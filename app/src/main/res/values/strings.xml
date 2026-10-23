@@ -729,6 +729,7 @@
     <string name="suwayomi" translatable="false">Suwayomi</string>
     <string name="hikka" translatable="false">Hikka</string>
     <string name="mangabaka" translatable="false">MangaBaka</string>
+    <string name="comick" translatable="false">ComicK</string>
     <string name="update_tracking_scoring_type">Update %1$s\'s scoring type</string>
     <string name="scoring_type_updated">Scoring type updated</string>
     <string name="could_not_update_scoring_">Could not update scoring type: %1$s</string>
@@ -933,6 +934,17 @@
     <string name="auto_sync_progress_from_trackers_summary">Two-way sync: mark chapters as read up to the tracker\'s progress and push further local progress to the tracker when opening or refreshing a manga, or updating the library</string>
     <string name="sync_progress_from_trackers_up_to_chapter">Marked chapters as read up to chapter %1$d from trackers</string>
     <string name="tracker_details">Tracker details</string>
+    <string name="no_tracker_provides_details">None of this series\' trackers is set to provide details</string>
+    <string name="tracker_details_per_tracker">Auto-sync from each tracker</string>
+    <string name="tracker_details_use_tracker_">Use %1$s</string>
+    <string name="tracker_details_use_tracker_summary">Takes part when syncing details. Turn off to leave this tracker out of automatic syncs</string>
+    <string name="tracker_details_from_tracker_">Details from %1$s</string>
+    <string name="tracker_details_cover_selection">Cover</string>
+    <string name="tracker_details_cover_best_quality">The sharpest of all trackers</string>
+    <string name="tracker_details_cover_first_tracker">The one of the first tracker that has one</string>
+    <string name="tracker_details_cover_selection_summary">Covers are compared by their size in pixels, read from the start of each image. MangaBaka covers can be small, ComicK often has bigger ones. To get the details from one tracker and the cover from another, choose the details each one provides below</string>
+    <string name="comick_latest_cover">ComicK: use the latest volume cover</string>
+    <string name="comick_latest_cover_summary">Instead of the cover of the series</string>
     <string name="auto_sync_tracker_details_on_refresh">Keep details in sync</string>
     <string name="auto_sync_tracker_details_on_refresh_summary">Also sync details whenever tracking is refreshed, like when opening a series</string>
     <string name="tracker_details_overwrite_edits">Replace details I edited</string>

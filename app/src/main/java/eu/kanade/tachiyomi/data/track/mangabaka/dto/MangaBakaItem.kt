@@ -128,6 +128,8 @@ data class MangaBakaScaledCover(
 @Serializable
 data class MangaBakaRawCover(
     val url: String? = null,
+    val width: Int? = null,
+    val height: Int? = null,
 )
 
 @Serializable

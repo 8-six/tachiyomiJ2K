@@ -4,6 +4,7 @@ import eu.kanade.tachiyomi.data.track.TrackPreferences
 import eu.kanade.tachiyomi.data.track.mangabaka.dto.MangaBakaItem
 import eu.kanade.tachiyomi.data.track.metadata.MetadataText
 import eu.kanade.tachiyomi.data.track.model.TrackMangaMetadata
+import eu.kanade.tachiyomi.data.track.model.TrackMangaMetadata.CoverCandidate
 import eu.kanade.tachiyomi.source.model.SManga
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
@@ -18,11 +19,13 @@ internal class MangaBakaMetadataBuilder(
 ) {
     suspend fun build(item: MangaBakaItem): TrackMangaMetadata {
         val warnings = mutableListOf<String>()
+        val cover = chooseCover(item, warnings)
         val title = item.chooseBestTitle(preferences.mangabakaTitleLanguage().get())
         return TrackMangaMetadata(
             remoteId = item.id,
             title = title,
-            coverUrl = chooseCover(item, warnings),
+            coverUrl = cover?.url,
+            covers = listOfNotNull(cover),
             description = item.description?.trim()?.takeIf { it.isNotEmpty() },
             authors =
                 item.authors
@@ -46,13 +49,18 @@ internal class MangaBakaMetadataBuilder(
         )
     }
 
+    /** The cover to use, with its size where MangaBaka says what it is. */
     private suspend fun chooseCover(
         item: MangaBakaItem,
         warnings: MutableList<String>,
-    ): String? {
-        val seriesCover = item.cover.bestUrl()
+    ): CoverCandidate? {
+        val main =
+            item.cover.raw
+                ?.url
+                ?.let { CoverCandidate(it, item.cover.raw.width, item.cover.raw.height) }
+                ?: item.cover.bestUrl()?.let { CoverCandidate(it) }
         val mode = preferences.mangabakaCoverMode().get()
-        if (mode == MangaBaka.COVER_DEFAULT) return seriesCover
+        if (mode == MangaBaka.COVER_DEFAULT) return main
 
         val images =
             try {
@@ -61,21 +69,25 @@ internal class MangaBakaMetadataBuilder(
                 if (e is CancellationException) throw e
                 Timber.w(e, "Could not load the covers of MangaBaka series ${item.id}")
                 warnings += "covers: ${e.message ?: e.javaClass.simpleName}"
-                return seriesCover
+                return main
             }
 
         val language =
             preferences.mangabakaCoverLanguage().get().let {
                 if (it == MangaBaka.LANGUAGE_ORIGINAL) item.originalLanguage ?: MangaBaka.LANGUAGE_ANY else it
             }
-        return MangaBakaCovers.choose(
-            images = images,
-            mode = mode,
-            language = language,
-            type = preferences.mangabakaCoverType().get(),
-            safeOnly = preferences.mangabakaCoverSafeOnly().get(),
-            originalLanguage = item.originalLanguage,
-        ) ?: seriesCover
+        val chosen =
+            MangaBakaCovers
+                .chooseImage(
+                    images = images,
+                    mode = mode,
+                    language = language,
+                    type = preferences.mangabakaCoverType().get(),
+                    safeOnly = preferences.mangabakaCoverSafeOnly().get(),
+                    originalLanguage = item.originalLanguage,
+                )?.image
+                ?.raw
+        return chosen?.url?.let { CoverCandidate(it, chosen.width, chosen.height) } ?: main
     }
 
     /**

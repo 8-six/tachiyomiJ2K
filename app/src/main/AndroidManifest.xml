@@ -217,6 +217,25 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".ui.setting.track.ComicKLoginActivity"
+            android:label="ComicK"
+            android:exported="true">
+            <!--
+                ComicK only sends users back to the callbacks registered for the app whose client ID is used, which is
+                Houri's, in the form of RFC 8252: a scheme and a path, with no host.
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:pathPrefix="/comick-auth"
+                    android:scheme="app.houri" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".ui.setting.track.MangaBakaLoginActivity"
             android:label="MangaBaka"
             android:exported="true">

@@ -9,6 +9,8 @@ data class MetadataOptions(
     val hideSpoilerTags: Boolean = true,
     /** AniList only: tags the community finds less relevant than this (0 to 100) are left out. */
     val minTagRank: Int = 50,
+    /** ComicK only: use the cover of the latest volume, instead of the cover of the series. */
+    val comickLatestCover: Boolean = false,
 ) {
     companion object {
         const val TITLE_AUTO = "auto"

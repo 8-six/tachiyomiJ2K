@@ -4,26 +4,33 @@ import android.app.Application
 import android.content.Context
 import android.net.Uri
 import androidx.core.net.toUri
+import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.database.DatabaseHelper
 import eu.kanade.tachiyomi.data.database.models.Manga
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.library.CustomMangaManager
+import eu.kanade.tachiyomi.data.track.metadata.CoverChooser
+import eu.kanade.tachiyomi.data.track.metadata.ImageDimensions
 import eu.kanade.tachiyomi.data.track.metadata.MetadataApply
+import eu.kanade.tachiyomi.data.track.metadata.MetadataCombiner
 import eu.kanade.tachiyomi.data.track.model.TrackMangaMetadata
 import eu.kanade.tachiyomi.data.track.model.TrackMangaMetadata.Field
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.NetworkHelper
+import eu.kanade.tachiyomi.network.await
 import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.util.isLocal
 import eu.kanade.tachiyomi.util.system.executeOnIO
 import eu.kanade.tachiyomi.util.system.withIOContext
 import kotlinx.coroutines.CancellationException
+import okhttp3.Headers
 import timber.log.Timber
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Gets series information from the trackers a manga is tracked with and applies it to the manga. Which details are
@@ -38,11 +45,26 @@ class TrackMetadataSync {
     private val coverCache: CoverCache by injectLazy()
     private val customMangaManager: CustomMangaManager by injectLazy()
 
+    private companion object {
+        const val MEASURE_BYTES = 65536
+
+        val UNKNOWN_SIZE = 0 to 0
+
+        // Sizes don't change, and a sync of every tracker would otherwise measure the same covers again
+        val imageSizes = ConcurrentHashMap<String, Pair<Int, Int>>()
+    }
+
     /**
      * The tracks of [manga] whose tracker is able to provide details, in the order they are asked in: the preferred
      * tracker first, then the others by [TrackManager.metadataPriority].
+     *
+     * @param onlyEnabled leave out the trackers the user turned off for syncing details, see
+     *   [TrackPreferences.metadataTrackerEnabled].
      */
-    suspend fun getSources(manga: Manga): List<Pair<Track, TrackService>> {
+    suspend fun getSources(
+        manga: Manga,
+        onlyEnabled: Boolean = false,
+    ): List<Pair<Track, TrackService>> {
         val preferred = trackPreferences.preferredMetadataTracker().get().toIntOrNull()
         val priority = trackManager.metadataPriority
         return db
@@ -50,7 +72,13 @@ class TrackMetadataSync {
             .executeOnIO()
             .mapNotNull { track ->
                 val service = trackManager.getService(track.sync_id) ?: return@mapNotNull null
-                if (service.supportsMetadata) track to service else null
+                if (service.supportsMetadata &&
+                    (!onlyEnabled || trackPreferences.metadataTrackerEnabled(service.id).get())
+                ) {
+                    track to service
+                } else {
+                    null
+                }
             }.sortedBy { (_, service) ->
                 when {
                     service.id == preferred -> -1
@@ -62,42 +90,94 @@ class TrackMetadataSync {
     /** The fields that are allowed to be synced. */
     fun enabledFields() = Field.fromKeys(trackPreferences.metadataSyncFields().get())
 
-    /** The details a single tracker has. */
+    /** The fields a tracker may provide: the ones that are synced at all, and that the user allowed for this tracker. */
+    fun fieldsOf(service: TrackService): Set<Field> =
+        enabledFields() intersect Field.fromKeys(trackPreferences.metadataTrackerFields(service.id).get())
+
+    /**
+     * The details a single tracker has.
+     *
+     * @param perTracker only the details the user allowed for this tracker. Not when the tracker was picked by hand, then
+     *   everything that's synced at all is taken.
+     */
     suspend fun fetch(
         track: Track,
         service: TrackService,
-    ): TrackMangaMetadata = service.getMangaMetadata(track).filter(enabledFields())
+        perTracker: Boolean = false,
+    ): TrackMangaMetadata =
+        service
+            .getMangaMetadata(track)
+            .filter(if (perTracker) fieldsOf(service) else enabledFields())
+            .withCoverSource(service.id)
 
     /**
-     * The details of every tracker of [manga] combined: the first tracker that has a detail provides it. Trackers are
-     * only asked while something that is to be synced is still missing, and only the first one if the user turned off
-     * filling gaps from the others.
+     * The details of every tracker of [manga] combined: the first tracker that has a detail provides it, see
+     * [MetadataCombiner]. Trackers the user turned off are left out, and each one only provides what it was allowed to.
+     * The cover is then chosen as set in [TrackPreferences.metadataCoverSelection].
      *
      * @throws Exception if no tracker could be asked, with what went wrong.
      */
     suspend fun fetchAll(manga: Manga): TrackMangaMetadata {
-        val sources = getSources(manga)
-        if (sources.isEmpty()) throw Exception("No tracker with details")
+        val sources = getSources(manga, onlyEnabled = true)
+        if (sources.isEmpty()) throw Exception(Injekt.get<Application>().getString(R.string.no_tracker_provides_details))
 
-        val fields = enabledFields()
-        val fillGaps = trackPreferences.metadataFillGaps().get()
-        var merged: TrackMangaMetadata? = null
-        val failures = mutableListOf<String>()
+        val wanted = enabledFields()
+        val bestCover = trackPreferences.metadataCoverSelection().get() == TrackPreferences.COVER_BEST_QUALITY
+        val result =
+            MetadataCombiner.combine(
+                sources = sources.map { MetadataCombiner.Source(it, fieldsOf(it.second)) },
+                wanted = wanted,
+                fillGaps = trackPreferences.metadataFillGaps().get(),
+                wantAllCovers = bestCover,
+                idOf = { it.second.id },
+                fetch = { (track, service) -> fetch(track, service, perTracker = true) },
+            )
+        val failures = result.failures.map { (id, message) -> "${trackManager.getService(id)?.let(::networkName)}: $message" }
 
-        for ((track, service) in sources) {
-            try {
-                val metadata = fetch(track, service)
-                merged = merged?.fillGapsFrom(metadata) ?: metadata
-            } catch (e: Exception) {
-                if (e is CancellationException) throw e
-                Timber.w(e, "Could not get details from tracker ${service.id}")
-                failures += "${networkName(service)}: ${e.message ?: e.javaClass.simpleName}"
+        val merged = result.metadata ?: throw Exception(failures.joinToString("; "))
+        val withCover = if (bestCover && Field.COVER in wanted) chooseBestCover(merged) else merged
+        return withCover.copy(warnings = withCover.warnings + failures)
+    }
+
+    /**
+     * Sets the cover to the best of those the trackers offered, see [CoverChooser]. The size of the ones that were
+     * offered without it is read from the start of the image.
+     */
+    suspend fun chooseBestCover(metadata: TrackMangaMetadata): TrackMangaMetadata {
+        val best = CoverChooser.choose(metadata.coverCandidates(), ::measureImage) ?: return metadata
+        return metadata.copy(coverUrl = best.url)
+    }
+
+    /** The size of an image, read from the first bytes of it so it doesn't have to be downloaded to be compared. */
+    private suspend fun measureImage(url: String): Pair<Int, Int>? {
+        val size =
+            imageSizes.getOrPut(url) {
+                try {
+                    withIOContext {
+                        network.client
+                            .newCall(GET(url, headers = Headers.headersOf("Range", "bytes=0-$MEASURE_BYTES")))
+                            .await()
+                            .use { response ->
+                                if (!response.isSuccessful) return@use UNKNOWN_SIZE
+                                val buffer = ByteArray(MEASURE_BYTES)
+                                var read = 0
+                                val input = response.body.byteStream()
+                                // The server may ignore the range and send everything, so only this much is taken
+                                while (read < buffer.size) {
+                                    val n = input.read(buffer, read, buffer.size - read)
+                                    if (n < 0) break
+                                    read += n
+                                }
+                                ImageDimensions.parse(buffer.copyOf(read)) ?: UNKNOWN_SIZE
+                            }
+                    }
+                } catch (e: Exception) {
+                    if (e is CancellationException) throw e
+                    Timber.w(e, "Could not measure the cover $url")
+                    UNKNOWN_SIZE
+                }
             }
-            if (merged != null && (!fillGaps || fields.all { merged!!.has(it) })) break
-        }
-
-        val result = merged ?: throw Exception(failures.joinToString("; "))
-        return result.copy(warnings = result.warnings + failures)
+        return size.takeIf { it != UNKNOWN_SIZE }
     }
 
     // TrackService only has a string resource for its name, which needs a context

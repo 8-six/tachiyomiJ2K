@@ -21,7 +21,17 @@ object MangaBakaCovers {
         type: String,
         safeOnly: Boolean,
         originalLanguage: String?,
-    ): String? {
+    ): String? = chooseImage(images, mode, language, type, safeOnly, originalLanguage)?.image?.raw?.url
+
+    /** Like [choose], but gives the cover with its size. */
+    fun chooseImage(
+        images: List<MangaBakaImage>,
+        mode: String,
+        language: String,
+        type: String,
+        safeOnly: Boolean,
+        originalLanguage: String?,
+    ): MangaBakaImage? {
         val candidates =
             images
                 .filter { it.image?.raw?.url != null }
@@ -32,26 +42,29 @@ object MangaBakaCovers {
         // Of covers with the same number there is often one per language and per site, so what's left decides
         fun MangaBakaImage.isOriginalLanguage() = originalLanguage != null && matchesLanguage(originalLanguage)
 
+        // The same cover is on several sites in different sizes
+        fun MangaBakaImage.pixels() = (image?.raw?.width ?: 0).toLong() * (image?.raw?.height ?: 0)
+
         val newestFirst =
             compareBy<MangaBakaImage>(
                 { it.indexNumeric ?: Double.NEGATIVE_INFINITY },
                 { it.isOriginalLanguage() },
+                { it.pixels() },
                 { it.createdAt.orEmpty() },
             )
         val oldestFirst =
             compareBy<MangaBakaImage>(
                 { it.indexNumeric ?: Double.POSITIVE_INFINITY },
                 { !it.isOriginalLanguage() },
+                { -it.pixels() },
                 { it.createdAt.orEmpty() },
             )
 
-        val chosen =
-            when (mode) {
-                MangaBaka.COVER_LATEST -> candidates.maxWithOrNull(newestFirst)
-                MangaBaka.COVER_FIRST -> candidates.minWithOrNull(oldestFirst)
-                else -> null
-            }
-        return chosen?.image?.raw?.url
+        return when (mode) {
+            MangaBaka.COVER_LATEST -> candidates.maxWithOrNull(newestFirst)
+            MangaBaka.COVER_FIRST -> candidates.minWithOrNull(oldestFirst)
+            else -> null
+        }
     }
 
     private fun MangaBakaImage.matchesLanguage(code: String): Boolean {

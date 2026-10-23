@@ -18,14 +18,40 @@ data class TrackMangaMetadata(
     val alternativeTitles: List<String>? = null,
     /** Whether it's a manga, manhwa, ... The reader picks its mode from it. */
     val seriesType: SeriesType? = null,
+    /**
+     * Covers to choose from. [coverUrl] is the one chosen from them, or the only one a tracker gave.
+     * See [eu.kanade.tachiyomi.data.track.metadata.CoverChooser].
+     */
+    val covers: List<CoverCandidate> = emptyList(),
     /** Things that went wrong without making the rest unusable, like covers that couldn't be loaded. */
     val warnings: List<String> = emptyList(),
 ) {
+    /** A cover that could be used, with its size in pixels where the tracker says what it is. */
+    data class CoverCandidate(
+        val url: String,
+        val width: Int? = null,
+        val height: Int? = null,
+        /** Id of the tracker that offered it, which also decides between covers that are just as good. */
+        val source: Int = 0,
+    ) {
+        val pixels: Long
+            get() = if (width != null && height != null) width.toLong() * height else 0L
+    }
+
+    /** The covers that can be chosen from: the offered ones, or the one cover there is. */
+    fun coverCandidates(): List<CoverCandidate> =
+        covers.ifEmpty { listOfNotNull(coverUrl?.takeIf { it.isNotBlank() }?.let { CoverCandidate(it) }) }
+
+    /** The same, with the id of the tracker they came from. */
+    fun withCoverSource(source: Int): TrackMangaMetadata = copy(covers = coverCandidates().map { it.copy(source = source) })
+
     /** The fields that are allowed to be synced, see [Field]. */
     fun filter(fields: Set<Field>) =
         copy(
             title = title.takeIf { Field.TITLE in fields },
             coverUrl = coverUrl.takeIf { Field.COVER in fields },
+            // The candidates too, or a tracker that may not give the cover could still win it
+            covers = covers.takeIf { Field.COVER in fields }.orEmpty(),
             description = description.takeIf { Field.DESCRIPTION in fields },
             authors = authors.takeIf { Field.AUTHORS in fields },
             artists = artists.takeIf { Field.ARTISTS in fields },
@@ -59,6 +85,7 @@ data class TrackMangaMetadata(
             artists = artists.takeUnless { it.isNullOrBlank() } ?: other.artists,
             tags = tags.takeUnless { it.isNullOrEmpty() } ?: other.tags,
             status = status ?: other.status,
+            covers = (coverCandidates() + other.coverCandidates()).distinctBy { it.url },
             alternativeTitles =
                 (
                     (alternativeTitles.orEmpty() + other.alternativeTitles.orEmpty()).distinctBy {

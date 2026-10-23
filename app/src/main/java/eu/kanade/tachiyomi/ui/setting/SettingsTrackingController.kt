@@ -11,6 +11,7 @@ import eu.kanade.tachiyomi.data.track.TrackPreferences
 import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.data.track.anilist.AnilistApi
 import eu.kanade.tachiyomi.data.track.bangumi.BangumiApi
+import eu.kanade.tachiyomi.data.track.comick.ComicKApi
 import eu.kanade.tachiyomi.data.track.hikka.HikkaApi
 import eu.kanade.tachiyomi.data.track.mangabaka.MangaBaka
 import eu.kanade.tachiyomi.data.track.mangabaka.MangaBakaApi
@@ -121,6 +122,9 @@ class SettingsTrackingController :
                 trackPreference(trackManager.mangaBaka) {
                     activity?.openInBrowser(MangaBakaApi.authUrl(), trackManager.mangaBaka.getLogoColor(), true)
                 }
+                trackPreference(trackManager.comicK) {
+                    activity?.openInBrowser(ComicKApi.authUrl(), trackManager.comicK.getLogoColor(), true)
+                }
                 infoPreference(R.string.tracking_info)
             }
             preferenceCategory {
@@ -148,6 +152,20 @@ class SettingsTrackingController :
                     entryValues = TrackMangaMetadata.Field.entries.map { it.key }
                     allSelectionRes = R.string.all
                     defaultValue = emptySet<String>()
+                }
+                listPreference(activity) {
+                    key = trackPreferences.metadataCoverSelection().key()
+                    titleRes = R.string.tracker_details_cover_selection
+                    summaryRes = R.string.tracker_details_cover_selection_summary
+                    entriesRes = arrayOf(R.string.tracker_details_cover_best_quality, R.string.tracker_details_cover_first_tracker)
+                    entryValues = listOf(TrackPreferences.COVER_BEST_QUALITY, TrackPreferences.COVER_FIRST_TRACKER)
+                    defaultValue = TrackPreferences.COVER_BEST_QUALITY
+                }
+                switchPreference {
+                    key = trackPreferences.comickLatestCover().key()
+                    titleRes = R.string.comick_latest_cover
+                    summaryRes = R.string.comick_latest_cover_summary
+                    defaultValue = false
                 }
                 switchPreference {
                     key = trackPreferences.autoSyncMetadataOnRefresh().key()
@@ -228,6 +246,43 @@ class SettingsTrackingController :
                     summaryRes = R.string.anilist_min_tag_rank_summary
                     entryValues = (0..90 step 10).toList()
                     valueFormatter = { "$it%" }
+                }
+            }
+            preferenceCategory {
+                titleRes = R.string.tracker_details_per_tracker
+
+                // Each tracker can be left out, or only be used for some details, like only the cover
+                trackManager.metadataPriority.forEach { service ->
+                    val enabled = trackPreferences.metadataTrackerEnabled(service.id)
+                    val name = context.getString(service.nameRes())
+                    switchPreference {
+                        key = enabled.key()
+                        title = context.getString(R.string.tracker_details_use_tracker_, name)
+                        summaryRes = R.string.tracker_details_use_tracker_summary
+                        defaultValue = true
+                    }
+                    val fields =
+                        multiSelectListPreferenceMat(activity) {
+                            key = trackPreferences.metadataTrackerFields(service.id).key()
+                            title = context.getString(R.string.tracker_details_from_tracker_, name)
+                            entriesRes =
+                                arrayOf(
+                                    R.string.title,
+                                    R.string.author,
+                                    R.string.artist,
+                                    R.string.description,
+                                    R.string.cover,
+                                    R.string.tags,
+                                    R.string.status,
+                                )
+                            entryValues = TrackMangaMetadata.Field.entries.map { it.key }
+                            allSelectionRes = R.string.all
+                            defaultValue = emptySet<String>()
+                        }
+                    enabled
+                        .changes()
+                        .onEach { fields.isVisible = it }
+                        .launchIn(viewScope)
                 }
             }
             preferenceCategory {

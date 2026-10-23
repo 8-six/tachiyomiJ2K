@@ -1047,7 +1047,12 @@ class MangaDetailsPresenter(
 
     /** Whether any tracker of this manga is able to provide details. */
     fun canSyncMetadata(): Boolean =
-        !manga.isLocal() && loggedServices.any { service -> service.supportsMetadata && tracks.any { it.sync_id == service.id } }
+        !manga.isLocal() &&
+            loggedServices.any { service ->
+                service.supportsMetadata &&
+                    trackPreferences.metadataTrackerEnabled(service.id).get() &&
+                    tracks.any { it.sync_id == service.id }
+            }
 
     /**
      * Syncs the details of the trackers to the manga because the user asked for it: every enabled detail is replaced.

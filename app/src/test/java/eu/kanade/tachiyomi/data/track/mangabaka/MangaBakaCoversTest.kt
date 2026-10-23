@@ -91,6 +91,8 @@ class MangaBakaCoversTest {
         language: String,
         createdAt: String,
         rating: String = "safe",
+        width: Int? = null,
+        height: Int? = null,
     ) = MangaBakaImage(
         id = id,
         type = "season",
@@ -98,7 +100,7 @@ class MangaBakaCoversTest {
         indexNumeric = index,
         contentRating = rating,
         createdAt = createdAt,
-        image = MangaBakaImageFile(raw = MangaBakaRawCover("https://img/$id")),
+        image = MangaBakaImageFile(raw = MangaBakaRawCover("https://img/$id", width, height)),
     )
 
     @Test
@@ -112,6 +114,34 @@ class MangaBakaCoversTest {
         assertEquals("https://img/3", choose(MangaBaka.COVER_LATEST, original = "ko", list = list))
         // without an original language only the upload date is left
         assertEquals("https://img/1", choose(MangaBaka.COVER_LATEST, original = null, list = list))
+    }
+
+    @Test
+    fun `of the same number and language the bigger cover wins, as the same cover is on several sites`() {
+        // like numbers 7 of the real series: 480 and 690 wide, the smaller one uploaded later
+        val list =
+            listOf(
+                image(1, 7.0, "ko", "2026-06-28", width = 480, height = 700),
+                image(2, 7.0, "ko", "2026-03-10", width = 690, height = 1000),
+            )
+        assertEquals("https://img/2", choose(MangaBaka.COVER_LATEST, list = list))
+        // the first cover prefers the bigger one as well
+        assertEquals("https://img/2", choose(MangaBaka.COVER_FIRST, list = list))
+    }
+
+    @Test
+    fun `the size of the chosen cover is known`() {
+        val chosen =
+            MangaBakaCovers.chooseImage(
+                listOf(image(1, 1.0, "ko", "2026-01-01", width = 690, height = 1000)),
+                MangaBaka.COVER_LATEST,
+                MangaBaka.LANGUAGE_ANY,
+                MangaBaka.COVER_TYPE_ANY,
+                true,
+                "ko",
+            )!!
+        assertEquals(690, chosen.image!!.raw!!.width)
+        assertEquals(1000, chosen.image!!.raw!!.height)
     }
 
     @Test

@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.track.metadata
 
+import eu.kanade.tachiyomi.data.track.comick.asHidToLong
 import eu.kanade.tachiyomi.data.track.model.TrackMangaMetadata.SeriesType
 import eu.kanade.tachiyomi.source.model.SManga
 import kotlinx.serialization.json.Json
@@ -181,6 +182,70 @@ class TrackerMetadataTest {
     }
     // endregion
 
+    // region ComicK
+    private val comick by lazy { fixture("comick_comic.json").jsonObject }
+
+    @Test
+    fun `comick gives everything for the real series`() {
+        val m = ComicKMetadata.parse(comick, trackerId = 12)
+        assertEquals("cjee7NwJ".asHidToLong(), m.remoteId)
+        assertEquals("The Extra's Academy Survival Guide", m.title)
+        assertEquals("코리타", m.authors)
+        assertEquals("Girin Geurin(기린그린)", m.artists)
+        assertEquals(SManga.ONGOING, m.status)
+        assertEquals(SeriesType.MANHWA, m.seriesType)
+        assertTrue(m.description!!.startsWith("Ed Rothstaylor"))
+        assertTrue(m.tags!!.containsAll(listOf("Action", "Fantasy", "Isekai", "Shounen")))
+    }
+
+    @Test
+    fun `comick covers come with their size`() {
+        val m = ComicKMetadata.parse(comick, trackerId = 12)
+        val cover = m.covers.single()
+        assertEquals("https://meo.comick.pictures/y77dL6.png", cover.url)
+        assertEquals(960, cover.width)
+        assertEquals(1246, cover.height)
+        assertEquals(12, cover.source)
+        assertEquals(cover.url, m.coverUrl)
+    }
+
+    @Test
+    fun `comick title style`() {
+        assertEquals(
+            "Academy eseo Saranamgi",
+            ComicKMetadata.parse(comick, MetadataOptions(titleStyle = MetadataOptions.TITLE_ROMAJI)).title,
+        )
+    }
+
+    @Test
+    fun `comick alternative titles`() {
+        val alternatives = ComicKMetadata.parse(comick).alternativeTitles!!
+        assertTrue("Surviving the Academy" in alternatives)
+        assertTrue("Academy eseo Saranamgi" in alternatives)
+        assertFalse("The Extra's Academy Survival Guide" in alternatives)
+    }
+
+    @Test
+    fun `comick offers the latest volume cover next to the series cover when wanted`() {
+        val covers =
+            Json
+                .parseToJsonElement(
+                    """
+                    {"comic":{"md_covers":[
+                      {"vol":"1","w":600,"h":900,"b2key":"one.jpg","is_primary":false},
+                      {"vol":"12","w":700,"h":1000,"b2key":"twelve.jpg","is_primary":false},
+                      {"vol":"2.5","w":650,"h":950,"b2key":"mid.jpg","is_primary":true},
+                      {"vol":null,"w":10,"h":10,"b2key":"nothing.jpg","is_primary":false}
+                    ]}}
+                    """.trimIndent(),
+                ).jsonObject
+        val latest = ComicKMetadata.parse(covers, MetadataOptions(comickLatestCover = true)).covers
+        assertEquals(listOf("twelve.jpg", "mid.jpg"), latest.map { it.url.substringAfterLast('/') })
+        val primary = ComicKMetadata.parse(covers).covers
+        assertEquals(listOf("mid.jpg"), primary.map { it.url.substringAfterLast('/') })
+    }
+    // endregion
+
     // region MyAnimeList and Shikimori, from their documented responses
     @Test
     fun `myanimelist response`() {
@@ -247,6 +312,7 @@ class TrackerMetadataTest {
             MyAnimeListMetadata.parse(empty),
             ShikimoriMetadata.parse(empty),
             BangumiMetadata.parse(empty),
+            ComicKMetadata.parse(empty),
         ).forEach {
             assertNull(it.title)
             assertNull(it.tags)

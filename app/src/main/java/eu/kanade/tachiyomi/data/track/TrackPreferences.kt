@@ -77,17 +77,36 @@ class TrackPreferences(
     /** AniList only: how relevant (0 to 100) a tag must be to be kept. */
     fun anilistMinTagRank() = preferenceStore.getInt("anilist_min_tag_rank", 50)
 
+    /** Whether details of this tracker are used when syncing details, on its own and combined with the other trackers. */
+    fun metadataTrackerEnabled(trackerId: Int) = preferenceStore.getBoolean("tracker_metadata_enabled_$trackerId", true)
+
+    /** Which details this tracker provides, empty is all of them. Lets one tracker only be the source of the cover, say. */
+    fun metadataTrackerFields(trackerId: Int) = preferenceStore.getStringSet("tracker_metadata_fields_$trackerId", emptySet())
+
+    /** How the cover is chosen when several trackers have one, [COVER_BEST_QUALITY] or [COVER_FIRST_TRACKER]. */
+    fun metadataCoverSelection() = preferenceStore.getString("tracker_metadata_cover_selection", COVER_BEST_QUALITY)
+
+    /** ComicK has the covers of the volumes too, use the latest one instead of the cover of the series. */
+    fun comickLatestCover() = preferenceStore.getBoolean("comick_latest_cover", false)
+
     fun metadataOptions() =
         MetadataOptions(
             titleStyle = trackerTitleStyle().get(),
             hideSpoilerTags = trackerHideSpoilerTags().get(),
             minTagRank = anilistMinTagRank().get(),
+            comickLatestCover = comickLatestCover().get(),
         )
 
     fun autoUpdateTrack() = preferenceStore.getBoolean("pref_auto_update_manga_sync_key", true)
 
     companion object {
         const val PREFERRED_AUTO = "auto"
+
+        /** The cover with the most pixels, of all the trackers that provide one. */
+        const val COVER_BEST_QUALITY = "quality"
+
+        /** The cover of the first tracker that has one, in the order the trackers are asked in. */
+        const val COVER_FIRST_TRACKER = "first"
 
         fun trackUsername(syncId: Int) = Preference.privateKey("pref_mangasync_username_$syncId")
 

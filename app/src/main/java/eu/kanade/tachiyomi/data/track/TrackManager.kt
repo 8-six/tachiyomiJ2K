@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.data.track
 import android.content.Context
 import eu.kanade.tachiyomi.data.track.anilist.Anilist
 import eu.kanade.tachiyomi.data.track.bangumi.Bangumi
+import eu.kanade.tachiyomi.data.track.comick.ComicK
 import eu.kanade.tachiyomi.data.track.hikka.Hikka
 import eu.kanade.tachiyomi.data.track.kavita.Kavita
 import eu.kanade.tachiyomi.data.track.kitsu.Kitsu
@@ -28,6 +29,7 @@ class TrackManager(
         const val SUWAYOMI = 9
         const val HIKKA = 10
         const val MANGABAKA = 11
+        const val COMICK = 12
     }
 
     val myAnimeList = MyAnimeList(context, MYANIMELIST)
@@ -41,6 +43,7 @@ class TrackManager(
     val suwayomi = Suwayomi(context, SUWAYOMI)
     val hikka = Hikka(context, HIKKA)
     val mangaBaka = MangaBaka(context, MANGABAKA)
+    val comicK = ComicK(context, COMICK)
 
     val services =
         listOf(
@@ -55,12 +58,14 @@ class TrackManager(
             suwayomi,
             hikka,
             mangaBaka,
+            comicK,
         )
 
     /** The order trackers are asked for details in when the user has no preference: the ones with the most data first. */
     val metadataPriority =
         listOf(
             mangaBaka,
+            comicK,
             aniList,
             mangaUpdates,
             myAnimeList,

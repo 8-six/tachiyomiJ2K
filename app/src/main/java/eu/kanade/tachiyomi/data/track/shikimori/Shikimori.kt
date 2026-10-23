@@ -6,6 +6,8 @@ import androidx.annotation.StringRes
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.TrackService
+import eu.kanade.tachiyomi.data.track.metadata.ShikimoriMetadata
+import eu.kanade.tachiyomi.data.track.model.TrackMangaMetadata
 import eu.kanade.tachiyomi.data.track.updateNewTrackInfo
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -36,6 +38,11 @@ class Shikimori(
     private val interceptor by lazy { ShikimoriInterceptor(this) }
 
     private val api by lazy { ShikimoriApi(client, interceptor) }
+
+    override val supportsMetadata: Boolean = true
+
+    override suspend fun getMangaMetadata(track: Track): TrackMangaMetadata =
+        api.getMangaWithRoles(track.media_id).let { (manga, roles) -> ShikimoriMetadata.parse(manga, roles) }
 
     override fun getLogo() = R.drawable.ic_tracker_shikimori
 

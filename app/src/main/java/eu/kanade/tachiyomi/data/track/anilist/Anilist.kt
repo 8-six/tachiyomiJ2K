@@ -6,6 +6,8 @@ import androidx.annotation.StringRes
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.TrackService
+import eu.kanade.tachiyomi.data.track.metadata.AniListMetadata
+import eu.kanade.tachiyomi.data.track.model.TrackMangaMetadata
 import eu.kanade.tachiyomi.data.track.updateNewTrackInfo
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -42,6 +44,11 @@ class Anilist(
     private val api by lazy { AnilistApi(client, interceptor) }
 
     override val supportsReadingDates: Boolean = true
+
+    override val supportsMetadata: Boolean = true
+
+    override suspend fun getMangaMetadata(track: Track): TrackMangaMetadata =
+        AniListMetadata.parse(api.getMediaDetails(track.media_id), trackPreferences.metadataOptions())
 
     override val supportsPrivateTracking: Boolean = true
 

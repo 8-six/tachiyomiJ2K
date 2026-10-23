@@ -12,6 +12,7 @@ import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
 import androidx.core.view.children
 import androidx.core.view.isVisible
 import coil.load
@@ -21,11 +22,10 @@ import com.google.android.material.chip.ChipGroup
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.DatabaseHelper
 import eu.kanade.tachiyomi.data.database.models.Manga
-import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.image.coil.MangaCoverFetcher
 import eu.kanade.tachiyomi.data.image.coil.loadManga
 import eu.kanade.tachiyomi.data.track.TrackMetadataSync
-import eu.kanade.tachiyomi.data.track.TrackService
+import eu.kanade.tachiyomi.data.track.model.TrackMangaMetadata
 import eu.kanade.tachiyomi.databinding.EditMangaDialogBinding
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.source.LocalSource
@@ -255,14 +255,30 @@ class EditMangaDialog : DialogController {
             val sources = sync.getSources(manga)
             when {
                 sources.isEmpty() -> context.toast(R.string.no_tracker_with_metadata)
-                sources.size == 1 -> applyTrackerMetadata(sync, sources.first())
+                sources.size == 1 ->
+                    applyTrackerMetadata(
+                        sync,
+                        context.getString(sources.first().second.nameRes()),
+                    ) { sync.fetchAll(manga) }
                 else -> {
-                    val names = sources.map { context.getString(it.second.nameRes()) }.toTypedArray()
+                    // The first choice combines them all, which is what a sync does
+                    val names =
+                        (
+                            listOf(context.getString(R.string.all_trackers_combined)) +
+                                sources.map { context.getString(it.second.nameRes()) }
+                        ).toTypedArray()
                     activity
                         ?.materialAlertDialog()
                         ?.setTitle(R.string.select_tracker)
                         ?.setItems(names) { _, index ->
-                            launchUI { applyTrackerMetadata(sync, sources[index]) }
+                            launchUI {
+                                if (index == 0) {
+                                    applyTrackerMetadata(sync, names[0]) { sync.fetchAll(manga) }
+                                } else {
+                                    val (track, service) = sources[index - 1]
+                                    applyTrackerMetadata(sync, names[index]) { sync.fetch(track, service) }
+                                }
+                            }
                         }?.show()
                 }
             }
@@ -271,28 +287,33 @@ class EditMangaDialog : DialogController {
 
     private suspend fun applyTrackerMetadata(
         sync: TrackMetadataSync,
-        source: Pair<Track, TrackService>,
+        name: String,
+        load: suspend () -> TrackMangaMetadata,
     ) {
-        val (track, service) = source
         val context = binding.root.context
         binding.autofillFromTracker.isEnabled = false
         try {
-            val metadata = withIOContext { sync.fetch(track, service) }
+            val metadata = withIOContext { load() }
             metadata.title?.let { binding.title.setText(it) }
             metadata.authors?.let { binding.mangaAuthor.setText(it) }
             metadata.artists?.let { binding.mangaArtist.setText(it) }
-            metadata.description?.let { binding.mangaDescription.setText(it) }
+            sync.descriptionFor(metadata)?.let { binding.mangaDescription.setText(it) }
             metadata.status?.let { binding.mangaStatus.setSelection(it.coerceIn(SManga.UNKNOWN, SManga.ON_HIATUS)) }
-            metadata.tags?.takeIf { it.isNotEmpty() }?.let { tags ->
-                setGenreTags(tags)
-                binding.seriesType.setSelection(manga.seriesType(customTags = tags.joinToString(", ")) - 1)
+            if (TrackMangaMetadata.Field.TAGS in sync.enabledFields()) {
+                sync.tagsFor(binding.mangaGenresTags.tags.toList(), metadata)?.let { tags ->
+                    setGenreTags(tags)
+                    binding.seriesType.setSelection(manga.seriesType(customTags = tags.joinToString(", ")) - 1)
+                }
             }
             metadata.coverUrl?.let { url ->
                 sync.downloadCover(context, url)?.let { updateCover(it) }
             }
+            if (metadata.warnings.isNotEmpty()) {
+                context.toast(context.getString(R.string.tracker_metadata_warning, metadata.warnings.joinToString()), Toast.LENGTH_LONG)
+            }
         } catch (e: Exception) {
             Timber.e(e)
-            context.toast(context.getString(R.string.tracker_metadata_error, context.getString(service.nameRes()), e.message.orEmpty()))
+            context.toast(context.getString(R.string.tracker_metadata_error, name, e.message.orEmpty()))
         } finally {
             binding.autofillFromTracker.isEnabled = true
         }

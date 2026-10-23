@@ -68,6 +68,29 @@ class ShikimoriApi(
         user_id: String,
     ): Track = addLibManga(track, user_id)
 
+    /** A manga and the people who made it, for [eu.kanade.tachiyomi.data.track.metadata.ShikimoriMetadata]. */
+    suspend fun getMangaWithRoles(mangaId: Long): Pair<JsonObject, JsonArray> =
+        withIOContext {
+            with(json) {
+                val manga =
+                    authClient
+                        .newCall(GET("$baseMangaUrl/$mangaId"))
+                        .awaitSuccess()
+                        .parseAs<JsonObject>()
+                // The people are nice to have, the rest is worth keeping if they can't be loaded
+                val roles =
+                    try {
+                        authClient
+                            .newCall(GET("$baseMangaUrl/$mangaId/roles"))
+                            .awaitSuccess()
+                            .parseAs<JsonArray>()
+                    } catch (e: Exception) {
+                        JsonArray(emptyList())
+                    }
+                manga to roles
+            }
+        }
+
     suspend fun search(search: String): List<TrackSearch> =
         withIOContext {
             val url =

@@ -6,6 +6,8 @@ import androidx.annotation.StringRes
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.TrackService
+import eu.kanade.tachiyomi.data.track.metadata.KitsuMetadata
+import eu.kanade.tachiyomi.data.track.model.TrackMangaMetadata
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import eu.kanade.tachiyomi.data.track.updateNewTrackInfo
 import kotlinx.serialization.decodeFromString
@@ -41,6 +43,11 @@ class Kitsu(
     private val interceptor by lazy { KitsuInterceptor(this) }
 
     private val api by lazy { KitsuApi(client, interceptor) }
+
+    override val supportsMetadata: Boolean = true
+
+    override suspend fun getMangaMetadata(track: Track): TrackMangaMetadata =
+        KitsuMetadata.parse(api.getMangaDetails(track), trackPreferences.metadataOptions())
 
     override fun getLogo() = R.drawable.ic_tracker_kitsu
 

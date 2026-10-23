@@ -36,6 +36,16 @@ class MangaBakaItemTest {
     }
 
     @Test
+    fun `the series type comes from the type MangaBaka gives it`() {
+        // series 1 is a manhwa
+        assertEquals(
+            eu.kanade.tachiyomi.data.track.model.TrackMangaMetadata.SeriesType.MANHWA,
+            eu.kanade.tachiyomi.data.track.model.TrackMangaMetadata.SeriesType
+                .from(series.type),
+        )
+    }
+
+    @Test
     fun `search payload parses`() {
         val results = json.decodeFromString<MangaBakaSearchResult>(resource("search.json")).data
         assertEquals(1, results.size)

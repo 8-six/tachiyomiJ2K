@@ -10,6 +10,8 @@ import eu.kanade.tachiyomi.data.track.mangaupdates.dto.ListItem
 import eu.kanade.tachiyomi.data.track.mangaupdates.dto.Rating
 import eu.kanade.tachiyomi.data.track.mangaupdates.dto.copyTo
 import eu.kanade.tachiyomi.data.track.mangaupdates.dto.toTrackSearch
+import eu.kanade.tachiyomi.data.track.metadata.MangaUpdatesMetadata
+import eu.kanade.tachiyomi.data.track.model.TrackMangaMetadata
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import eu.kanade.tachiyomi.data.track.updateNewTrackInfo
 
@@ -31,6 +33,10 @@ class MangaUpdates(
     private val interceptor by lazy { MangaUpdatesInterceptor(this) }
 
     private val api by lazy { MangaUpdatesApi(interceptor, client) }
+
+    override val supportsMetadata: Boolean = true
+
+    override suspend fun getMangaMetadata(track: Track): TrackMangaMetadata = MangaUpdatesMetadata.parse(api.getSeries(track.media_id))
 
     @StringRes
     override fun nameRes(): Int = R.string.manga_updates

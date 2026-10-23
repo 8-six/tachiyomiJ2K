@@ -141,6 +141,28 @@ class AnilistApi(
             }
         }
 
+    /** Everything AniList knows about a manga, for [eu.kanade.tachiyomi.data.track.metadata.AniListMetadata]. Public, no login needed. */
+    suspend fun getMediaDetails(mediaId: Long): JsonObject =
+        withIOContext {
+            val payload =
+                buildJsonObject {
+                    put("query", metadataQuery())
+                    putJsonObject("variables") {
+                        put("id", mediaId)
+                    }
+                }
+            with(json) {
+                client
+                    .newCall(POST(apiUrl, body = payload.toString().toRequestBody(jsonMime)))
+                    .awaitSuccess()
+                    .parseAs<JsonObject>()
+                    .let { response ->
+                        response["data"]?.jsonObject?.get("Media")?.jsonObject
+                            ?: throw Exception("Could not find manga")
+                    }
+            }
+        }
+
     suspend fun findLibManga(
         track: Track,
         userid: Int,
@@ -329,6 +351,46 @@ class AnilistApi(
                         |year
                         |month
                         |day
+                    |}
+                |}
+            |}
+            |
+            """.trimMargin()
+
+        fun metadataQuery() =
+            """
+            |query Details(${'$'}id: Int) {
+                |Media(id: ${'$'}id, type: MANGA) {
+                    |id
+                    |title {
+                        |romaji
+                        |english
+                        |native
+                    |}
+                    |synonyms
+                    |description(asHtml: false)
+                    |status
+                    |countryOfOrigin
+                    |genres
+                    |tags {
+                        |name
+                        |rank
+                        |isMediaSpoiler
+                        |isGeneralSpoiler
+                    |}
+                    |coverImage {
+                        |extraLarge
+                        |large
+                    |}
+                    |staff(perPage: 25) {
+                        |edges {
+                            |role
+                            |node {
+                                |name {
+                                    |full
+                                |}
+                            |}
+                        |}
                     |}
                 |}
             |}

@@ -267,7 +267,7 @@ class MangaBakaApi(
         withIOContext {
             with(json) {
                 val images = mutableListOf<MangaBakaImage>()
-                var url: String? = "$API_BASE_URL/v1/series/$id/images?limit=100"
+                var url: String? = "$API_BASE_URL/v1/series/$id/images?limit=$IMAGES_PAGE_SIZE"
                 var pages = 0
                 while (url != null && pages++ < MAX_IMAGE_PAGES) {
                     val result =
@@ -341,7 +341,9 @@ class MangaBakaApi(
     fun verifyOAuthState(state: String): Boolean = state == oauthStateParam
 
     companion object {
-        private const val MAX_IMAGE_PAGES = 5
+        // The API refuses a larger page size with a 400 error
+        private const val IMAGES_PAGE_SIZE = 50
+        private const val MAX_IMAGE_PAGES = 6
 
         private var genreLabels: Map<String, String>? = null
 

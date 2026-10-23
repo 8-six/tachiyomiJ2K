@@ -1,10 +1,11 @@
 package eu.kanade.tachiyomi.data.track.mangabaka
 
 import eu.kanade.tachiyomi.data.track.TrackPreferences
-import eu.kanade.tachiyomi.data.track.mangabaka.dto.MangaBakaImage
 import eu.kanade.tachiyomi.data.track.mangabaka.dto.MangaBakaItem
+import eu.kanade.tachiyomi.data.track.metadata.MetadataText
 import eu.kanade.tachiyomi.data.track.model.TrackMangaMetadata
 import eu.kanade.tachiyomi.source.model.SManga
+import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 
 /**
@@ -15,11 +16,13 @@ internal class MangaBakaMetadataBuilder(
     private val api: MangaBakaApi,
     private val preferences: TrackPreferences,
 ) {
-    suspend fun build(item: MangaBakaItem): TrackMangaMetadata =
-        TrackMangaMetadata(
+    suspend fun build(item: MangaBakaItem): TrackMangaMetadata {
+        val warnings = mutableListOf<String>()
+        val title = item.chooseBestTitle(preferences.mangabakaTitleLanguage().get())
+        return TrackMangaMetadata(
             remoteId = item.id,
-            title = item.chooseBestTitle(preferences.mangabakaTitleLanguage().get()),
-            coverUrl = chooseCover(item),
+            title = title,
+            coverUrl = chooseCover(item, warnings),
             description = item.description?.trim()?.takeIf { it.isNotEmpty() },
             authors =
                 item.authors
@@ -33,9 +36,20 @@ internal class MangaBakaMetadataBuilder(
                     .ifBlank { null },
             tags = chooseTags(item),
             status = item.status.toMangaStatus(),
+            alternativeTitles =
+                MetadataText.alternativeTitles(
+                    title,
+                    listOf(item.title, item.nativeTitle, item.romanizedTitle) + item.titles.orEmpty().map { it.title },
+                ),
+            seriesType = TrackMangaMetadata.SeriesType.from(item.type),
+            warnings = warnings,
         )
+    }
 
-    private suspend fun chooseCover(item: MangaBakaItem): String? {
+    private suspend fun chooseCover(
+        item: MangaBakaItem,
+        warnings: MutableList<String>,
+    ): String? {
         val seriesCover = item.cover.bestUrl()
         val mode = preferences.mangabakaCoverMode().get()
         if (mode == MangaBaka.COVER_DEFAULT) return seriesCover
@@ -44,37 +58,24 @@ internal class MangaBakaMetadataBuilder(
             try {
                 api.getSeriesImages(item.id)
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 Timber.w(e, "Could not load the covers of MangaBaka series ${item.id}")
+                warnings += "covers: ${e.message ?: e.javaClass.simpleName}"
                 return seriesCover
             }
 
         val language =
             preferences.mangabakaCoverLanguage().get().let {
-                if (it == MangaBaka.LANGUAGE_ORIGINAL) item.originalLanguage.orEmpty() else it
+                if (it == MangaBaka.LANGUAGE_ORIGINAL) item.originalLanguage ?: MangaBaka.LANGUAGE_ANY else it
             }
-        val type = preferences.mangabakaCoverType().get()
-        val safeOnly = preferences.mangabakaCoverSafeOnly().get()
-
-        val candidates =
-            images
-                .filter { it.image?.raw?.url != null }
-                .filter { !safeOnly || it.contentRating == null || it.contentRating == "safe" }
-                .filter { type == MangaBaka.COVER_TYPE_ANY || it.type.equals(type, ignoreCase = true) }
-                .filter { language.isEmpty() || language == MangaBaka.LANGUAGE_ANY || it.matchesLanguage(language) }
-
-        val order = compareBy<MangaBakaImage>({ it.indexNumeric ?: Double.NEGATIVE_INFINITY }, { it.createdAt.orEmpty() })
-        val chosen =
-            when (mode) {
-                MangaBaka.COVER_LATEST -> candidates.maxWithOrNull(order)
-                MangaBaka.COVER_FIRST -> candidates.minWithOrNull(order)
-                else -> null
-            }
-        return chosen?.image?.raw?.url ?: seriesCover
-    }
-
-    private fun MangaBakaImage.matchesLanguage(code: String): Boolean {
-        val lang = language ?: return false
-        return lang.equals(code, ignoreCase = true) || lang.startsWith("$code-", ignoreCase = true)
+        return MangaBakaCovers.choose(
+            images = images,
+            mode = mode,
+            language = language,
+            type = preferences.mangabakaCoverType().get(),
+            safeOnly = preferences.mangabakaCoverSafeOnly().get(),
+            originalLanguage = item.originalLanguage,
+        ) ?: seriesCover
     }
 
     /**

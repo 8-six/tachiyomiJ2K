@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.core.net.toUri
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.TrackManager
+import eu.kanade.tachiyomi.data.track.metadata.MyAnimeListMetadata
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.POST
@@ -100,6 +101,24 @@ class MyAnimeListApi(
                             }.awaitAll()
                             .filter { trackSearch -> !trackSearch.publishing_type.contains("novel") }
                     }
+            }
+        }
+
+    /** The details of a manga as MyAnimeList sends them, for [eu.kanade.tachiyomi.data.track.metadata.MyAnimeListMetadata]. */
+    suspend fun getMangaMetadataJson(id: Long): JsonObject =
+        withIOContext {
+            val url =
+                "$baseApiUrl/manga"
+                    .toUri()
+                    .buildUpon()
+                    .appendPath(id.toString())
+                    .appendQueryParameter("fields", MyAnimeListMetadata.FIELDS)
+                    .build()
+            with(json) {
+                authClient
+                    .newCall(GET(url.toString()))
+                    .awaitSuccess()
+                    .parseAs<JsonObject>()
             }
         }
 

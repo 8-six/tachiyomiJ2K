@@ -57,6 +57,19 @@ class TrackManager(
             mangaBaka,
         )
 
+    /** The order trackers are asked for details in when the user has no preference: the ones with the most data first. */
+    val metadataPriority =
+        listOf(
+            mangaBaka,
+            aniList,
+            mangaUpdates,
+            myAnimeList,
+            kitsu,
+            shikimori,
+            bangumi,
+            hikka,
+        )
+
     fun getService(id: Int) = services.find { it.id == id }
 
     fun hasLoggedServices() = services.any { it.isLogged }

@@ -76,6 +76,12 @@
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/action_sync_details"
+        android:icon="@drawable/ic_refresh_24dp"
+        android:title="@string/sync_details_from_trackers"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_merge"
         android:icon="@drawable/ic_swap_calls_24dp"
         android:title="@string/merge_with_another_source"

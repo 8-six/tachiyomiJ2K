@@ -15,6 +15,8 @@ import eu.kanade.tachiyomi.data.track.hikka.HikkaApi
 import eu.kanade.tachiyomi.data.track.mangabaka.MangaBaka
 import eu.kanade.tachiyomi.data.track.mangabaka.MangaBakaApi
 import eu.kanade.tachiyomi.data.track.mangabaka.dto.MangaBakaItem
+import eu.kanade.tachiyomi.data.track.metadata.MetadataApply
+import eu.kanade.tachiyomi.data.track.metadata.MetadataOptions
 import eu.kanade.tachiyomi.data.track.model.TrackMangaMetadata
 import eu.kanade.tachiyomi.data.track.myanimelist.MyAnimeListApi
 import eu.kanade.tachiyomi.data.track.shikimori.ShikimoriApi
@@ -147,6 +149,86 @@ class SettingsTrackingController :
                     allSelectionRes = R.string.all
                     defaultValue = emptySet<String>()
                 }
+                switchPreference {
+                    key = trackPreferences.autoSyncMetadataOnRefresh().key()
+                    titleRes = R.string.auto_sync_tracker_details_on_refresh
+                    summaryRes = R.string.auto_sync_tracker_details_on_refresh_summary
+                    defaultValue = false
+                }
+                switchPreference {
+                    key = trackPreferences.metadataOverwriteEdits().key()
+                    titleRes = R.string.tracker_details_overwrite_edits
+                    summaryRes = R.string.tracker_details_overwrite_edits_summary
+                    defaultValue = false
+                }
+                listPreference(activity) {
+                    key = trackPreferences.preferredMetadataTracker().key()
+                    titleRes = R.string.tracker_details_preferred
+                    val services = trackManager.metadataPriority
+                    entries =
+                        listOf(context.getString(R.string.tracker_details_preferred_auto)) +
+                        services.map { context.getString(it.nameRes()) }
+                    entryValues = listOf(TrackPreferences.PREFERRED_AUTO) + services.map { it.id.toString() }
+                    defaultValue = TrackPreferences.PREFERRED_AUTO
+                }
+                switchPreference {
+                    key = trackPreferences.metadataFillGaps().key()
+                    titleRes = R.string.tracker_details_fill_gaps
+                    summaryRes = R.string.tracker_details_fill_gaps_summary
+                    defaultValue = true
+                }
+                listPreference(activity) {
+                    key = trackPreferences.metadataTagsMode().key()
+                    titleRes = R.string.tracker_details_tags_mode
+                    entriesRes = arrayOf(R.string.tracker_details_tags_replace, R.string.tracker_details_tags_add)
+                    entryValues = listOf(MetadataApply.TAGS_REPLACE, MetadataApply.TAGS_ADD)
+                    defaultValue = MetadataApply.TAGS_REPLACE
+                }
+                switchPreference {
+                    key = trackPreferences.metadataSeriesTypeTag().key()
+                    titleRes = R.string.tracker_details_series_type_tag
+                    summaryRes = R.string.tracker_details_series_type_tag_summary
+                    defaultValue = true
+                }
+                switchPreference {
+                    key = trackPreferences.metadataAlternativeTitles().key()
+                    titleRes = R.string.tracker_details_alternative_titles
+                    defaultValue = false
+                }
+                listPreference(activity) {
+                    key = trackPreferences.trackerTitleStyle().key()
+                    titleRes = R.string.tracker_title_style
+                    summaryRes = R.string.tracker_title_style_summary
+                    entriesRes =
+                        arrayOf(
+                            R.string.tracker_title_style_auto,
+                            R.string.tracker_title_style_english,
+                            R.string.tracker_title_style_romaji,
+                            R.string.tracker_title_style_native,
+                        )
+                    entryValues =
+                        listOf(
+                            MetadataOptions.TITLE_AUTO,
+                            MetadataOptions.TITLE_ENGLISH,
+                            MetadataOptions.TITLE_ROMAJI,
+                            MetadataOptions.TITLE_NATIVE,
+                        )
+                    defaultValue = MetadataOptions.TITLE_AUTO
+                }
+                switchPreference {
+                    key = trackPreferences.trackerHideSpoilerTags().key()
+                    titleRes = R.string.tracker_hide_spoiler_tags
+                    summaryRes = R.string.tracker_hide_spoiler_tags_summary
+                    defaultValue = true
+                }
+                sliderPreference {
+                    key = trackPreferences.anilistMinTagRank().key()
+                    defaultValue = trackPreferences.anilistMinTagRank().defaultValue()
+                    titleRes = R.string.anilist_min_tag_rank
+                    summaryRes = R.string.anilist_min_tag_rank_summary
+                    entryValues = (0..90 step 10).toList()
+                    valueFormatter = { "$it%" }
+                }
             }
             preferenceCategory {
                 titleRes = R.string.mangabaka_details
@@ -176,7 +258,7 @@ class SettingsTrackingController :
                             R.string.mangabaka_cover_first,
                         )
                     entryValues = listOf(MangaBaka.COVER_DEFAULT, MangaBaka.COVER_LATEST, MangaBaka.COVER_FIRST)
-                    defaultValue = MangaBaka.COVER_DEFAULT
+                    defaultValue = MangaBaka.COVER_LATEST
                 }
                 val coverFilters = mutableListOf<androidx.preference.Preference>()
                 coverFilters +=

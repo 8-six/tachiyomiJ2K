@@ -65,6 +65,7 @@ import eu.kanade.tachiyomi.data.image.coil.getBestColor
 import eu.kanade.tachiyomi.data.merge.MergeManager
 import eu.kanade.tachiyomi.data.merge.MergedMangaReference
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
+import eu.kanade.tachiyomi.data.track.model.TrackMangaMetadata
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import eu.kanade.tachiyomi.databinding.MangaDetailsControllerBinding
 import eu.kanade.tachiyomi.source.CatalogueSource
@@ -1227,6 +1228,9 @@ class MangaDetailsController :
             !presenter.manga.isLocal() &&
             !isMerged &&
             presenter.manga.favorite
+        menu.findItem(R.id.action_sync_details)?.isVisible = !presenter.isLockedFromSearch &&
+            presenter.manga.favorite &&
+            presenter.canSyncMetadata()
         menu.findItem(R.id.action_merge)?.isVisible = !presenter.isLockedFromSearch &&
             presenter.manga.favorite &&
             (isMerged || mergeManager.canMerge(presenter.manga))
@@ -1238,6 +1242,7 @@ class MangaDetailsController :
             R.id.action_edit -> openEditMangaDialog()
             R.id.action_open_in_web_view -> openInWebView()
             R.id.action_refresh_tracking -> presenter.refreshTracking(true)
+            R.id.action_sync_details -> syncDetailsFromTrackers()
             R.id.action_merge -> startMerge()
             R.id.action_merged_sources -> showMergedSourcesDialog()
             R.id.action_migrate ->
@@ -2017,6 +2022,51 @@ class MangaDetailsController :
             activity?.toast(R.string.must_be_in_library_to_edit)
         }
     }
+
+    private fun syncDetailsFromTrackers() {
+        if (isNotOnline()) return
+        val activity = activity ?: return
+        val progress =
+            activity
+                .materialAlertDialog()
+                .setMessage(R.string.syncing_details)
+                .setCancelable(false)
+                .show()
+        viewScope.launch {
+            var warnings = emptyList<String>()
+            val changed = withContext(Dispatchers.IO) { presenter.syncMetadataNow { warnings = it } }
+            progress.dismiss()
+            when {
+                changed == null ->
+                    activity.toast(
+                        activity.getString(R.string.details_sync_failed_, warnings.joinToString()),
+                        Toast.LENGTH_LONG,
+                    )
+                changed.isEmpty() -> activity.toast(R.string.details_up_to_date)
+                else -> {
+                    presenter.refreshMangaFromDb()
+                    activity.toast(
+                        activity.getString(R.string.details_synced_, changed.joinToString { activity.getString(it.labelRes()) }),
+                        Toast.LENGTH_LONG,
+                    )
+                }
+            }
+            if (changed != null && changed.isNotEmpty() && warnings.isNotEmpty()) {
+                activity.toast(activity.getString(R.string.tracker_metadata_warning, warnings.joinToString()), Toast.LENGTH_LONG)
+            }
+        }
+    }
+
+    private fun TrackMangaMetadata.Field.labelRes() =
+        when (this) {
+            TrackMangaMetadata.Field.TITLE -> R.string.title
+            TrackMangaMetadata.Field.AUTHORS -> R.string.author
+            TrackMangaMetadata.Field.ARTISTS -> R.string.artist
+            TrackMangaMetadata.Field.DESCRIPTION -> R.string.description
+            TrackMangaMetadata.Field.COVER -> R.string.cover
+            TrackMangaMetadata.Field.TAGS -> R.string.tags
+            TrackMangaMetadata.Field.STATUS -> R.string.status
+        }
 
     //region merging
     private fun startMerge() {

@@ -28,6 +28,7 @@ import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.TrackMetadataSync
 import eu.kanade.tachiyomi.data.track.TrackPreferences
 import eu.kanade.tachiyomi.data.track.TrackService
+import eu.kanade.tachiyomi.data.track.model.TrackMangaMetadata
 import eu.kanade.tachiyomi.source.LocalSource
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.SourceManager
@@ -57,6 +58,7 @@ import eu.kanade.tachiyomi.util.system.launchUI
 import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.util.system.withUIContext
 import eu.kanade.tachiyomi.widget.TriStateCheckBox
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -981,6 +983,7 @@ class MangaDetailsPresenter(
                             }
                         }
                 asyncList.awaitAll()
+                if (trackPreferences.autoSyncMetadataOnRefresh().get()) withContext(Dispatchers.IO) { autoSyncMetadata() }
                 if (syncedUpTo != null) {
                     // Local chapters changed to follow the tracker
                     getChapters()
@@ -1030,7 +1033,7 @@ class MangaDetailsPresenter(
                 withContext(Dispatchers.IO) {
                     if (binding != null) {
                         db.insertTrack(binding).executeAsBlocking()
-                        syncMetadataFromTracker(binding, service)
+                        if (trackPreferences.autoSyncMetadata().get() && service.supportsMetadata) autoSyncMetadata()
                     }
 
                     if (service is EnhancedTrackService || preferences.autoSyncProgressFromTrackers()) {
@@ -1042,40 +1045,44 @@ class MangaDetailsPresenter(
         }
     }
 
+    /** Whether any tracker of this manga is able to provide details. */
+    fun canSyncMetadata(): Boolean =
+        !manga.isLocal() && loggedServices.any { service -> service.supportsMetadata && tracks.any { it.sync_id == service.id } }
+
     /**
-     * Applies the details of a newly bound tracker as the manga's custom info, if enabled in the tracking settings.
-     * Only the fields chosen in the settings are touched and existing custom values are kept for the rest.
+     * Syncs the details of the trackers to the manga because the user asked for it: every enabled detail is replaced.
+     *
+     * @return the details that changed, or null if it failed. [onWarnings] gets what went wrong without making it fail.
      */
-    private suspend fun syncMetadataFromTracker(
-        track: Track,
-        service: TrackService,
-    ) {
-        if (!trackPreferences.autoSyncMetadata().get() || !service.supportsMetadata || manga.isLocal()) return
-        try {
+    suspend fun syncMetadataNow(onWarnings: (List<String>) -> Unit = {}): Set<TrackMangaMetadata.Field>? =
+        syncMetadata(overwrite = true, onWarnings = onWarnings)
+
+    /**
+     * Syncs the details of the trackers to the manga on its own, if the user turned that on in the tracking settings.
+     * Details the user edited are kept unless they chose to replace them too.
+     */
+    private suspend fun autoSyncMetadata() {
+        syncMetadata(overwrite = trackPreferences.metadataOverwriteEdits().get())
+    }
+
+    private suspend fun syncMetadata(
+        overwrite: Boolean,
+        onWarnings: (List<String>) -> Unit = {},
+    ): Set<TrackMangaMetadata.Field>? {
+        if (manga.isLocal()) return emptySet()
+        return try {
             val sync = TrackMetadataSync()
-            val metadata = sync.fetch(track, service)
-            val custom = customMangaManager.getCustomInfo(manga)
-            val tags =
-                metadata.tags
-                    ?.takeIf { it.isNotEmpty() && it.joinToString(", ") != manga.originalGenre }
-                    ?.toTypedArray()
-            customMangaManager.saveMangaInfo(
-                CustomMangaManager.MangaJson(
-                    manga.id!!,
-                    metadata.title?.trimOrNull() ?: custom?.title,
-                    metadata.authors?.trimOrNull() ?: custom?.author,
-                    metadata.artists?.trimOrNull() ?: custom?.artist,
-                    metadata.description?.trimOrNull() ?: custom?.description,
-                    tags ?: custom?.genre,
-                    metadata.status?.takeIf { it != manga.originalStatus } ?: custom?.status,
-                ),
-            )
-            metadata.coverUrl?.let { url ->
-                sync.downloadCover(downloadManager.context, url)?.let { editCoverWithStream(it) }
-            }
-            withUIContext { view?.updateHeader() }
+            val metadata = sync.fetchAll(manga)
+            val changed = sync.apply(manga, metadata, overwrite)
+            if (metadata.warnings.isNotEmpty()) onWarnings(metadata.warnings)
+            if (changed.isNotEmpty()) withUIContext { view?.updateHeader() }
+            changed
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            Timber.w(e, "Could not sync details from ${service.id}")
+            Timber.w(e, "Could not sync the details of ${manga.title} from its trackers")
+            onWarnings(listOf(e.message.orEmpty()))
+            null
         }
     }
 

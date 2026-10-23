@@ -257,6 +257,38 @@ class KitsuApi(
             }
         }
 
+    /**
+     * The details of the manga of a tracked entry, for [eu.kanade.tachiyomi.data.track.metadata.KitsuMetadata]. The
+     * track points at the library entry, so the manga is looked up through it first. The manga itself is public.
+     */
+    suspend fun getMangaDetails(track: Track): JsonObject =
+        withIOContext {
+            with(json) {
+                val entry =
+                    authClient
+                        .newCall(GET("${baseUrl}library-entries/${track.media_id}?include=manga"))
+                        .awaitSuccess()
+                        .parseAs<JsonObject>()
+                val mangaId =
+                    entry["data"]
+                        ?.jsonObject
+                        ?.get("relationships")
+                        ?.jsonObject
+                        ?.get("manga")
+                        ?.jsonObject
+                        ?.get("data")
+                        ?.jsonObject
+                        ?.get("id")
+                        ?.jsonPrimitive
+                        ?.content
+                        ?: throw Exception("Could not find manga")
+                authClient
+                    .newCall(GET("${baseUrl}manga/$mangaId?include=categories,mangaStaff.person"))
+                    .awaitSuccess()
+                    .parseAs<JsonObject>()
+            }
+        }
+
     suspend fun getLibManga(track: Track): Track =
         withIOContext {
             val url =

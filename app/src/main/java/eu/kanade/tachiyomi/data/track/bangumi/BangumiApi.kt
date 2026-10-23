@@ -11,6 +11,7 @@ import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.network.parseAs
 import eu.kanade.tachiyomi.util.system.withIOContext
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -70,6 +71,17 @@ class BangumiApi(
                     .build()
             authClient.newCall(request).awaitSuccess()
             track
+        }
+
+    /** A subject as Bangumi sends it, for [eu.kanade.tachiyomi.data.track.metadata.BangumiMetadata]. */
+    suspend fun getSubject(subjectId: Long): JsonObject =
+        withIOContext {
+            with(json) {
+                authClient
+                    .newCall(GET("$apiUrl/v0/subjects/$subjectId"))
+                    .awaitSuccess()
+                    .parseAs<JsonObject>()
+            }
         }
 
     suspend fun search(search: String): List<TrackSearch> =

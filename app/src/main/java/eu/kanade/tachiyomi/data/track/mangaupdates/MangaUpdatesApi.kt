@@ -150,6 +150,15 @@ class MangaUpdatesApi(
         }
     }
 
+    /** Everything MangaUpdates knows about a series, for [eu.kanade.tachiyomi.data.track.metadata.MangaUpdatesMetadata]. Public. */
+    suspend fun getSeries(seriesId: Long): JsonObject =
+        with(json) {
+            client
+                .newCall(GET("$baseUrl/v1/series/$seriesId"))
+                .awaitSuccess()
+                .parseAs<JsonObject>()
+        }
+
     suspend fun search(query: String): List<Record> {
         val body =
             buildJsonObject {

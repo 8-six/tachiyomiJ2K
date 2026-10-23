@@ -19,6 +19,7 @@ import eu.kanade.tachiyomi.data.updater.AppDownloadInstallJob
 import eu.kanade.tachiyomi.data.updater.AppUpdateChecker
 import eu.kanade.tachiyomi.data.updater.AppUpdateNotifier
 import eu.kanade.tachiyomi.data.updater.AppUpdateResult
+import eu.kanade.tachiyomi.data.updater.NightlyUpdate
 import eu.kanade.tachiyomi.data.updater.RELEASE_URL
 import eu.kanade.tachiyomi.ui.base.controller.DialogController
 import eu.kanade.tachiyomi.ui.setting.SettingsController
@@ -201,17 +202,21 @@ class AboutController : SettingsController() {
             val releaseBody =
                 (args.getString(BODY_KEY) ?: "")
                     .replace("""---(\R|.)*Checksums(\R|.)*""".toRegex(), "")
+                    // nightly builds don't have the line before it
+                    .replace("""###\s*Checksums(\R|.)*""".toRegex(), "")
+                    .trim()
             val info = Markwon.create(activity!!).toMarkdown(releaseBody)
 
             val isOnA12 = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
             val isBeta = args.getBoolean(IS_BETA, false)
+            val isNightly = NightlyUpdate.isNightlyUrl(args.getString(URL_KEY).orEmpty())
             return activity!!
                 .materialAlertDialog()
                 .setTitle(
-                    if (isBeta) {
-                        R.string.new_beta_version_available
-                    } else {
-                        R.string.new_version_available
+                    when {
+                        isNightly -> R.string.new_nightly_version_available
+                        isBeta -> R.string.new_beta_version_available
+                        else -> R.string.new_version_available
                     },
                 ).setMessage(info)
                 .setPositiveButton(if (isOnA12) R.string.update else R.string.download) { _, _ ->

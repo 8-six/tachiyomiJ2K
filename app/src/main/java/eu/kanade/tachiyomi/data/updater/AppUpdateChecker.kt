@@ -25,55 +25,54 @@ class AppUpdateChecker {
         isUserPrompt: Boolean = false,
         doExtrasAfterNewUpdate: Boolean = true,
     ): AppUpdateResult {
-        // Limit checks to once a day at most
-        if (!isUserPrompt && Date().time < preferences.lastAppCheck().get() + TimeUnit.DAYS.toMillis(1)) {
+        val checkNightly = isNightlyEnabled()
+        // Limit checks, nightlies change a lot more often than versions do
+        val minInterval = if (checkNightly) TimeUnit.HOURS.toMillis(1) else TimeUnit.DAYS.toMillis(1)
+        if (!isUserPrompt && Date().time < preferences.lastAppCheck().get() + minInterval) {
             return AppUpdateResult.NoNewUpdate
         }
 
         return withIOContext {
             val result =
                 with(json) {
-                    if (preferences.checkForBetas().get()) {
-                        networkService.client
-                            .newCall(GET("https://api.github.com/repos/$GITHUB_REPO/releases"))
-                            .await()
-                            .parseAs<List<GithubRelease>>()
-                            .let { githubReleases ->
-                                val releases =
-                                    githubReleases.take(10).filter { isNewVersion(it.version) }
-                                // Check if any of the latest versions are newer than the current version
-                                val release =
-                                    releases
-                                        .maxWithOrNull { r1, r2 ->
-                                            when {
-                                                r1.version == r2.version -> 0
-                                                isNewVersion(r2.version, r1.version) -> -1
-                                                else -> 1
-                                            }
+                    when {
+                        checkNightly -> checkNightly()
+                        preferences.checkForBetas().get() -> {
+                            val githubReleases =
+                                getJson<List<GithubRelease>>(
+                                    "https://api.github.com/repos/$GITHUB_REPO/releases",
+                                ).orEmpty()
+                            // The rolling nightly release doesn't have a version
+                            val releases = githubReleases.take(10).filter { !it.isNightly && isNewVersion(it.version) }
+                            // Check if any of the latest versions are newer than the current version
+                            val release =
+                                releases
+                                    .maxWithOrNull { r1, r2 ->
+                                        when {
+                                            r1.version == r2.version -> 0
+                                            isNewVersion(r2.version, r1.version) -> -1
+                                            else -> 1
                                         }
-                                preferences.lastAppCheck().set(Date().time)
+                                    }
+                            preferences.lastAppCheck().set(Date().time)
 
-                                if (release != null) {
-                                    AppUpdateResult.NewUpdate(release)
-                                } else {
-                                    AppUpdateResult.NoNewUpdate
-                                }
+                            if (release != null) {
+                                AppUpdateResult.NewUpdate(release)
+                            } else {
+                                AppUpdateResult.NoNewUpdate
                             }
-                    } else {
-                        networkService.client
-                            .newCall(GET("https://api.github.com/repos/$GITHUB_REPO/releases/latest"))
-                            .await()
-                            .parseAs<GithubRelease>()
-                            .let {
-                                preferences.lastAppCheck().set(Date().time)
+                        }
+                        else -> {
+                            val release = getJson<GithubRelease>("https://api.github.com/repos/$GITHUB_REPO/releases/latest")
+                            preferences.lastAppCheck().set(Date().time)
 
-                                // Check if latest version is newer than the current version
-                                if (isNewVersion(it.version)) {
-                                    AppUpdateResult.NewUpdate(it)
-                                } else {
-                                    AppUpdateResult.NoNewUpdate
-                                }
+                            // Check if latest version is newer than the current version
+                            if (release != null && !release.isNightly && isNewVersion(release.version)) {
+                                AppUpdateResult.NewUpdate(release)
+                            } else {
+                                AppUpdateResult.NoNewUpdate
                             }
+                        }
                     }
                 }
             if (doExtrasAfterNewUpdate && result is AppUpdateResult.NewUpdate) {
@@ -89,6 +88,35 @@ class AppUpdateChecker {
         }
     }
 
+    /** Builds made while developing don't take part, they are another app (see the debug application id) and always older. */
+    private fun isNightlyEnabled() = preferences.checkForNightly().get() && !BuildConfig.DEBUG
+
+    /**
+     * The nightly build, if it isn't the one that is installed. It's one rolling release that is replaced by every build,
+     * so a new build is told by the commit it was made from.
+     */
+    private suspend fun checkNightly(): AppUpdateResult {
+        val release = getJson<GithubRelease>("https://api.github.com/repos/$GITHUB_REPO/releases/tags/${NightlyUpdate.TAG}")
+        preferences.lastAppCheck().set(Date().time)
+        if (release == null || release.nightlyCommit == null) return AppUpdateResult.NoNewUpdate
+
+        return if (NightlyUpdate.isNewer(release.nightlyCommit, release.publishedAt, BuildConfig.COMMIT_SHA, BuildConfig.BUILD_TIME)) {
+            AppUpdateResult.NewUpdate(release)
+        } else {
+            AppUpdateResult.NoNewUpdate
+        }
+    }
+
+    /** The parsed response, or null if there is nothing there (yet), like a repo that has no release. */
+    private suspend inline fun <reified T> getJson(url: String): T? {
+        val response = networkService.client.newCall(GET(url)).await()
+        if (response.code == 404) {
+            response.close()
+            return null
+        }
+        return with(json) { response.parseAs<T>() }
+    }
+
     private fun isNewVersion(
         versionTag: String,
         currentVersion: String = BuildConfig.VERSION_NAME,
@@ -98,8 +126,9 @@ class AppUpdateChecker {
         val oldVersion = currentVersion.replace("[^\\d.-]".toRegex(), "")
         val newPreReleaseVer = newVersion.split("-")
         val oldPreReleaseVer = oldVersion.split("-")
-        val newSemVer = newPreReleaseVer.first().split(".").map { it.toInt() }
-        val oldSemVer = oldPreReleaseVer.first().split(".").map { it.toInt() }
+        // A tag that isn't a version, like "nightly", is never newer
+        val newSemVer = newPreReleaseVer.first().split(".").map { it.toIntOrNull() ?: return false }
+        val oldSemVer = oldPreReleaseVer.first().split(".").map { it.toIntOrNull() ?: return false }
 
         oldSemVer.mapIndexed { index, i ->
             if (newSemVer.getOrElse(index) { i } > i) {
@@ -135,6 +164,6 @@ val RELEASE_TAG: String by lazy {
     "v${BuildConfig.VERSION_NAME}"
 }
 
-const val GITHUB_REPO: String = "Jays2Kings/tachiyomiJ2K"
+const val GITHUB_REPO: String = "8-six/tachiyomiJ2K"
 
 val RELEASE_URL = "https://github.com/$GITHUB_REPO/releases/tag/$RELEASE_TAG"

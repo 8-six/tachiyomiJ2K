@@ -56,7 +56,7 @@ class AboutLinksPreference
             }
             holder.findViewById(R.id.btn_github).apply {
                 tooltipText = contentDescription
-                setOnClickListener { context.openInBrowser("https://github.com/Jays2Kings/tachiyomiJ2K") }
+                setOnClickListener { context.openInBrowser("https://github.com/8-six/tachiyomiJ2K") }
             }
             holder.findViewById(R.id.btn_mihon).apply {
                 tooltipText = contentDescription

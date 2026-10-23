@@ -1,0 +1,37 @@
+{
+ "tag_name": "nightly",
+ "name": "Nightly nightly-20261023-afac8b0b2",
+ "body": "Automatic build of `master` at afac8b0b2. Nightly builds can be unstable.\n\n### Changes\n- Fix MangaBaka latest cover and make tracker detail sync much more complete (afac8b0b2)\n- Add nightly release workflow (9a068d44e)\n- Add tracker sync, MangaBaka details, source merging and more (21f081095)\n- Fix global search headers showing on extension intent searches (b83defe42)\n- Allow recent/saved search entries' filters to be applied in global search (a7e41f471)\n- remove lang suffix from the global search (055e68808)\n- Gradle to 9.3.3 (097be1fcf)\n- minor refactor of global search (1ed7a4f3d)\n- Translations update from Hosted Weblate (#1927) (6ad9e9ebe)\n- Add filters to global search (220ec81ec)\n- Translated using Weblate (Korean) (d251e5cf1)\n- Translations update from Hosted Weblate (#1926) (66807b891)\n- use selector icons for browse source's toolbar (188c8af02)\n- missing search history delegate in last commit (81313c694)\n- fix selecting a saved search being added to recents (dae79bdbb)\n\n### Checksums\n\n| File | SHA-256 |\n| ---- | ------- |\n| tachiyomij2k-arm64-v8a-nightly-20261023-afac8b0b2.apk | e4e28b1a88d17312a815f07c9a452a14f07e978475d385921dedeaf0ec93eb65 |\n| tachiyomij2k-armeabi-v7a-nightly-20261023-afac8b0b2.apk | 48158fd73d09792a0250f7c75ef4c498420e0752c2df25a8ad42505247a04a69 |\n| tachiyomij2k-universal-nightly-20261023-afac8b0b2.apk | 9a83a27b2f24e6d44dad9997143c62911f8e91deff70e6d38bc895d001ec5ee1 |\n| tachiyomij2k-x86-nightly-20261023-afac8b0b2.apk | 00b13b25bcc15ab7385330ffaf9a5008145bb352189f9027ade7ea0a67740d00 |\n| tachiyomij2k-x86_64-nightly-20261023-afac8b0b2.apk | dce2c7b4ea79c11a0b3f9b336a86ea9f764d1e80654af63bf4b41e3c702afc6c |\n",
+ "html_url": "https://github.com/8-six/tachiyomiJ2K/releases/tag/nightly",
+ "prerelease": true,
+ "draft": false,
+ "published_at": "2026-10-23T12:31:18Z",
+ "created_at": "2026-10-23T12:25:09Z",
+ "assets": [
+  {
+   "name": "tachiyomij2k-arm64-v8a-nightly-20261023-afac8b0b2.apk",
+   "browser_download_url": "https://github.com/8-six/tachiyomiJ2K/releases/download/nightly/tachiyomij2k-arm64-v8a-nightly-20261023-afac8b0b2.apk",
+   "size": 27949090
+  },
+  {
+   "name": "tachiyomij2k-armeabi-v7a-nightly-20261023-afac8b0b2.apk",
+   "browser_download_url": "https://github.com/8-six/tachiyomiJ2K/releases/download/nightly/tachiyomij2k-armeabi-v7a-nightly-20261023-afac8b0b2.apk",
+   "size": 24721456
+  },
+  {
+   "name": "tachiyomij2k-universal-nightly-20261023-afac8b0b2.apk",
+   "browser_download_url": "https://github.com/8-six/tachiyomiJ2K/releases/download/nightly/tachiyomij2k-universal-nightly-20261023-afac8b0b2.apk",
+   "size": 63098485
+  },
+  {
+   "name": "tachiyomij2k-x86-nightly-20261023-afac8b0b2.apk",
+   "browser_download_url": "https://github.com/8-six/tachiyomiJ2K/releases/download/nightly/tachiyomij2k-x86-nightly-20261023-afac8b0b2.apk",
+   "size": 29140984
+  },
+  {
+   "name": "tachiyomij2k-x86_64-nightly-20261023-afac8b0b2.apk",
+   "browser_download_url": "https://github.com/8-six/tachiyomiJ2K/releases/download/nightly/tachiyomij2k-x86_64-nightly-20261023-afac8b0b2.apk",
+   "size": 30177293
+  }
+ ]
+}

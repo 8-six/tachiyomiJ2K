@@ -10,9 +10,12 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import eu.kanade.tachiyomi.data.notification.Notifications
+import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.util.system.notificationManager
 import kotlinx.coroutines.coroutineScope
 import timber.log.Timber
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import java.util.concurrent.TimeUnit
 
 class AppUpdateJob(
@@ -38,7 +41,10 @@ class AppUpdateJob(
     companion object {
         private const val TAG = "UpdateChecker"
 
-        fun setupTask(context: Context) {
+        fun setupTask(
+            context: Context,
+            nightly: Boolean = Injekt.get<PreferencesHelper>().checkForNightly().get(),
+        ) {
             val constraints =
                 Constraints
                     .Builder()
@@ -47,9 +53,10 @@ class AppUpdateJob(
 
             val request =
                 PeriodicWorkRequestBuilder<AppUpdateJob>(
-                    2,
-                    TimeUnit.DAYS,
-                    3,
+                    // Nightlies change every day
+                    if (nightly) 12L else 48L,
+                    TimeUnit.HOURS,
+                    if (nightly) 1L else 3L,
                     TimeUnit.HOURS,
                 ).addTag(TAG)
                     .setConstraints(constraints)

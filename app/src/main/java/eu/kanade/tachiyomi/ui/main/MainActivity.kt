@@ -87,6 +87,7 @@ import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.data.preference.asImmediateFlowIn
 import eu.kanade.tachiyomi.data.preference.toggle
 import eu.kanade.tachiyomi.data.updater.AppUpdateChecker
+import eu.kanade.tachiyomi.data.updater.AppUpdateJob
 import eu.kanade.tachiyomi.data.updater.AppUpdateNotifier
 import eu.kanade.tachiyomi.data.updater.AppUpdateResult
 import eu.kanade.tachiyomi.data.updater.RELEASE_URL
@@ -1176,6 +1177,8 @@ open class MainActivity : BaseActivity<MainActivityBinding>() {
 
     private fun checkForAppUpdates() {
         if (isUpdaterEnabled) {
+            // Nightly builds keep the version, so the migrations that normally schedule this never run for them
+            AppUpdateJob.setupTask(this)
             lifecycleScope.launchIO {
                 try {
                     val result = updateChecker.checkForUpdate(this@MainActivity)

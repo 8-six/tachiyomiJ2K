@@ -18,26 +18,39 @@ data class GithubRelease(
     @SerialName("body") val info: String,
     @SerialName("html_url") val releaseLink: String,
     @SerialName("prerelease") val preRelease: Boolean?,
+    @SerialName("published_at") val publishedAt: String? = null,
     @SerialName("assets") private val assets: List<Assets>,
 ) {
+    /** Whether this is the rolling nightly release, see [NightlyUpdate]. */
+    val isNightly: Boolean
+        get() = version == NightlyUpdate.TAG
+
+    /** The commit a nightly was built from. */
+    val nightlyCommit: String?
+        get() = NightlyUpdate.commitOf(assets.map { it.downloadLink.substringAfterLast('/') })
+
     /**
      * Get download link of latest release from the assets.
      * @return download link of latest release.
      */
     val downloadLink: String
-        get() {
-            val apkVariant =
-                when (Build.SUPPORTED_ABIS[0]) {
-                    "arm64-v8a" -> "-arm64-v8a"
-                    "armeabi-v7a" -> "-armeabi-v7a"
-                    "x86" -> "-x86"
-                    "x86_64" -> "-x86_64"
-                    else -> ""
-                }
+        get() = downloadLinkFor(Build.SUPPORTED_ABIS[0])
 
-            return assets.find { it.downloadLink.contains("tachiyomij2k$apkVariant-") }?.downloadLink
-                ?: assets[0].downloadLink
-        }
+    /** The file made for [abi], or the universal one if there is none for it. */
+    fun downloadLinkFor(abi: String?): String {
+        val apkVariant =
+            when (abi) {
+                "arm64-v8a" -> "-arm64-v8a"
+                "armeabi-v7a" -> "-armeabi-v7a"
+                "x86" -> "-x86"
+                "x86_64" -> "-x86_64"
+                else -> "-universal"
+            }
+
+        return assets.find { it.downloadLink.contains("tachiyomij2k$apkVariant-") }?.downloadLink
+            ?: assets.find { it.downloadLink.contains("tachiyomij2k-universal-") }?.downloadLink
+            ?: assets[0].downloadLink
+    }
 
     /**
      * Assets class containing download url.

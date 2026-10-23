@@ -25,6 +25,7 @@ import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob.Target
 import eu.kanade.tachiyomi.data.preference.PreferenceKeys
 import eu.kanade.tachiyomi.data.preference.asImmediateFlowIn
+import eu.kanade.tachiyomi.data.updater.AppUpdateJob
 import eu.kanade.tachiyomi.extension.ShizukuInstaller
 import eu.kanade.tachiyomi.extension.util.ExtensionInstaller
 import eu.kanade.tachiyomi.extension.util.TrustExtension
@@ -148,6 +149,17 @@ class SettingsAdvancedController : SettingsController() {
             }
 
             if (isUpdaterEnabled) {
+                switchPreference {
+                    titleRes = R.string.update_to_nightly
+                    summaryRes = R.string.update_to_nightly_summary
+                    bindTo(preferences.checkForNightly())
+
+                    onChange {
+                        // The check is more frequent for nightlies
+                        AppUpdateJob.setupTask(context, nightly = it as Boolean)
+                        true
+                    }
+                }
                 switchPreference {
                     titleRes = R.string.check_for_beta_releases
                     summaryRes = R.string.try_new_features

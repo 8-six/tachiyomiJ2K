@@ -505,6 +505,9 @@ class PreferencesHelper(
 
     fun lastAppCheck() = flowPrefs.getLong("last_app_check", 0)
 
+    /** Update to the rolling nightly build of the repo whenever it changes, see [eu.kanade.tachiyomi.data.updater.NightlyUpdate]. */
+    fun checkForNightly() = flowPrefs.getBoolean("check_for_nightly", true)
+
     fun checkForBetas() = flowPrefs.getBoolean("check_for_betas", BuildConfig.BETA)
 
     fun unreadBadgeType() = flowPrefs.getInt("unread_badge_type", 2)

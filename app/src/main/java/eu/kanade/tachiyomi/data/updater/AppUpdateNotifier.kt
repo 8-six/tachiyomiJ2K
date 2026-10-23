@@ -59,10 +59,10 @@ internal class AppUpdateNotifier(
             setContentTitle(context.getString(R.string.app_name))
             setContentText(
                 context.getString(
-                    if (isBeta) {
-                        R.string.new_beta_version_available
-                    } else {
-                        R.string.new_version_available
+                    when {
+                        release.isNightly -> R.string.new_nightly_version_available
+                        isBeta -> R.string.new_beta_version_available
+                        else -> R.string.new_version_available
                     },
                 ),
             )

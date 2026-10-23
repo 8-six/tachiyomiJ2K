@@ -1,0 +1,110 @@
+name: Nightly
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nightly
+  cancel-in-progress: true
+
+jobs:
+  nightly:
+    name: Build and publish nightly
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Skip if nothing changed in the last day
+        if: github.event_name == 'schedule'
+        run: |
+          if [ -z "$(git log --since='24 hours ago' --oneline)" ]; then
+            echo "Nothing new, skipping"
+            echo "SKIP=true" >> $GITHUB_ENV
+          fi
+
+      - name: Set up JDK
+        if: env.SKIP != 'true'
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Set up Gradle
+        if: env.SKIP != 'true'
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+
+      - name: Copy CI gradle.properties
+        if: env.SKIP != 'true'
+        run: |
+          mkdir -p ~/.gradle
+          cp .github/runner-files/ci-gradle.properties ~/.gradle/gradle.properties
+
+      - name: Build app
+        if: env.SKIP != 'true'
+        run: ./gradlew assembleStandardRelease
+
+      - name: Detect installed build-tools version
+        if: env.SKIP != 'true'
+        run: |
+          BTV=$(ls -1 "${ANDROID_SDK_ROOT}/build-tools" | sort -V | tail -1)
+          echo "Using build-tools $BTV"
+          echo "BUILD_TOOLS_VERSION=$BTV" >> $GITHUB_ENV
+
+      - name: Sign APK
+        if: env.SKIP != 'true'
+        uses: r0adkll/sign-android-release@v1
+        with:
+          releaseDirectory: app/build/outputs/apk/standard/release
+          signingKeyBase64: ${{ secrets.SIGNING_KEY }}
+          alias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.KEY_STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOLS_VERSION }}
+
+      - name: Prepare files
+        if: env.SKIP != 'true'
+        run: |
+          set -e
+          VERSION="nightly-$(date -u +%Y%m%d)-$(git rev-parse --short HEAD)"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+          mkdir -p release-files
+          for abi in universal arm64-v8a armeabi-v7a x86 x86_64; do
+            cp "app/build/outputs/apk/standard/release/app-standard-$abi-release-unsigned-signed.apk" \
+              "release-files/tachiyomij2k-$abi-$VERSION.apk"
+          done
+
+          {
+            echo "Automatic build of \`master\` at $(git rev-parse --short HEAD). Nightly builds can be unstable."
+            echo
+            echo "### Changes"
+            git log -15 --pretty='- %s (%h)'
+            echo
+            echo "### Checksums"
+            echo
+            echo "| File | SHA-256 |"
+            echo "| ---- | ------- |"
+            (cd release-files && for f in *.apk; do echo "| $f | $(sha256sum "$f" | awk '{ print $1 }') |"; done)
+          } > release-notes.md
+
+      # One rolling release, replaced by every nightly
+      - name: Publish nightly release
+        if: env.SKIP != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete nightly --cleanup-tag --yes || true
+          gh release create nightly release-files/*.apk \
+            --target "$GITHUB_SHA" \
+            --prerelease \
+            --title "Nightly ${{ env.VERSION }}" \
+            --notes-file release-notes.md

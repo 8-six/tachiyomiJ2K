@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.source.LocalSource
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.SourceManager
+import eu.kanade.tachiyomi.source.online.all.MERGED_SOURCE_ID
 import eu.kanade.tachiyomi.ui.base.presenter.BaseCoroutinePresenter
 import eu.kanade.tachiyomi.util.system.executeOnIO
 import eu.kanade.tachiyomi.util.system.withUIContext
@@ -64,8 +65,15 @@ abstract class BaseMigrationPresenter<T : BaseMigrationInterface>(
                 .map { it.id }
 
         return sourceGroup
-            .mapNotNull { if (it.key != LocalSource.ID) sourceManager.getOrStub(it.key) to it.value.size else null }
-            .sortedWith(
+            .mapNotNull {
+                if (it.key != LocalSource.ID &&
+                    it.key != MERGED_SOURCE_ID
+                ) {
+                    sourceManager.getOrStub(it.key) to it.value.size
+                } else {
+                    null
+                }
+            }.sortedWith(
                 compareBy(
                     {
                         when (sortOrder) {

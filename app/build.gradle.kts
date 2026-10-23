@@ -124,10 +124,17 @@ android {
         }
     }
 
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
+
     namespace = "eu.kanade.tachiyomi"
 }
 
 dependencies {
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("com.squareup.okhttp3:mockwebserver3:5.4.0")
+
     // Compose
     implementation("androidx.activity:activity-compose:1.13.0")
     implementation("androidx.compose.foundation:foundation:1.11.4")
@@ -259,8 +266,8 @@ dependencies {
     val fastAdapterVersion = "5.7.0"
     implementation("com.mikepenz:fastadapter:$fastAdapterVersion")
     implementation("com.mikepenz:fastadapter-extensions-binding:$fastAdapterVersion")
-    implementation("com.github.arkon.FlexibleAdapter:flexible-adapter:c8013533")
-    implementation("com.github.arkon.FlexibleAdapter:flexible-adapter-ui:c8013533")
+    implementation("com.github.arkon.FlexibleAdapter:flexible-adapter:3268efe4")
+    implementation("com.github.arkon.FlexibleAdapter:flexible-adapter-ui:3268efe4")
     implementation("com.nightlynexus.viewstatepageradapter:viewstatepageradapter:1.1.0")
     implementation("com.github.mthli:Slice:v1.2")
     implementation("io.noties.markwon:core:4.6.2")

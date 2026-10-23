@@ -77,9 +77,22 @@ class RepoPresenter(
 
     fun getReposWithCreate(): List<RepoItem> {
         val metadataByUrl = preferences.extensionRepoMetadata().get()
+        val disabled = preferences.disabledExtensionRepos().get()
         return (listOf(CREATE_REPO_ITEM) + repos).map { repo ->
-            RepoItem(repo, if (repo == CREATE_REPO_ITEM) null else metadataByUrl[repo])
+            RepoItem(repo, if (repo == CREATE_REPO_ITEM) null else metadataByUrl[repo], repo !in disabled)
         }
+    }
+
+    /**
+     * Flips whether [repo] is used when fetching extensions.
+     *
+     * @return true if the repo is enabled after the toggle.
+     */
+    fun toggleRepoEnabled(repo: String): Boolean {
+        val disabled = preferences.disabledExtensionRepos().get()
+        val nowEnabled = repo in disabled
+        preferences.disabledExtensionRepos().set(if (nowEnabled) disabled - repo else disabled + repo)
+        return nowEnabled
     }
 
     fun getRepoUrl(repo: String): String {
@@ -134,6 +147,8 @@ class RepoPresenter(
                 val resolvedUrl = ExtensionApi().validateRepo(newName)
                 oldRepo?.let {
                     repos -= it
+                    val disabled = preferences.disabledExtensionRepos().get()
+                    preferences.disabledExtensionRepos().set(disabled - it)
                     preferences.extensionRepoMetadata().set(preferences.extensionRepoMetadata().get() - it)
                 }
                 repos += resolvedUrl
@@ -163,6 +178,7 @@ class RepoPresenter(
     fun deleteRepo(repo: String?) {
         val safeRepo = repo ?: return
         repos -= safeRepo
+        preferences.disabledExtensionRepos().set(preferences.disabledExtensionRepos().get() - safeRepo)
         preferences.extensionRepoMetadata().set(preferences.extensionRepoMetadata().get() - safeRepo)
         controller.updateRepos()
     }

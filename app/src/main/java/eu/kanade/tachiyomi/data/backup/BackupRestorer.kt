@@ -6,6 +6,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupHistory
 import eu.kanade.tachiyomi.data.backup.models.BackupManga
+import eu.kanade.tachiyomi.data.backup.models.BackupMergedMember
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSource
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
@@ -23,12 +24,14 @@ import eu.kanade.tachiyomi.data.database.models.MangaCategory
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.library.CustomMangaManager
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import eu.kanade.tachiyomi.data.merge.MergedMangaReference
 import eu.kanade.tachiyomi.data.preference.AndroidPreferenceStore
 import eu.kanade.tachiyomi.data.preference.PreferenceKeys
 import eu.kanade.tachiyomi.data.preference.PreferenceStore
 import eu.kanade.tachiyomi.extension.ExtensionUpdateJob
 import eu.kanade.tachiyomi.extension.util.ExtensionInstaller
 import eu.kanade.tachiyomi.source.model.SChapter
+import eu.kanade.tachiyomi.source.online.all.MERGED_SOURCE_ID
 import eu.kanade.tachiyomi.source.sourcePreferences
 import eu.kanade.tachiyomi.ui.library.LibrarySort
 import eu.kanade.tachiyomi.util.BackupUtil
@@ -219,6 +222,7 @@ class BackupRestorer(
                     customManga,
                 )
             }
+            if (manga.source == MERGED_SOURCE_ID) restoreMergedMembers(manga, backupManga.mergedMembers)
         } catch (e: Exception) {
             val sourceName = sourceMapping[manga.source] ?: manga.source.toString()
             errors.add(Date() to "${manga.title} [$sourceName]: ${e.message}")
@@ -227,6 +231,36 @@ class BackupRestorer(
         restoreProgress += 1
         showRestoreProgress(restoreProgress, restoreAmount, manga.title)
         LibraryUpdateJob.updateMutableFlow.tryEmit(manga.id)
+    }
+
+    /**
+     * Brings back the manga a merged manga is made of, as hidden manga that aren't in the library, and links them.
+     */
+    private fun restoreMergedMembers(
+        merged: Manga,
+        members: List<BackupMergedMember>,
+    ) {
+        val mergeId = merged.id ?: return
+        val existing = db.getMergedReferences(mergeId).map { it.mangaId }.toSet()
+        members.forEach { member ->
+            val manga =
+                db.getManga(member.url, member.source).executeAsBlocking()
+                    ?: Manga.create(member.url, member.title, member.source).also {
+                        it.thumbnail_url = member.thumbnailUrl
+                        it.id = db.insertManga(it).executeAsBlocking().insertedId()
+                    }
+            val mangaId = manga.id ?: return@forEach
+            if (mangaId in existing) return@forEach
+            db.insertMergedReference(
+                MergedMangaReference(
+                    mergeId = mergeId,
+                    mangaId = mangaId,
+                    priority = member.priority,
+                    isInfoManga = member.isInfoManga,
+                    getChapterUpdates = member.getChapterUpdates,
+                ),
+            )
+        }
     }
 
     /**

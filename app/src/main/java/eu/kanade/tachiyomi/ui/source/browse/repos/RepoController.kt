@@ -149,6 +149,12 @@ class RepoController(
         }
     }
 
+    override fun onToggleEnabled(position: Int) {
+        val item = adapter?.getItem(position) as? RepoItem ?: return
+        item.repoEnabled = presenter.toggleRepoEnabled(item.repo)
+        adapter?.notifyItemChanged(position)
+    }
+
     override fun onDiscordClick(position: Int) {
         val repo = (adapter?.getItem(position) as? RepoItem)?.repo ?: return
         val discordUrl = presenter.getDiscordUrl(repo) ?: return

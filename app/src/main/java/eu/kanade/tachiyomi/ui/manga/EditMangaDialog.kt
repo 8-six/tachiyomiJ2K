@@ -21,8 +21,11 @@ import com.google.android.material.chip.ChipGroup
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.DatabaseHelper
 import eu.kanade.tachiyomi.data.database.models.Manga
+import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.image.coil.MangaCoverFetcher
 import eu.kanade.tachiyomi.data.image.coil.loadManga
+import eu.kanade.tachiyomi.data.track.TrackMetadataSync
+import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.databinding.EditMangaDialogBinding
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.source.LocalSource
@@ -37,10 +40,14 @@ import eu.kanade.tachiyomi.util.system.clipboardHasImage
 import eu.kanade.tachiyomi.util.system.dpToPx
 import eu.kanade.tachiyomi.util.system.getClipboardImageUri
 import eu.kanade.tachiyomi.util.system.isInNightMode
+import eu.kanade.tachiyomi.util.system.launchUI
 import eu.kanade.tachiyomi.util.system.materialAlertDialog
+import eu.kanade.tachiyomi.util.system.toast
+import eu.kanade.tachiyomi.util.system.withIOContext
 import eu.kanade.tachiyomi.util.view.applyTagColors
 import eu.kanade.tachiyomi.util.view.tagChipColors
 import eu.kanade.tachiyomi.widget.TachiyomiTextInputEditText
+import timber.log.Timber
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
@@ -195,6 +202,7 @@ class EditMangaDialog : DialogController {
             view.startActionMode(pasteCoverActionModeCallback(view), ActionMode.TYPE_FLOATING)
             true
         }
+        binding.autofillFromTracker.setOnClickListener { autofillFromTracker() }
         binding.resetTags.setOnClickListener { resetTags() }
         binding.resetTags.text =
             resources?.getString(
@@ -237,6 +245,56 @@ class EditMangaDialog : DialogController {
             )
             customCoverUri = null
             willResetCover = true
+        }
+    }
+
+    private fun autofillFromTracker() {
+        val context = binding.root.context
+        launchUI {
+            val sync = TrackMetadataSync()
+            val sources = sync.getSources(manga)
+            when {
+                sources.isEmpty() -> context.toast(R.string.no_tracker_with_metadata)
+                sources.size == 1 -> applyTrackerMetadata(sync, sources.first())
+                else -> {
+                    val names = sources.map { context.getString(it.second.nameRes()) }.toTypedArray()
+                    activity
+                        ?.materialAlertDialog()
+                        ?.setTitle(R.string.select_tracker)
+                        ?.setItems(names) { _, index ->
+                            launchUI { applyTrackerMetadata(sync, sources[index]) }
+                        }?.show()
+                }
+            }
+        }
+    }
+
+    private suspend fun applyTrackerMetadata(
+        sync: TrackMetadataSync,
+        source: Pair<Track, TrackService>,
+    ) {
+        val (track, service) = source
+        val context = binding.root.context
+        binding.autofillFromTracker.isEnabled = false
+        try {
+            val metadata = withIOContext { sync.fetch(track, service) }
+            metadata.title?.let { binding.title.setText(it) }
+            metadata.authors?.let { binding.mangaAuthor.setText(it) }
+            metadata.artists?.let { binding.mangaArtist.setText(it) }
+            metadata.description?.let { binding.mangaDescription.setText(it) }
+            metadata.status?.let { binding.mangaStatus.setSelection(it.coerceIn(SManga.UNKNOWN, SManga.ON_HIATUS)) }
+            metadata.tags?.takeIf { it.isNotEmpty() }?.let { tags ->
+                setGenreTags(tags)
+                binding.seriesType.setSelection(manga.seriesType(customTags = tags.joinToString(", ")) - 1)
+            }
+            metadata.coverUrl?.let { url ->
+                sync.downloadCover(context, url)?.let { updateCover(it) }
+            }
+        } catch (e: Exception) {
+            Timber.e(e)
+            context.toast(context.getString(R.string.tracker_metadata_error, context.getString(service.nameRes()), e.message.orEmpty()))
+        } finally {
+            binding.autofillFromTracker.isEnabled = true
         }
     }
 

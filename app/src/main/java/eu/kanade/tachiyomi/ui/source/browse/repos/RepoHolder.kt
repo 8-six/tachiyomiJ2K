@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.source.browse.repos
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.ColorStateList
+import android.graphics.Paint
 import android.graphics.drawable.Drawable
 import android.text.InputType
 import android.view.View
@@ -37,11 +38,15 @@ class RepoHolder(
         binding.discordButton.setOnClickListener {
             adapter.repoItemListener.onDiscordClick(flexibleAdapterPosition)
         }
+        binding.toggleButton.setOnClickListener {
+            adapter.repoItemListener.onToggleEnabled(flexibleAdapterPosition)
+        }
     }
 
     private var createRepo = false
     private var hasDiscord = false
     private var isLoading = false
+    private var isRepoEnabled = true
     private var regularDrawable: Drawable? = null
 
     /**
@@ -53,7 +58,9 @@ class RepoHolder(
     fun bind(
         repo: String,
         metadata: RepoMetadata?,
+        enabled: Boolean = true,
     ) {
+        isRepoEnabled = enabled
         // Set capitalized title.
         binding.editText.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
@@ -74,6 +81,9 @@ class RepoHolder(
             adapter.pendingUrl = null
             binding.editText.hint = ""
             binding.discordButton.isVisible = false
+            binding.toggleButton.isVisible = false
+            itemView.alpha = 1f
+            binding.title.paintFlags = binding.title.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
         } else {
             binding.title.text = metadata?.name?.takeIf { it.isNotBlank() } ?: repo
             binding.title.maxLines = 2
@@ -83,6 +93,21 @@ class RepoHolder(
                 adapter.repoItemListener.onLogoClick(flexibleAdapterPosition)
             }
             binding.editText.setText(repo)
+            binding.toggleButton.icon =
+                ContextCompat.getDrawable(
+                    itemView.context,
+                    if (enabled) R.drawable.ic_eye_24dp else R.drawable.ic_eye_off_24dp,
+                )
+            binding.toggleButton.contentDescription =
+                itemView.context.getString(if (enabled) R.string.disable_repo else R.string.enable_repo)
+            binding.toggleButton.tooltipText = binding.toggleButton.contentDescription
+            itemView.alpha = if (enabled) 1f else 0.5f
+            binding.title.paintFlags =
+                if (enabled) {
+                    binding.title.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+                } else {
+                    binding.title.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+                }
         }
     }
 
@@ -92,6 +117,7 @@ class RepoHolder(
         binding.title.isInvisible = editing
         binding.editText.isInvisible = !editing
         binding.discordButton.isVisible = !editing && !createRepo && hasDiscord
+        binding.toggleButton.isVisible = !editing && !createRepo
         if (editing) {
             binding.editText.inputType = InputType.TYPE_TEXT_VARIATION_URI
             binding.editText.requestFocus()

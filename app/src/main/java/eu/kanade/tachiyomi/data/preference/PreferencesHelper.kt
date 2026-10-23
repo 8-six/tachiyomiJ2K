@@ -243,6 +243,8 @@ class PreferencesHelper(
 
     fun preloadSize() = flowPrefs.getInt(Keys.preloadSize, 6)
 
+    fun autoSyncProgressFromTrackers() = prefs.getBoolean(Keys.autoSyncProgressFromTrackers, true)
+
     fun autoUpdateTrack() = prefs.getBoolean(Keys.autoUpdateTrack, true)
 
     fun trackMarkedAsRead() = prefs.getBoolean(Keys.trackMarkedAsRead, false)
@@ -350,6 +352,9 @@ class PreferencesHelper(
     fun automaticExtUpdates() = flowPrefs.getBoolean(Keys.automaticExtUpdates, true)
 
     fun extensionRepos() = flowPrefs.getStringSet("extension_repos", emptySet())
+
+    /** Repo URLs (as stored in [extensionRepos]) that are kept in the list but skipped when fetching extensions. */
+    fun disabledExtensionRepos() = flowPrefs.getStringSet("disabled_repos", emptySet())
 
     /**
      * Cached display metadata (proper name, website, discord) for extension repos, keyed by
@@ -574,6 +579,12 @@ class PreferencesHelper(
     fun dohProvider() = prefs.getInt(Keys.dohProvider, -1)
 
     fun defaultUserAgent() = flowPrefs.getString("default_user_agent", NetworkHelper.DEFAULT_USER_AGENT)
+
+    fun flareSolverrEnabled() = flowPrefs.getBoolean("flaresolverr_enabled", false)
+
+    fun flareSolverrUrl() = flowPrefs.getString("flaresolverr_url", "http://localhost:8191")
+
+    fun flareSolverrTimeout() = flowPrefs.getInt("flaresolverr_timeout", 60)
 
     fun showSeriesInShortcuts() = prefs.getBoolean(Keys.showSeriesInShortcuts, true)
 

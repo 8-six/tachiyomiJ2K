@@ -14,6 +14,7 @@ import eu.kanade.tachiyomi.extension.model.RepoMetadata
 class RepoItem(
     val repo: String,
     val metadata: RepoMetadata? = null,
+    var repoEnabled: Boolean = true,
 ) : AbstractFlexibleItem<RepoHolder>() {
     /**
      * Whether this item is currently selected.
@@ -55,7 +56,7 @@ class RepoItem(
         position: Int,
         payloads: List<Any?>?,
     ) {
-        holder.bind(repo, metadata)
+        holder.bind(repo, metadata, repoEnabled)
         holder.isEditing(isEditing)
         holder.setLoading(isLoading)
     }

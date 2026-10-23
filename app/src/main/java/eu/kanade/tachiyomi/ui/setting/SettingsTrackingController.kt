@@ -12,7 +12,10 @@ import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.data.track.anilist.AnilistApi
 import eu.kanade.tachiyomi.data.track.bangumi.BangumiApi
 import eu.kanade.tachiyomi.data.track.hikka.HikkaApi
+import eu.kanade.tachiyomi.data.track.mangabaka.MangaBaka
 import eu.kanade.tachiyomi.data.track.mangabaka.MangaBakaApi
+import eu.kanade.tachiyomi.data.track.mangabaka.dto.MangaBakaItem
+import eu.kanade.tachiyomi.data.track.model.TrackMangaMetadata
 import eu.kanade.tachiyomi.data.track.myanimelist.MyAnimeListApi
 import eu.kanade.tachiyomi.data.track.shikimori.ShikimoriApi
 import eu.kanade.tachiyomi.source.SourceManager
@@ -22,9 +25,12 @@ import eu.kanade.tachiyomi.util.view.snack
 import eu.kanade.tachiyomi.widget.preference.TrackLoginDialog
 import eu.kanade.tachiyomi.widget.preference.TrackLogoutDialog
 import eu.kanade.tachiyomi.widget.preference.TrackerPreference
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
+import java.util.Locale
 import eu.kanade.tachiyomi.data.preference.PreferenceKeys as Keys
 
 class SettingsTrackingController :
@@ -41,6 +47,12 @@ class SettingsTrackingController :
             switchPreference {
                 key = Keys.autoUpdateTrack
                 titleRes = R.string.update_tracking_after_reading
+                defaultValue = true
+            }
+            switchPreference {
+                key = Keys.autoSyncProgressFromTrackers
+                titleRes = R.string.auto_sync_progress_from_trackers
+                summaryRes = R.string.auto_sync_progress_from_trackers_summary
                 defaultValue = true
             }
             switchPreference {
@@ -110,6 +122,122 @@ class SettingsTrackingController :
                 infoPreference(R.string.tracking_info)
             }
             preferenceCategory {
+                titleRes = R.string.tracker_details
+
+                switchPreference {
+                    key = trackPreferences.autoSyncMetadata().key()
+                    titleRes = R.string.auto_sync_tracker_details
+                    summaryRes = R.string.auto_sync_tracker_details_summary
+                    defaultValue = false
+                }
+                multiSelectListPreferenceMat(activity) {
+                    key = trackPreferences.metadataSyncFields().key()
+                    titleRes = R.string.tracker_details_to_sync
+                    entriesRes =
+                        arrayOf(
+                            R.string.title,
+                            R.string.author,
+                            R.string.artist,
+                            R.string.description,
+                            R.string.cover,
+                            R.string.tags,
+                            R.string.status,
+                        )
+                    entryValues = TrackMangaMetadata.Field.entries.map { it.key }
+                    allSelectionRes = R.string.all
+                    defaultValue = emptySet<String>()
+                }
+            }
+            preferenceCategory {
+                titleRes = R.string.mangabaka_details
+
+                listPreference(activity) {
+                    key = trackPreferences.mangabakaTitleLanguage().key()
+                    titleRes = R.string.title_language
+                    val languages = TITLE_LANGUAGES.map { it to languageName(it) }
+                    entries =
+                        listOf(
+                            context.getString(R.string.mangabaka_language_auto),
+                            context.getString(R.string.mangabaka_title_native),
+                            context.getString(R.string.mangabaka_title_romanized),
+                        ) + languages.map { it.second }
+                    entryValues =
+                        listOf(MangaBaka.LANGUAGE_AUTO, MangaBakaItem.TITLE_NATIVE, MangaBakaItem.TITLE_ROMANIZED) +
+                        languages.map { it.first }
+                    defaultValue = MangaBaka.LANGUAGE_AUTO
+                }
+                listPreference(activity) {
+                    key = trackPreferences.mangabakaCoverMode().key()
+                    titleRes = R.string.mangabaka_cover
+                    entriesRes =
+                        arrayOf(
+                            R.string.mangabaka_cover_default,
+                            R.string.mangabaka_cover_latest,
+                            R.string.mangabaka_cover_first,
+                        )
+                    entryValues = listOf(MangaBaka.COVER_DEFAULT, MangaBaka.COVER_LATEST, MangaBaka.COVER_FIRST)
+                    defaultValue = MangaBaka.COVER_DEFAULT
+                }
+                val coverFilters = mutableListOf<androidx.preference.Preference>()
+                coverFilters +=
+                    listPreference(activity) {
+                        key = trackPreferences.mangabakaCoverLanguage().key()
+                        titleRes = R.string.mangabaka_cover_language
+                        val languages = COVER_LANGUAGES.map { it to languageName(it) }
+                        entries =
+                            listOf(
+                                context.getString(R.string.mangabaka_cover_language_any),
+                                context.getString(R.string.mangabaka_cover_language_original),
+                            ) + languages.map { it.second }
+                        entryValues = listOf(MangaBaka.LANGUAGE_ANY, MangaBaka.LANGUAGE_ORIGINAL) + languages.map { it.first }
+                        defaultValue = MangaBaka.LANGUAGE_ANY
+                    }
+                coverFilters +=
+                    listPreference(activity) {
+                        key = trackPreferences.mangabakaCoverType().key()
+                        titleRes = R.string.mangabaka_cover_type
+                        entriesRes =
+                            arrayOf(
+                                R.string.mangabaka_cover_type_any,
+                                R.string.mangabaka_cover_type_volume,
+                                R.string.mangabaka_cover_type_season,
+                            )
+                        entryValues = listOf(MangaBaka.COVER_TYPE_ANY, "volume", "season")
+                        defaultValue = MangaBaka.COVER_TYPE_ANY
+                    }
+                coverFilters +=
+                    switchPreference {
+                        key = trackPreferences.mangabakaCoverSafeOnly().key()
+                        titleRes = R.string.mangabaka_cover_safe_only
+                        defaultValue = true
+                    }
+                trackPreferences
+                    .mangabakaCoverMode()
+                    .changes()
+                    .onEach { mode -> coverFilters.forEach { it.isVisible = mode != MangaBaka.COVER_DEFAULT } }
+                    .launchIn(viewScope)
+
+                multiSelectListPreferenceMat(activity) {
+                    key = trackPreferences.mangabakaTagCategories().key()
+                    titleRes = R.string.mangabaka_tag_categories
+                    entries = MangaBaka.TAG_CATEGORIES
+                    entryValues = MangaBaka.TAG_CATEGORIES
+                    allSelectionRes = R.string.all
+                    defaultValue = emptySet<String>()
+                }
+                switchPreference {
+                    key = trackPreferences.mangabakaHideSpoilerTags().key()
+                    titleRes = R.string.mangabaka_hide_spoiler_tags
+                    defaultValue = true
+                }
+                switchPreference {
+                    key = trackPreferences.mangabakaHideExplicitTags().key()
+                    titleRes = R.string.mangabaka_hide_explicit_tags
+                    defaultValue = false
+                }
+                infoPreference(R.string.mangabaka_details_info)
+            }
+            preferenceCategory {
                 titleRes = R.string.enhanced_services
                 val sourceManager = Injekt.get<SourceManager>()
                 val enhancedTrackers =
@@ -122,6 +250,9 @@ class SettingsTrackingController :
                 infoPreference(R.string.enhanced_tracking_info)
             }
         }
+
+    private fun languageName(code: String): String =
+        Locale.forLanguageTag(code).let { it.getDisplayName(it).replaceFirstChar(Char::uppercaseChar) } + " ($code)"
 
     private inline fun PreferenceGroup.trackPreference(
         service: TrackService,
@@ -178,3 +309,28 @@ class SettingsTrackingController :
         updatePreference(service)
     }
 }
+
+private val TITLE_LANGUAGES =
+    listOf(
+        "en",
+        "ja-Latn",
+        "ja",
+        "ko-Latn",
+        "ko",
+        "zh-Latn",
+        "zh",
+        "es",
+        "pt-br",
+        "fr",
+        "de",
+        "it",
+        "id",
+        "ru",
+        "th",
+        "vi",
+        "pl",
+        "tr",
+        "ar",
+    )
+
+private val COVER_LANGUAGES = listOf("en", "ja", "ko", "zh", "es", "pt", "fr", "de", "it", "id", "ru", "th", "vi", "pl", "tr", "ar")

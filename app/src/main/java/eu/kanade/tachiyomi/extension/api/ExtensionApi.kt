@@ -40,7 +40,8 @@ internal class ExtensionApi {
 
     suspend fun findExtensions(): List<Extension.Available> {
         return withIOContext {
-            val repos = preferences.extensionRepos().get()
+            val disabledRepos = preferences.disabledExtensionRepos().get()
+            val repos = preferences.extensionRepos().get().filterNot { it in disabledRepos }
             if (repos.isEmpty()) {
                 return@withIOContext emptyList()
             }
@@ -120,6 +121,8 @@ internal class ExtensionApi {
         val repos = preferences.extensionRepos().get()
         if (oldUrl !in repos) return
         preferences.extensionRepos().set(repos - oldUrl + newUrl)
+        val disabled = preferences.disabledExtensionRepos().get()
+        if (oldUrl in disabled) preferences.disabledExtensionRepos().set(disabled - oldUrl + newUrl)
     }
 
     /**

@@ -206,6 +206,8 @@ class ExtensionDetailsController(
         when (item.itemId) {
             R.id.action_open_repo -> openRepo()
             R.id.action_clear_cookies -> clearCookies()
+            R.id.action_enable_all -> setAllSources(true)
+            R.id.action_disable_all -> setAllSources(false)
         }
         return super.onOptionsItemSelected(item)
     }
@@ -391,6 +393,16 @@ class ExtensionDetailsController(
                 screen.addPreference(pref)
             }
         }
+    }
+
+    private fun setAllSources(enable: Boolean) {
+        val ids =
+            presenter.extension
+                ?.sources
+                ?.map { it.id.toString() }
+                ?.toSet() ?: return
+        val hidden = preferences.hiddenSources().get()
+        preferences.hiddenSources().set(if (enable) hidden - ids else hidden + ids)
     }
 
     private fun toggleSource(

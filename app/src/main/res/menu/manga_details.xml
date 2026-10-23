@@ -76,6 +76,18 @@
         app:showAsAction="never" />
 
     <item
+        android:id="@+id/action_merge"
+        android:icon="@drawable/ic_swap_calls_24dp"
+        android:title="@string/merge_with_another_source"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_merged_sources"
+        android:icon="@drawable/ic_swap_calls_24dp"
+        android:title="@string/merged_sources"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_migrate"
         android:icon="@drawable/ic_swap_calls_24dp"
         android:title="@string/migrate"

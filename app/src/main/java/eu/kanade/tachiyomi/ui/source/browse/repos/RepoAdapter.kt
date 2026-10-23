@@ -52,6 +52,8 @@ class RepoAdapter(
 
         fun onDiscordClick(position: Int)
 
+        fun onToggleEnabled(position: Int)
+
         fun onRepoRename(
             position: Int,
             newName: String,

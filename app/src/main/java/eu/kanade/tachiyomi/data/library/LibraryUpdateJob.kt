@@ -349,8 +349,8 @@ class LibraryUpdateJob(
                         val newTrack = service.refresh(track)
                         db.insertTrack(newTrack).executeAsBlocking()
 
-                        if (service is EnhancedTrackService) {
-                            syncChaptersWithTrackServiceTwoWay(db, db.getChapters(manga).executeAsBlocking(), track, service)
+                        if (service is EnhancedTrackService || preferences.autoSyncProgressFromTrackers()) {
+                            syncChaptersWithTrackServiceTwoWay(db, db.getChapters(manga).executeAsBlocking(), newTrack, service)
                         }
                     } catch (e: Exception) {
                         Timber.e(e)

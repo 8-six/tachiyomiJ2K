@@ -44,6 +44,18 @@
                 android:layout_marginStart="16dp"
                 android:text="@string/reset_cover" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/autofill_from_tracker"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAllCaps="false"
+                android:layout_gravity="center"
+                android:layout_marginTop="4dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginStart="16dp"
+                android:text="@string/autofill_from_tracker" />
+
             <eu.kanade.tachiyomi.widget.TachiyomiTextInputEditText
                 android:id="@+id/title"
                 android:layout_width="match_parent"

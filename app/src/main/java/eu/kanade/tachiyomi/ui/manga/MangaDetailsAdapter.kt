@@ -215,6 +215,10 @@ class MangaDetailsAdapter(
             isTag: Boolean = false,
         )
 
+        fun onTagClicked(tag: String)
+
+        fun onTagLongClicked(tag: String)
+
         fun showChapterFilter()
 
         fun favoriteManga(longPress: Boolean)

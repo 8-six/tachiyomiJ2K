@@ -10,6 +10,7 @@ import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.util.chapter.ChapterRecognition
 import eu.kanade.tachiyomi.util.lang.compareToCaseInsensitiveNaturalOrder
+import eu.kanade.tachiyomi.util.storage.ComicInfoReader
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import eu.kanade.tachiyomi.util.storage.EpubFile
 import eu.kanade.tachiyomi.util.system.ImageUtil
@@ -288,6 +289,8 @@ class LocalSource(
                             EpubFile(format.file).use { epub ->
                                 epub.fillChapterMetadata(this)
                             }
+                        } else {
+                            ComicInfoReader.apply(chapterFile, this)
                         }
 
                         ChapterRecognition.parseChapterNumber(this, manga)

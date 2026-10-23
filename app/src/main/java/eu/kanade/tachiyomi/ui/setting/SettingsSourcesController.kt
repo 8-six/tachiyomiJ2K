@@ -1,24 +1,31 @@
 package eu.kanade.tachiyomi.ui.setting
 
+import android.content.Context
 import android.graphics.drawable.Drawable
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import androidx.appcompat.widget.SearchView
+import androidx.core.view.isVisible
 import androidx.preference.CheckBoxPreference
 import androidx.preference.PreferenceGroup
 import androidx.preference.PreferenceScreen
+import androidx.preference.PreferenceViewHolder
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.preference.minusAssign
 import eu.kanade.tachiyomi.data.preference.plusAssign
 import eu.kanade.tachiyomi.source.SourceManager
 import eu.kanade.tachiyomi.source.icon
 import eu.kanade.tachiyomi.source.online.HttpSource
+import eu.kanade.tachiyomi.source.pkgName
+import eu.kanade.tachiyomi.ui.extension.details.ExtensionDetailsController
 import eu.kanade.tachiyomi.ui.main.FloatingSearchInterface
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import eu.kanade.tachiyomi.util.view.activityBinding
 import eu.kanade.tachiyomi.util.view.setOnQueryTextChangeListener
+import eu.kanade.tachiyomi.util.view.snack
+import eu.kanade.tachiyomi.util.view.withFadeTransaction
 import eu.kanade.tachiyomi.widget.preference.SwitchPreferenceCategory
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -130,7 +137,9 @@ class SettingsSourcesController :
 
         sources.forEach { source ->
             val sourcePreference =
-                CheckBoxPreference(group.context).apply {
+                SourceCheckBoxPreference(group.context, source.pkgName()) { pkgName ->
+                    router.pushController(ExtensionDetailsController(pkgName, source.id).withFadeTransaction())
+                }.apply {
                     val id = source.id.toString()
                     title = source.name
                     key = getSourceKey(source.id)
@@ -166,6 +175,23 @@ class SettingsSourcesController :
     }
 
     private fun getSourceKey(sourceId: Long): String = "source_$sourceId"
+
+    /**
+     * Enables or disables every source of the enabled languages, or only the ones matching the search if one is active.
+     */
+    private fun setAllSources(enabled: Boolean) {
+        val activeLangs = preferences.enabledLanguages().get()
+        val ids =
+            onlineSources
+                .filter { it.lang in activeLangs && (query.isEmpty() || it.name.contains(query, ignoreCase = true)) }
+                .map { it.id.toString() }
+        val hidden = preferences.hiddenSources().get()
+        preferences.hiddenSources().set(if (enabled) hidden - ids.toSet() else hidden + ids)
+        drawSources()
+        view?.snack(
+            view!!.context.getString(if (enabled) R.string.sources_enabled_all else R.string.sources_disabled_all, ids.size),
+        )
+    }
 
     /**
      * Adds items to the options menu.
@@ -254,6 +280,16 @@ class SettingsSourcesController :
      * @return True if this event has been consumed, false if it has not.
      */
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.action_enable_all -> {
+                setAllSources(true)
+                return true
+            }
+            R.id.action_disable_all -> {
+                setAllSources(false)
+                return true
+            }
+        }
         sorting =
             when (item.itemId) {
                 R.id.action_sort_alpha -> SourcesSort.Alpha
@@ -285,5 +321,23 @@ class SettingsSourcesController :
         companion object {
             fun from(i: Int): SourcesSort? = entries.find { it.value == i }
         }
+    }
+}
+
+/** A source's enable checkbox with an extra button that opens the source's own settings, if it has any. */
+private class SourceCheckBoxPreference(
+    context: Context,
+    private val pkgName: String?,
+    private val openSettings: (pkgName: String) -> Unit,
+) : CheckBoxPreference(context) {
+    init {
+        widgetLayoutResource = R.layout.pref_source_checkbox_widget
+    }
+
+    override fun onBindViewHolder(holder: PreferenceViewHolder) {
+        super.onBindViewHolder(holder)
+        val button = holder.findViewById(R.id.source_settings) ?: return
+        button.isVisible = pkgName != null
+        button.setOnClickListener { pkgName?.let(openSettings) }
     }
 }

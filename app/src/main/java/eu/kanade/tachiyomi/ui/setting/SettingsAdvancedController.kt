@@ -37,6 +37,7 @@ import eu.kanade.tachiyomi.network.PREF_DOH_DNSPOD
 import eu.kanade.tachiyomi.network.PREF_DOH_GOOGLE
 import eu.kanade.tachiyomi.network.PREF_DOH_QUAD101
 import eu.kanade.tachiyomi.network.PREF_DOH_QUAD9
+import eu.kanade.tachiyomi.network.interceptor.FlareSolverrInterceptor
 import eu.kanade.tachiyomi.source.SourceManager
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.setting.database.ClearDatabaseController
@@ -308,6 +309,43 @@ class SettingsAdvancedController : SettingsController() {
                     onChange {
                         activity?.toast(R.string.requires_app_restart)
                         true
+                    }
+                }
+                switchPreference {
+                    bindTo(preferences.flareSolverrEnabled())
+                    titleRes = R.string.flaresolverr
+                    summaryRes = R.string.flaresolverr_summary
+                }
+                editTextPreference(activity) {
+                    bindTo(preferences.flareSolverrUrl())
+                    titleRes = R.string.flaresolverr_url
+                    visibleIf(preferences.flareSolverrEnabled()) { it }
+                }
+                sliderPreference {
+                    bindTo(preferences.flareSolverrTimeout())
+                    titleRes = R.string.flaresolverr_timeout
+                    entryValues = (30..180 step 30).toList()
+                    valueFormatter = { "${it}s" }
+                    visibleIf(preferences.flareSolverrEnabled()) { it }
+                }
+                preference {
+                    titleRes = R.string.flaresolverr_test
+                    visibleIf(preferences.flareSolverrEnabled()) { it }
+
+                    onClick {
+                        val url = preferences.flareSolverrUrl().get()
+                        val timeout = preferences.flareSolverrTimeout().get()
+                        context.toast(R.string.flaresolverr_testing)
+                        viewScope.launchIO {
+                            val message =
+                                try {
+                                    val userAgent = FlareSolverrInterceptor.test(url, timeout)
+                                    context.getString(R.string.flaresolverr_test_success, userAgent)
+                                } catch (e: Exception) {
+                                    context.getString(R.string.flaresolverr_test_failed, e.message.orEmpty())
+                                }
+                            withUIContext { context.toast(message, Toast.LENGTH_LONG) }
+                        }
                     }
                 }
                 editTextPreference(activity) {

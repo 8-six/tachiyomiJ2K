@@ -5,6 +5,10 @@ import androidx.core.net.toUri
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.TrackManager
+import eu.kanade.tachiyomi.data.track.TrackPreferences
+import eu.kanade.tachiyomi.data.track.mangabaka.dto.MangaBakaGenresResult
+import eu.kanade.tachiyomi.data.track.mangabaka.dto.MangaBakaImage
+import eu.kanade.tachiyomi.data.track.mangabaka.dto.MangaBakaImagesResult
 import eu.kanade.tachiyomi.data.track.mangabaka.dto.MangaBakaItem
 import eu.kanade.tachiyomi.data.track.mangabaka.dto.MangaBakaItemResult
 import eu.kanade.tachiyomi.data.track.mangabaka.dto.MangaBakaListResult
@@ -43,6 +47,7 @@ class MangaBakaApi(
     interceptor: MangaBakaInterceptor,
 ) {
     private val json: Json by injectLazy()
+    private val trackPreferences: TrackPreferences by injectLazy()
 
     private val client =
         baseClient
@@ -122,7 +127,7 @@ class MangaBakaApi(
 
                     Track.create(TrackManager.MANGABAKA).apply {
                         media_id = track.media_id
-                        title = additionalData.chooseBestTitle()
+                        title = additionalData.chooseBestTitle(titleLanguage())
                         status = userData.getStatus()
                         score = userData.rating?.toFloat() ?: 0f
                         started_reading_date = parseIsoDate(userData.startDate)
@@ -199,15 +204,13 @@ class MangaBakaApi(
     private fun parseSearchItem(item: MangaBakaItem): TrackSearch =
         TrackSearch.create(trackId).apply {
             media_id = item.id
-            title = item.chooseBestTitle()
+            title = item.chooseBestTitle(titleLanguage())
             summary = item.description?.trim().orEmpty()
             score = item.rating
                 ?.toBigDecimal()
                 ?.setScale(2, RoundingMode.HALF_UP)
                 ?.toFloat() ?: -1f
-            cover_url =
-                item.cover.x250.x1
-                    .orEmpty()
+            cover_url = (item.cover.x250?.x1 ?: item.cover.bestUrl()).orEmpty()
             tracking_url = "$BASE_URL/${item.id}"
             start_date = item.published.startDate.orEmpty()
             publishing_status = item.status
@@ -242,6 +245,65 @@ class MangaBakaApi(
             }
         }
     }
+
+    /** Full details of a series. The series endpoints are public so this works without being logged in. */
+    suspend fun getSeries(id: Long): MangaBakaItem? =
+        withIOContext {
+            with(json) {
+                try {
+                    client
+                        .newCall(GET("$API_BASE_URL/v1/series/$id"))
+                        .awaitSuccess()
+                        .parseAs<MangaBakaItemResult>()
+                        .data
+                } catch (e: HttpException) {
+                    if (e.code == 404) null else throw e
+                }
+            }
+        }
+
+    /** The extra covers (volumes, seasons, ...) of a series, up to [MAX_IMAGE_PAGES] pages of them. */
+    suspend fun getSeriesImages(id: Long): List<MangaBakaImage> =
+        withIOContext {
+            with(json) {
+                val images = mutableListOf<MangaBakaImage>()
+                var url: String? = "$API_BASE_URL/v1/series/$id/images?limit=100"
+                var pages = 0
+                while (url != null && pages++ < MAX_IMAGE_PAGES) {
+                    val result =
+                        try {
+                            client.newCall(GET(url)).awaitSuccess().parseAs<MangaBakaImagesResult>()
+                        } catch (e: HttpException) {
+                            if (e.code == 404) break else throw e
+                        }
+                    images += result.data
+                    url = result.pagination?.next
+                }
+                images
+            }
+        }
+
+    /** Maps genre slugs like `slice_of_life` to their label, fetched once. Falls back to prettifying the slug. */
+    suspend fun getGenreLabels(): Map<String, String> {
+        genreLabels?.let { return it }
+        return withIOContext {
+            with(json) {
+                try {
+                    client
+                        .newCall(GET("$API_BASE_URL/v1/genres"))
+                        .awaitSuccess()
+                        .parseAs<MangaBakaGenresResult>()
+                        .data
+                        .associate { it.value to it.label }
+                        .also { genreLabels = it }
+                } catch (e: Exception) {
+                    emptyMap()
+                }
+            }
+        }
+    }
+
+    private fun titleLanguage() = trackPreferences.mangabakaTitleLanguage().get()
 
     suspend fun getCurrentUser(): MangaBakaUserProfile =
         withIOContext {
@@ -279,6 +341,10 @@ class MangaBakaApi(
     fun verifyOAuthState(state: String): Boolean = state == oauthStateParam
 
     companion object {
+        private const val MAX_IMAGE_PAGES = 5
+
+        private var genreLabels: Map<String, String>? = null
+
         private const val CLIENT_ID = "ppVWLKHpvCXGgHnuCMBPqnbGTrVRmpqh"
 
         private const val BASE_URL = "https://mangabaka.org"

@@ -53,6 +53,7 @@ data class BackupManga(
     // skipping 803 due to using duplicate value in previous builds
     @ProtoNumber(804) var customDescription: String? = null,
     @ProtoNumber(805) var customGenre: List<String>? = null,
+    @ProtoNumber(810) var mergedMembers: List<BackupMergedMember> = emptyList(),
 ) {
     fun getMangaImpl(): MangaImpl =
         MangaImpl().apply {

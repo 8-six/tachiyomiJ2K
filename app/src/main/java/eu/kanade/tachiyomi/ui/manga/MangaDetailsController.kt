@@ -24,6 +24,7 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.annotation.ColorInt
 import androidx.annotation.FloatRange
 import androidx.appcompat.app.AppCompatActivity
@@ -61,6 +62,8 @@ import eu.kanade.tachiyomi.data.database.models.Manga
 import eu.kanade.tachiyomi.data.download.DownloadJob
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.data.image.coil.getBestColor
+import eu.kanade.tachiyomi.data.merge.MergeManager
+import eu.kanade.tachiyomi.data.merge.MergedMangaReference
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import eu.kanade.tachiyomi.databinding.MangaDetailsControllerBinding
@@ -69,6 +72,7 @@ import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.SourceManager
 import eu.kanade.tachiyomi.source.icon
 import eu.kanade.tachiyomi.source.online.HttpSource
+import eu.kanade.tachiyomi.source.online.all.MERGED_SOURCE_ID
 import eu.kanade.tachiyomi.ui.base.MaterialMenuSheet
 import eu.kanade.tachiyomi.ui.base.SmallToolbarInterface
 import eu.kanade.tachiyomi.ui.base.controller.BaseCoroutineController
@@ -85,6 +89,7 @@ import eu.kanade.tachiyomi.ui.manga.chapter.ChapterItem
 import eu.kanade.tachiyomi.ui.manga.chapter.ChaptersSortBottomSheet
 import eu.kanade.tachiyomi.ui.manga.track.TrackItem
 import eu.kanade.tachiyomi.ui.manga.track.TrackingBottomSheet
+import eu.kanade.tachiyomi.ui.migration.MergeSearchController
 import eu.kanade.tachiyomi.ui.migration.manga.design.PreMigrationController
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.recents.RecentsController
@@ -136,7 +141,10 @@ import eu.kanade.tachiyomi.util.view.snack
 import eu.kanade.tachiyomi.util.view.toolbarHeight
 import eu.kanade.tachiyomi.util.view.withFadeTransaction
 import eu.kanade.tachiyomi.widget.LinearLayoutManagerAccurateOffset
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 import uy.kohesive.injekt.Injekt
@@ -1213,9 +1221,16 @@ class MangaDetailsController :
         menu.findItem(R.id.remove_non_bookmarked)?.isVisible =
             presenter.hasBookmark() &&
             !presenter.isLockedFromSearch
+        val mergeManager = MergeManager()
+        val isMerged = mergeManager.isMerged(presenter.manga)
         menu.findItem(R.id.action_migrate)?.isVisible = !presenter.isLockedFromSearch &&
             !presenter.manga.isLocal() &&
+            !isMerged &&
             presenter.manga.favorite
+        menu.findItem(R.id.action_merge)?.isVisible = !presenter.isLockedFromSearch &&
+            presenter.manga.favorite &&
+            (isMerged || mergeManager.canMerge(presenter.manga))
+        menu.findItem(R.id.action_merged_sources)?.isVisible = !presenter.isLockedFromSearch && isMerged
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -1223,6 +1238,8 @@ class MangaDetailsController :
             R.id.action_edit -> openEditMangaDialog()
             R.id.action_open_in_web_view -> openInWebView()
             R.id.action_refresh_tracking -> presenter.refreshTracking(true)
+            R.id.action_merge -> startMerge()
+            R.id.action_merged_sources -> showMergedSourcesDialog()
             R.id.action_migrate ->
                 if (!isNotOnline()) {
                     PreMigrationController.navigateToMigration(
@@ -1637,13 +1654,13 @@ class MangaDetailsController :
     fun sourceSearch(tags: List<String>) {
         when (val previousController = previousController) {
             is BrowseSourceController -> {
-                if (presenter.source is CatalogueSource) {
+                if (presenter.source is CatalogueSource && presenter.source.id != MERGED_SOURCE_ID) {
                     router.getOnBackPressedDispatcher()?.onBackPressed()
                     previousController.searchGenres(tags)
                 }
             }
             else -> {
-                if (presenter.source is CatalogueSource) {
+                if (presenter.source is CatalogueSource && presenter.source.id != MERGED_SOURCE_ID) {
                     val controller = BrowseSourceController(presenter.source)
                     router.pushController(controller.withFadeTransaction())
                     controller.searchGenres(tags)
@@ -1655,6 +1672,20 @@ class MangaDetailsController :
     fun globalSearch(text: String) {
         if (isNotOnline()) return
         router.pushController(GlobalSearchController(text).withFadeTransaction())
+    }
+
+    override fun onTagClicked(tag: String) {
+        finishFloatingActionMode()
+        if (presenter.source is CatalogueSource && presenter.source.id != MERGED_SOURCE_ID) {
+            sourceSearch(tag)
+        } else {
+            localSearch(tag, isTag = true)
+        }
+    }
+
+    override fun onTagLongClicked(tag: String) {
+        finishFloatingActionMode()
+        globalSearch(tag)
     }
 
     override fun showFloatingActionMode(
@@ -1987,6 +2018,144 @@ class MangaDetailsController :
         }
     }
 
+    //region merging
+    private fun startMerge() {
+        if (isNotOnline()) return
+        val controller = MergeSearchController(presenter.manga)
+        controller.targetController = this
+        router.pushController(controller.withFadeTransaction())
+    }
+
+    /** Called by [MergeSearchController] when a series to merge with was picked. */
+    fun onMergePicked(picked: Manga) {
+        val base = presenter.manga
+        val mergeManager = MergeManager()
+        if (!mergeManager.canMerge(picked) || picked.id == base.id) {
+            activity?.toast(R.string.merge_cant_pick)
+            return
+        }
+        runMergeTask {
+            val merged = mergeManager.merge(base, picked)
+            mergeManager.refresh(merged)
+            merged
+        }
+    }
+
+    /**
+     * Runs [task], which returns the merged manga, in the background with a progress dialog. If it's another manga than
+     * the one shown, its details replace this screen.
+     */
+    private fun runMergeTask(task: suspend () -> Manga) {
+        val activity = activity ?: return
+        val progress =
+            activity
+                .materialAlertDialog()
+                .setMessage(R.string.merging)
+                .setCancelable(false)
+                .show()
+        viewScope.launch {
+            try {
+                val merged = withContext(Dispatchers.IO) { task() }
+                progress.dismiss()
+                if (merged.id != presenter.manga.id) {
+                    router.replaceTopController(MangaDetailsController(merged).withFadeTransaction())
+                } else {
+                    presenter.refreshMangaFromDb()
+                    presenter.fetchChapters()
+                    updateHeader()
+                }
+            } catch (e: Exception) {
+                progress.dismiss()
+                Timber.e(e)
+                activity.toast(activity.getString(R.string.merge_failed_, e.message.orEmpty()), Toast.LENGTH_LONG)
+                // The merge itself is kept, only fetching the chapters failed
+                presenter.refreshMangaFromDb()
+                presenter.fetchChapters()
+            }
+        }
+    }
+
+    private fun showMergedSourcesDialog() {
+        val activity = activity ?: return
+        val mergeManager = MergeManager()
+        val members = mergeManager.getMembers(presenter.manga)
+        val sourceManager: SourceManager = Injekt.get()
+        val items =
+            members
+                .mapIndexed { index, (reference, member) ->
+                    val markers =
+                        listOfNotNull(
+                            activity.getString(R.string.merge_marker_details).takeIf { reference.isInfoManga },
+                            activity.getString(R.string.merge_marker_no_updates).takeUnless { reference.getChapterUpdates },
+                        )
+                    "${index + 1}. ${sourceManager.getOrStub(member.source).name} - ${member.originalTitle}" +
+                        if (markers.isEmpty()) "" else " (${markers.joinToString()})"
+                }.toTypedArray()
+
+        activity
+            .materialAlertDialog()
+            .setTitle(R.string.merged_sources)
+            .setItems(items) { _, index -> showMergedSourceOptions(members, index) }
+            .setPositiveButton(R.string.merge_add_source) { _, _ -> startMerge() }
+            .setNeutralButton(R.string.unmerge) { _, _ -> confirmUnmerge() }
+            .setNegativeButton(R.string.close, null)
+            .show()
+    }
+
+    private fun showMergedSourceOptions(
+        members: List<Pair<MergedMangaReference, Manga>>,
+        index: Int,
+    ) {
+        val activity = activity ?: return
+        val (reference, member) = members[index]
+        val mergeManager = MergeManager()
+        val merged = presenter.manga
+
+        val options = mutableListOf<Pair<Int, () -> Unit>>()
+        if (index > 0) options += R.string.merge_move_up to { mergeManager.moveMember(merged, member, up = true) }
+        if (index < members.lastIndex) options += R.string.merge_move_down to { mergeManager.moveMember(merged, member, up = false) }
+        if (!reference.isInfoManga) options += R.string.merge_use_for_details to { mergeManager.setInfoManga(merged, member) }
+        options +=
+            (if (reference.getChapterUpdates) R.string.merge_updates_off else R.string.merge_updates_on) to {
+                mergeManager.setGetChapterUpdates(merged, member, !reference.getChapterUpdates)
+            }
+        if (members.size > 1) options += R.string.merge_remove_source to { mergeManager.removeMember(merged, member) }
+
+        activity
+            .materialAlertDialog()
+            .setTitle("${Injekt.get<SourceManager>().getOrStub(member.source).name} - ${member.originalTitle}")
+            .setItems(options.map { activity.getString(it.first) }.toTypedArray()) { _, which ->
+                runMergeTask {
+                    options[which].second()
+                    mergeManager.refresh(merged)
+                    merged
+                }
+            }.setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    private fun confirmUnmerge() {
+        val activity = activity ?: return
+        val members = MergeManager().getMembers(presenter.manga)
+        val primary = (members.firstOrNull { it.first.isInfoManga } ?: members.firstOrNull())?.second ?: return
+        activity
+            .materialAlertDialog()
+            .setMessage(activity.getString(R.string.unmerge_confirm_, primary.originalTitle))
+            .setPositiveButton(R.string.unmerge) { _, _ ->
+                viewScope.launch {
+                    try {
+                        val restored = withContext(Dispatchers.IO) { MergeManager().unmerge(presenter.manga) }
+                        router.replaceTopController(MangaDetailsController(restored).withFadeTransaction())
+                    } catch (e: Exception) {
+                        Timber.e(e)
+                        activity.toast(e.message.orEmpty(), Toast.LENGTH_LONG)
+                    }
+                }
+            }.setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+    //endregion
+
     private fun openEditMangaDialog(): EditMangaDialog {
         val dialog =
             EditMangaDialog(
@@ -2158,7 +2327,7 @@ class MangaDetailsController :
             )
             menu?.findItem(R.id.action_copy)?.isVisible = showCopy
             var sourceMenuItem = menu?.findItem(R.id.action_source_search)
-            sourceMenuItem?.isVisible = isTag && presenter.source is CatalogueSource
+            sourceMenuItem?.isVisible = isTag && presenter.source is CatalogueSource && presenter.source.id != MERGED_SOURCE_ID
             val context = view?.context ?: return false
             val localItem = menu?.findItem(R.id.action_local_search) ?: return true
             localItem.isVisible = previousController !is FilteredLibraryController
@@ -2261,7 +2430,7 @@ class MangaDetailsController :
             menu?.findItem(R.id.action_global_search)?.isVisible = false
             menu?.findItem(R.id.action_select_all_tags)?.isVisible = false
             val sourceMenuItem = menu?.findItem(R.id.action_source_search)
-            sourceMenuItem?.isVisible = presenter.source is CatalogueSource
+            sourceMenuItem?.isVisible = presenter.source is CatalogueSource && presenter.source.id != MERGED_SOURCE_ID
             val context = view?.context ?: return false
             sourceMenuItem?.title = context.getString(R.string.search_, presenter.source.name)
             val localItem = menu?.findItem(R.id.action_local_search) ?: return true

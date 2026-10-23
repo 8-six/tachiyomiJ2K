@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.data.track.mangabaka.dto.MangaBakaOAuth
+import eu.kanade.tachiyomi.data.track.model.TrackMangaMetadata
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import eu.kanade.tachiyomi.data.track.updateNewTrackInfo
 import kotlinx.serialization.decodeFromString
@@ -38,6 +39,41 @@ class MangaBaka(
         const val STEP_25 = "STEP_25"
 
         private const val SEARCH_ID_PREFIX = "id:"
+
+        // Metadata settings
+        const val LANGUAGE_AUTO = "auto"
+        const val LANGUAGE_ANY = "any"
+        const val LANGUAGE_ORIGINAL = "original"
+        const val COVER_DEFAULT = "default"
+        const val COVER_LATEST = "latest"
+        const val COVER_FIRST = "first"
+        const val COVER_TYPE_ANY = "any"
+        const val TAG_GENRES = "Genres"
+
+        /** The groups of MangaBaka's tag tree (https://api.mangabaka.org/v1/tags), plus the genres list. */
+        val TAG_CATEGORIES =
+            listOf(
+                TAG_GENRES,
+                "Audience Demographics",
+                "Themes",
+                "Narrative Tropes",
+                "Tone",
+                "Settings",
+                "World Building",
+                "Time Period",
+                "Locations",
+                "Activities",
+                "Occupations",
+                "Character Archetype",
+                "Character Traits",
+                "Character Types",
+                "Species & Creatures",
+                "Relationship",
+                "Objects",
+                "Sexual Content",
+                "Derivative Work",
+                "Work Info",
+            )
     }
 
     @StringRes
@@ -51,6 +87,13 @@ class MangaBaka(
     override val supportsReadingDates: Boolean = true
 
     override val supportsPrivateTracking: Boolean = true
+
+    override val supportsMetadata: Boolean = true
+
+    override suspend fun getMangaMetadata(track: Track): TrackMangaMetadata {
+        val item = api.getSeries(track.media_id) ?: throw Exception("Could not find manga")
+        return MangaBakaMetadataBuilder(api, trackPreferences).build(item)
+    }
 
     private val scorePreference = trackPreferences.mangabakaScoreType()
 

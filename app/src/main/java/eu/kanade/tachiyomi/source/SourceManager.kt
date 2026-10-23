@@ -9,6 +9,8 @@ import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.online.DelegatedHttpSource
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.source.online.all.Cubari
+import eu.kanade.tachiyomi.source.online.all.MERGED_SOURCE_ID
+import eu.kanade.tachiyomi.source.online.all.MergedSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -69,10 +71,13 @@ class SourceManager(
 //        }
     }
 
-    fun get(sourceKey: Long): Source? = sourcesMapFlow.value[sourceKey]
+    // Not part of the map, so it never shows up in the lists of sources
+    private val mergedSource by lazy { MergedSource(context) }
+
+    fun get(sourceKey: Long): Source? = if (sourceKey == MERGED_SOURCE_ID) mergedSource else sourcesMapFlow.value[sourceKey]
 
     fun getOrStub(sourceKey: Long): Source =
-        sourcesMapFlow.value[sourceKey] ?: stubSourcesMap.getOrPut(sourceKey) {
+        get(sourceKey) ?: stubSourcesMap.getOrPut(sourceKey) {
             runBlocking { StubSource(sourceKey) }
         }
 

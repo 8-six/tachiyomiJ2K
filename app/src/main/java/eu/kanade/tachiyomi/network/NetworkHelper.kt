@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.network
 import android.content.Context
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.network.interceptor.CloudflareInterceptor
+import eu.kanade.tachiyomi.network.interceptor.FlareSolverrInterceptor
 import eu.kanade.tachiyomi.network.interceptor.UncaughtExceptionInterceptor
 import eu.kanade.tachiyomi.network.interceptor.UserAgentInterceptor
 import okhttp3.Cache
@@ -25,6 +26,15 @@ class NetworkHelper(
     private val userAgentInterceptor by lazy { UserAgentInterceptor(::defaultUserAgent) }
     private val cloudflareInterceptor by lazy {
         CloudflareInterceptor(context, cookieJar, ::defaultUserAgent)
+    }
+
+    private val flareSolverrInterceptor by lazy {
+        FlareSolverrInterceptor(
+            cookieJar,
+            enabled = { preferences.flareSolverrEnabled().get() && preferences.flareSolverrUrl().get().isNotBlank() },
+            serverUrl = { preferences.flareSolverrUrl().get() },
+            timeoutSeconds = { preferences.flareSolverrTimeout().get() },
+        )
     }
 
     private val baseClientBuilder: OkHttpClient.Builder
@@ -65,6 +75,7 @@ class NetworkHelper(
         baseClientBuilder
             .cache(Cache(cacheDir, cacheSize))
             .addInterceptor(cloudflareInterceptor)
+            .addInterceptor(flareSolverrInterceptor)
             .build()
     }
 

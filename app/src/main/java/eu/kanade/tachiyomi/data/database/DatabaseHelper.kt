@@ -22,6 +22,7 @@ import eu.kanade.tachiyomi.data.database.queries.ChapterQueries
 import eu.kanade.tachiyomi.data.database.queries.HistoryQueries
 import eu.kanade.tachiyomi.data.database.queries.MangaCategoryQueries
 import eu.kanade.tachiyomi.data.database.queries.MangaQueries
+import eu.kanade.tachiyomi.data.database.queries.MergedQueries
 import eu.kanade.tachiyomi.data.database.queries.SearchMetadataQueries
 import eu.kanade.tachiyomi.data.database.queries.TrackQueries
 import io.requery.android.database.sqlite.RequerySQLiteOpenHelperFactory
@@ -37,7 +38,8 @@ open class DatabaseHelper(
     CategoryQueries,
     MangaCategoryQueries,
     HistoryQueries,
-    SearchMetadataQueries {
+    SearchMetadataQueries,
+    MergedQueries {
     private val configuration =
         SupportSQLiteOpenHelper.Configuration
             .builder(context)

@@ -29,6 +29,7 @@ import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupChapter
 import eu.kanade.tachiyomi.data.backup.models.BackupHistory
 import eu.kanade.tachiyomi.data.backup.models.BackupManga
+import eu.kanade.tachiyomi.data.backup.models.BackupMergedMember
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSource
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
@@ -47,6 +48,7 @@ import eu.kanade.tachiyomi.data.preference.PreferenceStore
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.source.ConfigurableSource
 import eu.kanade.tachiyomi.source.SourceManager
+import eu.kanade.tachiyomi.source.online.all.MERGED_SOURCE_ID
 import eu.kanade.tachiyomi.source.preferenceKey
 import eu.kanade.tachiyomi.source.sourcePreferences
 import eu.kanade.tachiyomi.ui.library.LibrarySort
@@ -210,6 +212,23 @@ class BackupCreator(
                     null
                 },
             )
+
+        // A merged manga is nothing without the manga it is made of
+        if (manga.source == MERGED_SOURCE_ID) {
+            mangaObject.mergedMembers =
+                db.getMergedReferences(manga.id!!).mapNotNull { reference ->
+                    val member = db.getManga(reference.mangaId).executeAsBlocking() ?: return@mapNotNull null
+                    BackupMergedMember(
+                        source = member.source,
+                        url = member.url,
+                        title = member.originalTitle,
+                        thumbnailUrl = member.thumbnail_url,
+                        priority = reference.priority,
+                        isInfoManga = reference.isInfoManga,
+                        getChapterUpdates = reference.getChapterUpdates,
+                    )
+                }
+        }
 
         // Check if user wants chapter information in backup
         if (options and BACKUP_CHAPTER_MASK == BACKUP_CHAPTER) {

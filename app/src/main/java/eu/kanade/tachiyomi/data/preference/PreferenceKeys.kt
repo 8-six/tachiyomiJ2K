@@ -96,6 +96,8 @@ object PreferenceKeys {
 
     const val autoUpdateTrack = "pref_auto_update_manga_sync_key"
 
+    const val autoSyncProgressFromTrackers = "pref_auto_sync_progress_from_trackers_key"
+
     const val trackMarkedAsRead = "track_marked_as_read"
 
     const val trackingsToAddOnline = "pref_tracking_for_online"

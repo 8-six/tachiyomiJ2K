@@ -25,6 +25,8 @@ import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.track.EnhancedTrackService
 import eu.kanade.tachiyomi.data.track.TrackManager
+import eu.kanade.tachiyomi.data.track.TrackMetadataSync
+import eu.kanade.tachiyomi.data.track.TrackPreferences
 import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.source.LocalSource
 import eu.kanade.tachiyomi.source.Source
@@ -52,6 +54,7 @@ import eu.kanade.tachiyomi.util.system.ImageUtil
 import eu.kanade.tachiyomi.util.system.executeOnIO
 import eu.kanade.tachiyomi.util.system.launchIO
 import eu.kanade.tachiyomi.util.system.launchUI
+import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.util.system.withUIContext
 import eu.kanade.tachiyomi.widget.TriStateCheckBox
 import kotlinx.coroutines.Dispatchers
@@ -63,6 +66,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
@@ -80,6 +84,7 @@ class MangaDetailsPresenter(
 ) : BaseCoroutinePresenter<MangaDetailsController>(),
     DownloadQueue.DownloadListener {
     private val customMangaManager: CustomMangaManager by injectLazy()
+    private val trackPreferences: TrackPreferences by injectLazy()
     private val mangaShortcutManager: MangaShortcutManager by injectLazy()
     val sourceManager: SourceManager by injectLazy()
 
@@ -486,6 +491,9 @@ class MangaDetailsPresenter(
                     view?.updateChapters(this@MangaDetailsPresenter.chapters)
                 }
                 getHistory()
+                if (preferences.autoSyncProgressFromTrackers()) {
+                    withContext(Dispatchers.Main) { refreshTracking(false) }
+                }
             } catch (e: java.lang.Exception) {
                 withContext(Dispatchers.Main) {
                     view?.showError(trimException(e))
@@ -944,6 +952,7 @@ class MangaDetailsPresenter(
     ) {
         if (view?.isNotOnline(showOfflineSnack) == false) {
             presenterScope.launch {
+                var syncedUpTo: Int? = null
                 val asyncList =
                     (trackIndex?.let { listOf(trackList[it]) } ?: trackList.filter { it.track != null })
                         .map { item ->
@@ -957,8 +966,13 @@ class MangaDetailsPresenter(
                                     }
                                 if (trackItem != null) {
                                     db.insertTrack(trackItem).executeAsBlocking()
-                                    if (item.service is EnhancedTrackService) {
-                                        syncChaptersWithTrackServiceTwoWay(db, chapters, trackItem, item.service)
+                                    if (item.service is EnhancedTrackService || preferences.autoSyncProgressFromTrackers()) {
+                                        syncChaptersWithTrackServiceTwoWay(
+                                            db,
+                                            db.getChapters(manga).executeAsBlocking(),
+                                            trackItem,
+                                            item.service,
+                                        )?.let { syncedUpTo = maxOf(syncedUpTo ?: 0, it) }
                                     }
                                     trackItem
                                 } else {
@@ -967,6 +981,14 @@ class MangaDetailsPresenter(
                             }
                         }
                 asyncList.awaitAll()
+                if (syncedUpTo != null) {
+                    // Local chapters changed to follow the tracker
+                    getChapters()
+                    withContext(Dispatchers.Main) {
+                        view?.updateChapters(chapters)
+                        view?.activity?.let { it.toast(it.getString(R.string.sync_progress_from_trackers_up_to_chapter, syncedUpTo)) }
+                    }
+                }
                 fetchTracks()
             }
         }
@@ -1008,14 +1030,52 @@ class MangaDetailsPresenter(
                 withContext(Dispatchers.IO) {
                     if (binding != null) {
                         db.insertTrack(binding).executeAsBlocking()
+                        syncMetadataFromTracker(binding, service)
                     }
 
-                    if (service is EnhancedTrackService) {
-                        syncChaptersWithTrackServiceTwoWay(db, chapters, item, service)
+                    if (service is EnhancedTrackService || preferences.autoSyncProgressFromTrackers()) {
+                        syncChaptersWithTrackServiceTwoWay(db, db.getChapters(manga).executeAsBlocking(), item, service)
                     }
                 }
                 fetchTracks()
             }
+        }
+    }
+
+    /**
+     * Applies the details of a newly bound tracker as the manga's custom info, if enabled in the tracking settings.
+     * Only the fields chosen in the settings are touched and existing custom values are kept for the rest.
+     */
+    private suspend fun syncMetadataFromTracker(
+        track: Track,
+        service: TrackService,
+    ) {
+        if (!trackPreferences.autoSyncMetadata().get() || !service.supportsMetadata || manga.isLocal()) return
+        try {
+            val sync = TrackMetadataSync()
+            val metadata = sync.fetch(track, service)
+            val custom = customMangaManager.getCustomInfo(manga)
+            val tags =
+                metadata.tags
+                    ?.takeIf { it.isNotEmpty() && it.joinToString(", ") != manga.originalGenre }
+                    ?.toTypedArray()
+            customMangaManager.saveMangaInfo(
+                CustomMangaManager.MangaJson(
+                    manga.id!!,
+                    metadata.title?.trimOrNull() ?: custom?.title,
+                    metadata.authors?.trimOrNull() ?: custom?.author,
+                    metadata.artists?.trimOrNull() ?: custom?.artist,
+                    metadata.description?.trimOrNull() ?: custom?.description,
+                    tags ?: custom?.genre,
+                    metadata.status?.takeIf { it != manga.originalStatus } ?: custom?.status,
+                ),
+            )
+            metadata.coverUrl?.let { url ->
+                sync.downloadCover(downloadManager.context, url)?.let { editCoverWithStream(it) }
+            }
+            withUIContext { view?.updateHeader() }
+        } catch (e: Exception) {
+            Timber.w(e, "Could not sync details from ${service.id}")
         }
     }
 

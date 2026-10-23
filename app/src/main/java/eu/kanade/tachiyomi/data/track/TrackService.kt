@@ -5,6 +5,7 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import eu.kanade.tachiyomi.data.database.DatabaseHelper
 import eu.kanade.tachiyomi.data.database.models.Track
+import eu.kanade.tachiyomi.data.track.model.TrackMangaMetadata
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.util.system.executeOnIO
@@ -74,6 +75,14 @@ abstract class TrackService(
     abstract suspend fun search(query: String): List<TrackSearch>
 
     abstract suspend fun refresh(track: Track): Track
+
+    /** Whether [getMangaMetadata] is implemented by this service. */
+    open val supportsMetadata: Boolean = false
+
+    /**
+     * Fetches the series information of a tracked entry so the manga's details can be filled in or synced.
+     */
+    open suspend fun getMangaMetadata(track: Track): TrackMangaMetadata = throw UnsupportedOperationException()
 
     abstract suspend fun login(
         username: String,

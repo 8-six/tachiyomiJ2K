@@ -21,6 +21,7 @@ import eu.kanade.tachiyomi.data.database.tables.CategoryTable
 import eu.kanade.tachiyomi.data.database.tables.ChapterTable
 import eu.kanade.tachiyomi.data.database.tables.MangaCategoryTable
 import eu.kanade.tachiyomi.data.database.tables.MangaTable
+import eu.kanade.tachiyomi.data.database.tables.MergedMangaTable
 import eu.kanade.tachiyomi.data.database.tables.TrackTable
 
 interface MangaQueries : DbProvider {
@@ -217,8 +218,10 @@ interface MangaQueries : DbProvider {
                 DeleteQuery
                     .builder()
                     .table(MangaTable.TABLE)
-                    .where("${MangaTable.COL_FAVORITE} = ? AND ${MangaTable.COL_SOURCE} IN (${Queries.placeholders(sourceIds.size)})")
-                    .whereArgs(0, *sourceIds.toTypedArray())
+                    .where(
+                        "${MangaTable.COL_FAVORITE} = ? AND ${MangaTable.COL_SOURCE} IN (${Queries.placeholders(sourceIds.size)}) AND " +
+                            "${MangaTable.COL_ID} NOT IN (SELECT ${MergedMangaTable.COL_MANGA_ID} FROM ${MergedMangaTable.TABLE})",
+                    ).whereArgs(0, *sourceIds.toTypedArray())
                     .build(),
             ).prepare()
 
@@ -233,7 +236,7 @@ interface MangaQueries : DbProvider {
                         """
                         ${MangaTable.COL_FAVORITE} = ? AND ${MangaTable.COL_SOURCE} IN (${Queries.placeholders(
                             sourceIds.size,
-                        )}) AND ${MangaTable.COL_ID} NOT IN (
+                        )}) AND ${MangaTable.COL_ID} NOT IN (SELECT ${MergedMangaTable.COL_MANGA_ID} FROM ${MergedMangaTable.TABLE}) AND ${MangaTable.COL_ID} NOT IN (
                             SELECT ${ChapterTable.COL_MANGA_ID} FROM ${ChapterTable.TABLE} WHERE ${ChapterTable.COL_READ} = 1 OR ${ChapterTable.COL_LAST_PAGE_READ} != 0
                         )
                         """.trimIndent(),

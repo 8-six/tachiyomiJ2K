@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -92,6 +93,7 @@ class EditMangaState(
     var seriesType by mutableIntStateOf(oldSeriesType)
     var lang by mutableStateOf("")
     var cover by mutableStateOf<CoverChange>(CoverChange.None)
+    var coverWide by mutableStateOf(false)
     var autofillBusy by mutableStateOf(false)
     var pendingTag by mutableStateOf("")
     val tags = mutableStateListOf<String>()
@@ -145,10 +147,10 @@ fun EditMangaSheet(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        val coverAndActions: @Composable () -> Unit = {
             EditMangaCover(state, actions)
             Column(
-                modifier = Modifier.weight(1f),
+                modifier = if (state.coverWide) Modifier.fillMaxWidth() else Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 FilledTonalButton(
@@ -167,6 +169,11 @@ fun EditMangaSheet(
                     }
                 }
             }
+        }
+        if (state.coverWide) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) { coverAndActions() }
+        } else {
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) { coverAndActions() }
         }
 
         val originalTitle = if (state.isLocal) manga.url else manga.originalTitle
@@ -336,22 +343,31 @@ private fun EditMangaCover(
                 }
             },
             update = { view ->
+                val onLoaded: (android.graphics.drawable.Drawable) -> Unit = {
+                    if (it.intrinsicHeight > 0) state.coverWide = it.intrinsicWidth.toFloat() / it.intrinsicHeight >= WIDE_COVER_RATIO
+                }
                 when (val change = state.cover) {
-                    is CoverChange.Custom -> view.load(change.uri)
+                    is CoverChange.Custom -> view.load(change.uri) { listener(onSuccess = { _, r -> onLoaded(r.drawable) }) }
                     CoverChange.Reset ->
                         view.load(
                             state.manga,
                             builder = {
                                 parameters(Parameters.Builder().set(MangaCoverFetcher.useCustomCover, false).build())
+                                listener(onSuccess = { _, r -> onLoaded(r.drawable) })
                             },
                         )
-                    CoverChange.None -> view.loadManga(state.manga)
+                    CoverChange.None -> view.loadManga(state.manga) { listener(onSuccess = { _, r -> onLoaded(r.drawable) }) }
                 }
             },
             modifier =
                 Modifier
-                    .size(width = 112.dp, height = 168.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .then(
+                        if (state.coverWide) {
+                            Modifier.fillMaxWidth().aspectRatio(16f / 9f)
+                        } else {
+                            Modifier.size(width = 112.dp, height = 168.dp)
+                        },
+                    ).clip(RoundedCornerShape(12.dp))
                     .combinedClickable(
                         onClick = actions.onCoverClick,
                         onLongClick = { if (actions.canPasteCover()) menuOpen = true },
@@ -436,3 +452,6 @@ private fun DropdownField(
     }
 }
 // KMK <--
+
+// Covers at least this wide (width/height) switch the sheet to a panorama header
+private const val WIDE_COVER_RATIO = 1.2f

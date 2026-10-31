@@ -29,6 +29,7 @@ from upstream TachiyomiJ2K are not repeated here.
 - Source categories (Settings > Browse): group sources under names, and limit Global Search to one category. It takes precedence over "pinned only" and only includes enabled, visible sources in enabled languages. Categories are stored as a JSON preference, so they are included in preference backups. Adapted from Komikku; there is no category filter on the Sources list itself, and the category is chosen in settings rather than inside Global Search.
 - Webtoon "Disable pinch to zoom" option in the reader sheet and Settings > Reader (adapted from Komikku). Not device-tested.
 - Webtoon "Gap between pages" slider (0-32dp) in Settings > Reader, drawn as an item decoration between page items. Not device-tested; not in the reader sheet.
+- Edit panel switches to a panorama cover header when the cover is wide (width/height >= 1.2). Not device-tested.
 
 ### Changed
 - The manga edit panel is rewritten as a Compose Material 3 bottom sheet, adapted from Komikku's

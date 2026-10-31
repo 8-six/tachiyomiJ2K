@@ -4,6 +4,7 @@ import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.LocalSource
+import eu.kanade.tachiyomi.source.SourceCategories
 import eu.kanade.tachiyomi.source.SourceManager
 import eu.kanade.tachiyomi.util.system.withUIContext
 import kotlinx.coroutines.CoroutineScope
@@ -140,10 +141,20 @@ class SourcePresenter(
         val languages = preferences.enabledLanguages().get()
         val hiddenCatalogues = preferences.hiddenSources().get()
 
+        // KMK -->
+        val categoryIds =
+            preferences.browseSourceCategory().get().takeIf { it.isNotBlank() }?.let {
+                SourceCategories(
+                    preferences,
+                ).all()[it]
+            }
+        // KMK <--
+
         return sourceManager
             .getCatalogueSources()
             .filter { it.lang in languages || it.id == LocalSource.ID }
             .filterNot { it.id.toString() in hiddenCatalogues }
+            .filter { categoryIds == null || it.id in categoryIds }
             .sortedBy { "(${it.lang}) ${it.name}" }
     }
 

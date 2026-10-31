@@ -616,6 +616,8 @@ class PreferencesHelper(
 
     fun globalSearchSourceCategory() = flowPrefs.getString("global_search_source_category", "")
 
+    fun browseSourceCategory() = flowPrefs.getString("browse_source_category", "")
+
     fun webhookEnabled() = flowPrefs.getBoolean("webhook_enabled", false)
 
     // The private prefix keeps the endpoint out of backups.

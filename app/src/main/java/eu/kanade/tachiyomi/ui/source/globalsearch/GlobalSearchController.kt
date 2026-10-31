@@ -23,6 +23,7 @@ import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.main.SearchActivity
 import eu.kanade.tachiyomi.ui.main.SearchControllerInterface
 import eu.kanade.tachiyomi.ui.manga.MangaDetailsController
+import eu.kanade.tachiyomi.ui.setting.SourceCategoriesDialog
 import eu.kanade.tachiyomi.ui.source.browse.BrowseSourceController
 import eu.kanade.tachiyomi.ui.source.searchhistory.FilterApplyResult
 import eu.kanade.tachiyomi.ui.source.searchhistory.SearchHistoryDelegate
@@ -210,6 +211,9 @@ open class GlobalSearchController(
     ) {
         // Inflate menu.
         inflater.inflate(R.menu.catalogue_new_list, menu)
+        // KMK -->
+        menu.findItem(R.id.action_source_category)?.isVisible = presenter.sourceFilterEnabled
+        // KMK <--
 
         // Initialize search menu
         activityBinding?.searchToolbar?.setQueryHint(view?.context?.getString(R.string.global_search), false)
@@ -230,6 +234,17 @@ open class GlobalSearchController(
             true
         }
     }
+
+    // KMK -->
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.action_source_category) {
+            val activity = activity ?: return true
+            SourceCategoriesDialog(activity).showPicker { presenter.refreshSourceFilter() }
+            return true
+        }
+        return super.onOptionsItemSelected(item)
+    }
+    // KMK <--
 
     override fun onChangeStarted(
         handler: ControllerChangeHandler,

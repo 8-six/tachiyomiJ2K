@@ -28,6 +28,9 @@ class SourceCategories(
         if (preferences.globalSearchSourceCategory().get() !in categories) {
             preferences.globalSearchSourceCategory().set("")
         }
+        if (preferences.browseSourceCategory().get() !in categories) {
+            preferences.browseSourceCategory().set("")
+        }
     }
 
     /** Source ids of the category Global Search is scoped to, or null when it is not scoped. */

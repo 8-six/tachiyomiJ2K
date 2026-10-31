@@ -15,6 +15,12 @@
         android:icon="@drawable/ic_rule_24dp"
         app:showAsAction="ifRoom"/>
 
+    <!-- KMK -->
+    <item android:id="@+id/action_source_category"
+        android:title="@string/browse_source_category"
+        app:showAsAction="never"/>
+    <!-- KMK -->
+
     <item
         android:id="@+id/action_more"
         android:icon="@drawable/ic_more_vert_24dp"

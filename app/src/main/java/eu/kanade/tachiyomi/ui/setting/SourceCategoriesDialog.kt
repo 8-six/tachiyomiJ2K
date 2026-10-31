@@ -34,19 +34,23 @@ class SourceCategoriesDialog(
     }
 
     /** Single choice between "no category" and the existing categories. */
-    fun showPicker(onPicked: () -> Unit) {
+    fun showPicker(
+        forBrowse: Boolean = false,
+        onPicked: () -> Unit,
+    ) {
+        val pref = if (forBrowse) preferences.browseSourceCategory() else preferences.globalSearchSourceCategory()
         val names = store.all().keys.sorted()
         if (names.isEmpty()) {
             showManager()
             return
         }
         val items = (listOf(activity.getString(R.string.none)) + names).toTypedArray()
-        val current = preferences.globalSearchSourceCategory().get()
+        val current = pref.get()
         val checked = names.indexOf(current) + 1
         MaterialAlertDialogBuilder(activity)
             .setTitle(R.string.global_search_source_category)
             .setSingleChoiceItems(items, checked) { dialog, which ->
-                preferences.globalSearchSourceCategory().set(if (which == 0) "" else names[which - 1])
+                pref.set(if (which == 0) "" else names[which - 1])
                 onPicked()
                 dialog.dismiss()
             }.setNegativeButton(android.R.string.cancel, null)

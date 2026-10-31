@@ -42,6 +42,7 @@ import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.main.RootSearchInterface
 import eu.kanade.tachiyomi.ui.setting.SettingsBrowseController
 import eu.kanade.tachiyomi.ui.setting.SettingsSourcesController
+import eu.kanade.tachiyomi.ui.setting.SourceCategoriesDialog
 import eu.kanade.tachiyomi.ui.source.browse.BrowseSourceController
 import eu.kanade.tachiyomi.ui.source.browse.repos.RepoController
 import eu.kanade.tachiyomi.ui.source.globalsearch.GlobalSearchController
@@ -839,6 +840,12 @@ class BrowseController :
             R.id.action_migration_guide -> {
                 activity?.openInBrowser(HELP_URL)
             }
+            // KMK -->
+            R.id.action_source_category -> {
+                val activity = activity ?: return true
+                SourceCategoriesDialog(activity).showPicker(forBrowse = true) { presenter.updateSources() }
+            }
+            // KMK <--
             R.id.action_sources_settings -> {
                 router.pushController(SettingsBrowseController().withFadeTransaction())
             }

@@ -39,6 +39,13 @@ class WebtoonConfig(
     var enableZoomOut = false
         private set
 
+    // KMK -->
+    var disableZoom = false
+        private set
+
+    var disableZoomChangedListener: ((Boolean) -> Unit)? = null
+    // KMK <--
+
     var zoomPropertyChangedListener: ((Boolean) -> Unit)? = null
 
     var splitPages = preferences.webtoonPageLayout().get() == PageLayout.SPLIT_PAGES.webtoonValue
@@ -86,6 +93,12 @@ class WebtoonConfig(
         preferences
             .webtoonEnableZoomOut()
             .register({ enableZoomOut = it }, { zoomPropertyChangedListener?.invoke(it) })
+
+        // KMK -->
+        preferences
+            .webtoonDisableZoom()
+            .register({ disableZoom = it }, { disableZoomChangedListener?.invoke(it) })
+        // KMK <--
 
         preferences
             .webtoonPageLayout()

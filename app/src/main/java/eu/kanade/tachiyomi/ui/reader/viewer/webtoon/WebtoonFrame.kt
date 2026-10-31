@@ -32,6 +32,10 @@ class WebtoonFrame(
             recycler?.canZoomOut = value
         }
 
+    // KMK -->
+    var disableZoom = false
+    // KMK <--
+
     /**
      * Recycler view added in this frame.
      */
@@ -42,7 +46,9 @@ class WebtoonFrame(
      * Dispatches a touch event to the detectors.
      */
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-        scaleDetector.onTouchEvent(ev)
+        // KMK -->
+        if (!disableZoom) scaleDetector.onTouchEvent(ev)
+        // KMK <--
         flingDetector.onTouchEvent(ev)
         return super.dispatchTouchEvent(ev)
     }

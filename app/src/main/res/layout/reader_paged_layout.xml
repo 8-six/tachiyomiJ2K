@@ -176,6 +176,14 @@
             android:textColor="?attr/colorOnBackground"
             app:layout_constraintTop_toBottomOf="@id/webtoon_side_padding" />
 
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/webtoon_disable_zoom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/reader_settings_spacing"
+            android:text="@string/disable_pinch_zoom"
+            android:textColor="?attr/colorOnBackground" />
+
         <eu.kanade.tachiyomi.widget.MaterialSpinnerView
             android:id="@+id/webtoon_page_layout"
             android:layout_width="match_parent"

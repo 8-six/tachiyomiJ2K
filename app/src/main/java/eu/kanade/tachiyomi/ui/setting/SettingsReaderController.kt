@@ -428,6 +428,14 @@ class SettingsReaderController : SettingsController() {
                     titleRes = R.string.enable_zoom_out
                     defaultValue = false
                 }
+
+                // KMK -->
+                switchPreference {
+                    key = Keys.webtoonDisableZoom
+                    titleRes = R.string.disable_pinch_zoom
+                    defaultValue = false
+                }
+                // KMK <--
             }
             preferenceCategory {
                 titleRes = R.string.navigation

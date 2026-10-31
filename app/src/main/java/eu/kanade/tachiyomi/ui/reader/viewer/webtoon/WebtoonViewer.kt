@@ -175,6 +175,11 @@ class WebtoonViewer(
             refreshAdapter()
         }
 
+        // KMK -->
+        frame.disableZoom = config.disableZoom
+        config.disableZoomChangedListener = { frame.disableZoom = it }
+        // KMK <--
+
         config.zoomPropertyChangedListener = {
             frame.enableZoomOut = it
         }

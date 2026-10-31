@@ -102,6 +102,10 @@ object PreferenceKeys {
 
     const val webtoonEnableZoomOut = "webtoon_enable_zoom_out"
 
+    // KMK -->
+    const val webtoonDisableZoom = "webtoon_disable_zoom"
+    // KMK <--
+
     const val autoUpdateTrack = "pref_auto_update_manga_sync_key"
 
     const val autoSyncProgressFromTrackers = "pref_auto_sync_progress_from_trackers_key"

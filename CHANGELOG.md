@@ -25,6 +25,7 @@ from upstream TachiyomiJ2K are not repeated here.
   backups. Adapted from Komikku's webhooks; Discord Rich Presence is not ported.
 - Storage usage in Settings > Downloads: lists the downloads folder per source with its size and deletes the sources you tick after a confirmation. Only folders inside the downloads directory are listed. Simpler than Komikku's storage screen: no per-type categories and no merged-manga handling.
 - Date headings on the Recents Updates view show how many different manga that day had, so three chapters of one series count once. Adapted from Komikku's History screen; the plain History view has no date headings in this app.
+- Ongoing series with enough release history show "next around <date>" next to the chapter count on the manga page. It is the median gap between recent release days added to the latest one, hidden once the date passes or when releases are rarer than every 90 days. It is a guess, not a source-confirmed date. Adapted from Komikku's release prediction idea; the algorithm is this fork's own.
 
 ### Changed
 - The manga edit panel is rewritten as a Compose Material 3 bottom sheet, adapted from Komikku's

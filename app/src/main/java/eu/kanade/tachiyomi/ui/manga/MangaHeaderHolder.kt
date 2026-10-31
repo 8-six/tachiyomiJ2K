@@ -10,6 +10,7 @@ import android.graphics.Typeface
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.os.Build
+import android.text.format.DateUtils
 import android.text.method.LinkMovementMethod
 import android.text.style.StyleSpan
 import android.view.LayoutInflater
@@ -46,6 +47,7 @@ import eu.kanade.tachiyomi.source.SourceManager
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.ui.base.holder.BaseFlexibleViewHolder
 import eu.kanade.tachiyomi.ui.reader.viewer.missingChaptersCount
+import eu.kanade.tachiyomi.util.chapter.ReleasePrediction
 import eu.kanade.tachiyomi.util.isLocal
 import eu.kanade.tachiyomi.util.lang.toNormalized
 import eu.kanade.tachiyomi.util.system.getResourceColor
@@ -354,9 +356,20 @@ class MangaHeaderHolder(
     ): CharSequence {
         val base = itemView.resources.getQuantityString(R.plurals.chapters_plural, count, count)
         val missingCount = missingChapterCount(presenter)
-        if (missingCount <= 0 || !adapter.preferences.showChapterMissingWarnings().get()) return base
+        val showMissing = missingCount > 0 && adapter.preferences.showChapterMissingWarnings().get()
+        // KMK -->
+        val estimate = nextChapterEstimate(presenter)
+        if (!showMissing && estimate == null) return base
+        // KMK <--
         return buildSpannedString {
             append(base)
+            // KMK -->
+            if (estimate != null) {
+                append(" ")
+                inSpans(StyleSpan(Typeface.NORMAL)) { scale(0.75f) { append("($estimate)") } }
+            }
+            if (!showMissing) return@buildSpannedString
+            // KMK <--
             append(" ")
             inSpans(StyleSpan(Typeface.NORMAL)) {
                 scale(0.75f) {
@@ -373,6 +386,26 @@ class MangaHeaderHolder(
             }
         }
     }
+
+    // KMK -->
+
+    /** A rough "next chapter around <date>" for ongoing series with enough release history. */
+    private fun nextChapterEstimate(presenter: MangaDetailsPresenter): String? {
+        if (presenter.manga.status != SManga.ONGOING) return null
+        val expected =
+            ReleasePrediction.predictNext(
+                presenter.chapters.map { it.date_upload },
+                System.currentTimeMillis(),
+            ) ?: return null
+        val date =
+            DateUtils.formatDateTime(
+                itemView.context,
+                expected,
+                DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_ABBREV_MONTH,
+            )
+        return itemView.context.getString(R.string.next_chapter_estimate, date)
+    }
+    // KMK <--
 
     private fun missingChapterCount(presenter: MangaDetailsPresenter): Int = missingChaptersCount(presenter.chapters.map { it.chapter })
 

@@ -89,6 +89,7 @@ import eu.kanade.tachiyomi.data.preference.asImmediateFlowIn
 import eu.kanade.tachiyomi.data.preference.toggle
 import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.databinding.ReaderActivityBinding
+import eu.kanade.tachiyomi.databinding.ReaderAutomationDialogBinding
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.base.MaterialMenuSheet
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
@@ -186,6 +187,22 @@ class ReaderActivity : BaseActivity<ReaderActivityBinding>() {
      */
     var viewer: BaseViewer? = null
         private set
+
+    // 8SIX -->
+    private val automation by lazy {
+        ReaderAutomation(
+            scope,
+            preferences,
+            { viewer },
+            {
+                if (!preferences.keepScreenOn().get()) {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                }
+                invalidateOptionsMenu()
+            },
+        )
+    }
+    // 8SIX <--
 
     /**
      * Whether the menu is currently visible.
@@ -590,6 +607,13 @@ class ReaderActivity : BaseActivity<ReaderActivityBinding>() {
             layerDrawable.findDrawableByLayerId(R.id.layer_full_width).alpha = if (!isDoublePage) 255 else 0
             layerDrawable.findDrawableByLayerId(R.id.layer_one_item).alpha = if (isDoublePage) 255 else 0
         }
+        // 8SIX -->
+        menu.findItem(R.id.action_automation)?.apply {
+            val running = automation.isRunning
+            setIcon(if (running) R.drawable.ic_pause_24dp else R.drawable.ic_play_arrow_24dp)
+            setTitle(if (running) R.string.reader_automation_stop else R.string.reader_automation_start)
+        }
+        // 8SIX <--
         return super.onPrepareOptionsMenu(menu)
     }
 
@@ -858,10 +882,43 @@ class ReaderActivity : BaseActivity<ReaderActivityBinding>() {
                 shiftDoublePages()
                 manuallyShiftedPages = true
             }
+            // 8SIX -->
+            R.id.action_automation -> toggleAutomation()
+            R.id.action_automation_settings -> showAutomationSettings()
+            // 8SIX <--
             else -> return super.onOptionsItemSelected(item)
         }
         return true
     }
+
+    // 8SIX -->
+    private fun toggleAutomation() {
+        if (automation.isRunning) {
+            automation.stop()
+        } else {
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            automation.start()
+            setMenuVisibility(false)
+            invalidateOptionsMenu()
+        }
+    }
+
+    private fun showAutomationSettings() {
+        val dialogBinding = ReaderAutomationDialogBinding.inflate(layoutInflater)
+        dialogBinding.scrollSpeed.value = preferences.autoScrollSpeed().get().toFloat()
+        dialogBinding.flipInterval.value = preferences.autoFlipInterval().get().toFloat()
+        dialogBinding.duration.value = preferences.automationDuration().get().toFloat()
+        materialAlertDialog()
+            .setTitle(R.string.reader_automation_settings)
+            .setView(dialogBinding.root)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                preferences.autoScrollSpeed().set(dialogBinding.scrollSpeed.value.toInt())
+                preferences.autoFlipInterval().set(dialogBinding.flipInterval.value.toInt())
+                preferences.automationDuration().set(dialogBinding.duration.value.toInt())
+            }.setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+    // 8SIX <--
 
     fun shiftDoublePages(
         forceShift: Boolean? = null,
@@ -1640,6 +1697,7 @@ class ReaderActivity : BaseActivity<ReaderActivityBinding>() {
         }
 
         // Destroy previous viewer if there was one
+        automation.stop()
         if (prevViewer != null) {
             prevViewer.destroy()
             binding.viewerContainer.removeAllViews()
@@ -1699,6 +1757,9 @@ class ReaderActivity : BaseActivity<ReaderActivityBinding>() {
     }
 
     override fun onPause() {
+        // 8SIX -->
+        automation.stop()
+        // 8SIX <--
         viewModel.saveCurrentChapterReadingProgress()
         super.onPause()
     }

@@ -7,4 +7,15 @@
         android:icon="@drawable/ic_page_next_outline_24dp"
         android:title="@string/shift_one_page_over"
         app:showAsAction="ifRoom" />
+
+    <!-- 8SIX -->
+    <item
+        android:id="@+id/action_automation"
+        android:icon="@drawable/ic_play_arrow_24dp"
+        android:title="@string/reader_automation_start"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_automation_settings"
+        android:title="@string/reader_automation_settings"
+        app:showAsAction="never" />
 </menu>

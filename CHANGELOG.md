@@ -14,6 +14,12 @@ from upstream TachiyomiJ2K are not repeated here.
 - `AGENTS.md` with the rules for working on this fork (anonymous local commits, feature branches, no
   pushing, fork markers, verification commands, changelog upkeep), adapted from Komikku's guide.
 
+- Reader automation: a start/stop item and a settings dialog in the reader toolbar overflow menu.
+  Webtoons scroll continuously, paged modes turn the page on a timer. Speed, seconds per page and a
+  stop-after duration are saved. It stops at the end of the reader, when the app is paused, when the
+  reading mode changes or when the duration runs out, and keeps the screen on while running. Adapted
+  from Komikku's automation feature, not its code.
+
 ### Changed
 - Release and beta builds are signed with a stable local key read from the git-ignored
   `keystore.properties`, so updates install over each other.

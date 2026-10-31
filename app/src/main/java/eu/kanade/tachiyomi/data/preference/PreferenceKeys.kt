@@ -27,6 +27,14 @@ object PreferenceKeys {
 
     const val keepScreenOn = "pref_keep_screen_on_key"
 
+    // 8SIX -->
+    const val autoScrollSpeed = "pref_reader_auto_scroll_speed"
+
+    const val autoFlipInterval = "pref_reader_auto_flip_interval"
+
+    const val automationDuration = "pref_reader_automation_duration"
+    // 8SIX <--
+
     const val flashOnPageChange = "pref_reader_flash"
 
     const val flashDurationMillis = "pref_reader_flash_duration"

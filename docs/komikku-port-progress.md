@@ -34,3 +34,5 @@ architecture are recorded as `skipped` with the reason.
 ## Done so far
 
 Nothing from the port is implemented yet.
+
+| Reader automation (auto-scroll / auto page flip, duration, keep awake) | partial | Not done: refresh-rate handling, webtoon pinch-zoom switch, gap preference. Built (dev debug) but not tested on a device. |

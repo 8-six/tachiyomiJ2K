@@ -1388,4 +1388,12 @@
     <string name="view_chapters">View chapters</string>
     <string name="warning">Warning</string>
     <string name="wifi">Wi-Fi</string>
+    <!-- 8SIX -->
+    <string name="reader_automation_start">Start auto-scroll</string>
+    <string name="reader_automation_stop">Stop auto-scroll</string>
+    <string name="reader_automation_settings">Auto-scroll settings</string>
+    <string name="reader_automation_scroll_speed">Scroll speed (webtoon)</string>
+    <string name="reader_automation_flip_interval">Seconds per page (paged)</string>
+    <string name="reader_automation_duration">Stop after (minutes, 0 = never)</string>
+    <string name="reader_automation_finished">Auto-scroll stopped</string>
 </resources>

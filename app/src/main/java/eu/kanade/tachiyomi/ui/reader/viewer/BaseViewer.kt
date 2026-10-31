@@ -44,6 +44,12 @@ interface BaseViewer {
     fun moveToPrevious()
 
     /**
+     * Scrolls the content by [dy] pixels without animation for continuous automation. Returns false
+     * if the viewer cannot scroll further or does not support continuous scrolling.
+     */
+    fun autoScrollBy(dy: Int): Boolean = false
+
+    /**
      * Returns whether the current page is zoomed in past its default scale. Used to decide
      * whether a dpad/analog stick input should pan the page or turn to the next/previous one.
      */

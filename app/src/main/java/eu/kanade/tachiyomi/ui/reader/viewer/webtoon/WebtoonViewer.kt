@@ -330,6 +330,12 @@ class WebtoonViewer(
         }
     }
 
+    override fun autoScrollBy(dy: Int): Boolean {
+        if (!recycler.canScrollVertically(1)) return false
+        recycler.scrollBy(0, dy)
+        return true
+    }
+
     override fun isZoomedIn(): Boolean = recycler.isZoomedIn()
 
     override fun isAtEndOfReader(): Boolean = (currentPage as? ChapterTransition.Next)?.let { it.to == null } ?: false

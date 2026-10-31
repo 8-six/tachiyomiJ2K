@@ -151,6 +151,18 @@ class PreferencesHelper(
 
     fun keepScreenOn() = flowPrefs.getBoolean(Keys.keepScreenOn, true)
 
+    // 8SIX -->
+
+    /** Webtoon auto-scroll speed in 1-20 steps of 20dp per second. */
+    fun autoScrollSpeed() = flowPrefs.getInt(Keys.autoScrollSpeed, 5)
+
+    /** Seconds between page turns when auto-flipping paged viewers. */
+    fun autoFlipInterval() = flowPrefs.getInt(Keys.autoFlipInterval, 5)
+
+    /** Minutes before automation stops by itself, 0 for no limit. */
+    fun automationDuration() = flowPrefs.getInt(Keys.automationDuration, 0)
+    // 8SIX <--
+
     fun flashOnPageChange() = flowPrefs.getBoolean(Keys.flashOnPageChange, false)
 
     fun flashDurationMillis() = flowPrefs.getInt(Keys.flashDurationMillis, 100)

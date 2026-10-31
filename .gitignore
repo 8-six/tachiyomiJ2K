@@ -8,3 +8,8 @@
 *.iml
 */build
 .kotlin
+
+# Signing
+keystore.properties
+*.jks
+*.keystore

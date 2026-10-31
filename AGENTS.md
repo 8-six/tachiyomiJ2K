@@ -58,11 +58,11 @@ diffed against each source:
 "Build passes" is not enough. After Kotlin/XML edits, run before marking work done:
 
 ```bash
-./gradlew ktlintFormat          # fix formatting (see ktlintCodeStyle.xml)
-./gradlew ktlintCheck           # must pass
-./gradlew :app:compileStandardDebugKotlin
-./gradlew assembleStandardDebug
-./gradlew :app:testStandardDebugUnitTest
+./gradlew formatKotlin          # fix formatting (kotlinter)
+./gradlew lintKotlin            # must pass
+./gradlew :app:assembleDevDebug --build-cache
+./gradlew :app:testDevDebugUnitTest --build-cache
+./gradlew :app:assembleDevRelease --build-cache   # signed with keystore.properties
 ```
 
 Check the task names with `./gradlew tasks --all` if a variant rename breaks them. Never report a
@@ -71,7 +71,7 @@ task as tested when the build or tests were not run; say what was not verified.
 ### Build caching (always)
 
 - Use JDK 21 to build: `export JAVA_HOME=/usr/lib/jvm/java-21-openjdk` (JDK 17 on this machine has no `javac`).
-- Always pass `--build-cache` (already `org.gradle.caching=true`) and prefer `--configuration-cache`.
+- Always pass `--build-cache` (already `org.gradle.caching=true`) and do **not** use `--configuration-cache` (the oss-licenses plugin is incompatible).
   Keep the Gradle daemon alive between runs; do not `--no-daemon` or `clean` unless a build is
   provably corrupt.
 - Do not delete `~/.gradle`, `.gradle/`, `.kotlin/` or `app/build/` to "fix" an error without trying
@@ -153,7 +153,7 @@ anything not verified.
 
 ## Common issues
 
-- **Gradle OOM** – raise `org.gradle.jvmargs` in `gradle.properties` (currently `-Xmx2048M`), then
+- **Gradle OOM** – raise `org.gradle.jvmargs` in `gradle.properties` (currently `-Xmx3g`, plus `kotlin.daemon.jvmargs`), then
   `./gradlew --stop` and retry.
 - **`javac` missing** – you are on JDK 17 JRE; set `JAVA_HOME` to the JDK 21 path above.
 - **SDK not found** – check `local.properties` (`sdk.dir=/home/mauricio/Android/Sdk`).

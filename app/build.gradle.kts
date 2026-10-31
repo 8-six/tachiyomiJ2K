@@ -1,5 +1,6 @@
 import org.gradle.api.tasks.Copy
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     id(Plugins.androidApplication)
@@ -58,6 +59,26 @@ android {
         }
     }
 
+    // 8SIX -->
+    // Local release signing. Without keystore.properties the release APK stays unsigned and CI signs
+    // it afterwards with the repository secrets. Always reuse the same key so updates install over
+    // each other.
+    val keystoreProperties =
+        Properties().apply {
+            rootProject.file("keystore.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+        }
+    signingConfigs {
+        if (keystoreProperties.isNotEmpty()) {
+            create("fork") {
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+    // 8SIX <--
+
     buildTypes {
         getByName("debug") {
             applicationIdSuffix = ".debugJ2K"
@@ -68,6 +89,9 @@ android {
             isShrinkResources = true
             isMinifyEnabled = true
             proguardFiles("proguard-android-optimize.txt", "proguard-rules.pro")
+            // 8SIX -->
+            signingConfigs.findByName("fork")?.let { signingConfig = it }
+            // 8SIX <--
         }
         create("beta") {
             initWith(getByName("release"))
@@ -101,6 +125,12 @@ android {
                 androidResources.localeFilters.clear()
                 androidResources.localeFilters.add("en")
             }
+            // 8SIX -->
+            // Dev builds skip google-services, so Crashlytics cannot upload mapping files for them.
+            (this as ExtensionAware).extensions.configure<com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension>("firebaseCrashlytics") {
+                mappingFileUploadEnabled = false
+            }
+            // 8SIX <--
         }
     }
 

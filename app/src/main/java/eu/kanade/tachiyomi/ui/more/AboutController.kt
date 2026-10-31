@@ -71,7 +71,7 @@ class AboutController : SettingsController() {
                         Intent(
                             Intent.ACTION_VIEW,
                             if (BuildConfig.DEBUG) {
-                                "https://github.com/Jays2Kings/tachiyomiJ2K/commits/master"
+                                "https://github.com/8-six/tachiyomiJ2K/commits/master"
                             } else {
                                 RELEASE_URL
                             }.toUri(),

@@ -841,6 +841,12 @@ class BrowseController :
                 activity?.openInBrowser(HELP_URL)
             }
             // KMK -->
+            R.id.action_feeds -> {
+                val activity = activity as? androidx.activity.ComponentActivity ?: return true
+                eu.kanade.tachiyomi.ui.source.feed
+                    .FeedsSheet(activity, router)
+                    .show()
+            }
             R.id.action_source_category -> {
                 val activity = activity ?: return true
                 SourceCategoriesDialog(activity).showPicker(forBrowse = true) { presenter.updateSources() }

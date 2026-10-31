@@ -16,6 +16,9 @@
         app:showAsAction="ifRoom"/>
 
     <!-- KMK -->
+    <item android:id="@+id/action_feeds"
+        android:title="@string/feeds"
+        app:showAsAction="never"/>
     <item android:id="@+id/action_source_category"
         android:title="@string/browse_source_category"
         app:showAsAction="never"/>

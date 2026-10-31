@@ -57,4 +57,5 @@ architecture are recorded as `skipped` with the reason.
 | Smart categories / update schedules | partial | reading/completed/plan-to-read buckets only; schedule applies to automatic updates only |
 | Chapter blacklist | done (core) | DB v23 + backup 802; hide/reveal, reader/recents/next-unread/library counts aware; URL+scanlator identity fallback not needed (hidden by chapter row id) |
 | Scanlator priority + Smart Merge | done (core) | DB v24/v25 + backup 811/812, priority dialog, global toggle + per-manga override, library counts; deep-link resolve to the merged representative not done |
-| Unified tracker editor / feeds | skipped (for now) | Needs DB schema and backup work |
+| Source feeds | partial | Preference-backed feeds sheet (latest/popular/saved search, per-feed retry, reorder); no per-source feed tabs |
+| Unified tracker editor | skipped (for now) | Needs DB schema and backup work |

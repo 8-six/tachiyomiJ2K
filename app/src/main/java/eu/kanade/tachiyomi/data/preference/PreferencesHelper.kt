@@ -617,6 +617,8 @@ class PreferencesHelper(
     // KMK -->
     fun sourceCategories() = flowPrefs.getString("source_categories", "{}")
 
+    fun sourceFeeds() = flowPrefs.getString("source_feeds", "[]")
+
     fun globalSearchSourceCategory() = flowPrefs.getString("global_search_source_category", "")
 
     fun browseSourceCategory() = flowPrefs.getString("browse_source_category", "")

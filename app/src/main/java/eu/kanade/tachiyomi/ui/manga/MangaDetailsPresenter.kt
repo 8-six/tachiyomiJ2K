@@ -931,6 +931,12 @@ class MangaDetailsPresenter(
     fun hasTrackers(): Boolean = loggedServices.isNotEmpty()
 
     // Tracking
+    // KMK -->
+    private val trackErrorIds =
+        java.util.concurrent.ConcurrentHashMap
+            .newKeySet<Int>()
+    // KMK <--
+
     private fun setTrackItems() {
         trackList =
             loggedServices
@@ -938,7 +944,7 @@ class MangaDetailsPresenter(
                     if (service !is EnhancedTrackService) return@filter true
                     service.accept(source)
                 }.map { service ->
-                    TrackItem(tracks.find { it.sync_id == service.id }, service)
+                    TrackItem(tracks.find { it.sync_id == service.id }, service, service.id in trackErrorIds)
                 }
     }
 
@@ -963,10 +969,12 @@ class MangaDetailsPresenter(
                                     try {
                                         item.service.refresh(item.track!!)
                                     } catch (e: Exception) {
+                                        trackErrorIds.add(item.service.id)
                                         trackError(e)
                                         null
                                     }
                                 if (trackItem != null) {
+                                    trackErrorIds.remove(item.service.id)
                                     db.insertTrack(trackItem).executeAsBlocking()
                                     if (item.service is EnhancedTrackService || preferences.autoSyncProgressFromTrackers()) {
                                         syncChaptersWithTrackServiceTwoWay(

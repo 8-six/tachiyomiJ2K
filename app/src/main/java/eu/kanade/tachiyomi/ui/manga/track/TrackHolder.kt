@@ -88,6 +88,25 @@ class TrackHolder(
         binding.addTrackingPrivate.isVisible = track == null && item.service.supportsPrivateTracking
         if (track != null) {
             binding.trackTitle.text = track.title
+            // KMK -->
+            val errorColor = binding.trackTitle.context.getResourceColor(androidx.appcompat.R.attr.colorError)
+            binding.trackTitle.setTextColor(
+                if (item.hasError) {
+                    errorColor
+                } else {
+                    binding.trackTitle.context.getResourceColor(
+                        com.google.android.material.R.attr.colorOnSurface,
+                    )
+                },
+            )
+            binding.trackTitle.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                0,
+                0,
+                if (item.hasError) R.drawable.ic_warning_white_24dp else 0,
+                0,
+            )
+            binding.trackTitle.compoundDrawableTintList = ColorStateList.valueOf(errorColor)
+            // KMK <--
             binding.trackPrivateBadge.isVisible = item.service.supportsPrivateTracking && track.private
             binding.trackTitle.updatePaddingRelative(if (binding.trackPrivateBadge.isVisible) 24.dpToPx else 16.dpToPx)
             setupOverflowMenu(item, track)

@@ -30,6 +30,7 @@ from upstream TachiyomiJ2K are not repeated here.
 - Webtoon "Disable pinch to zoom" option in the reader sheet and Settings > Reader (adapted from Komikku). Not device-tested.
 - Webtoon "Gap between pages" slider (0-32dp) in Settings > Reader, drawn as an item decoration between page items. Not device-tested; not in the reader sheet.
 - Edit panel switches to a panorama cover header when the cover is wide (width/height >= 1.2). Not device-tested.
+- Tracker sheet marks a tracker whose last refresh failed with an error-colored title and warning icon until a later refresh succeeds (in memory only). Not device-tested.
 
 ### Changed
 - The manga edit panel is rewritten as a Compose Material 3 bottom sheet, adapted from Komikku's

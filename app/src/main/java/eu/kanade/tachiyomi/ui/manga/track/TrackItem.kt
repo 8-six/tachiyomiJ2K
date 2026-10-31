@@ -6,4 +6,7 @@ import eu.kanade.tachiyomi.data.track.TrackService
 data class TrackItem(
     val track: Track?,
     val service: TrackService,
+    // KMK -->
+    val hasError: Boolean = false,
+    // KMK <--
 )

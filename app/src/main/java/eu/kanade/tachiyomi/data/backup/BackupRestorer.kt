@@ -170,6 +170,18 @@ class BackupRestorer(
                     category.id = result.insertedId()?.toInt()
                 }
             }
+            // KMK -->
+            val allCategories = db.getCategories().executeAsBlocking()
+            backupCategories.forEach { backup ->
+                val parent = backup.parentName?.let { name -> allCategories.firstOrNull { it.name == name } }
+                val child = allCategories.firstOrNull { it.name == backup.name } ?: return@forEach
+                val parentId = parent?.id ?: 0
+                if (parent != null && child.parentId != parentId) {
+                    child.parentId = parentId
+                    db.insertCategory(child).executeAsBlocking()
+                }
+            }
+            // KMK <--
         }
 
         restoreProgress += 1

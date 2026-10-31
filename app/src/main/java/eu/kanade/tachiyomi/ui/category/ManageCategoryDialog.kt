@@ -32,6 +32,10 @@ class ManageCategoryDialog(
     private var updateLibrary: ((Int?) -> Unit)? = null
     private var category: Category? = null
 
+    // KMK -->
+    private var selectedParentId = 0
+    // KMK <--
+
     private val preferences by injectLazy<PreferencesHelper>()
     private val db by injectLazy<DatabaseHelper>()
     lateinit var binding: MangaCategoryDialogBinding
@@ -122,6 +126,12 @@ class ManageCategoryDialog(
             preferences.libraryUpdateInterval().set(0)
             LibraryUpdateJob.setupTask(preferences.context, 0)
         }
+        // KMK -->
+        if (category.id != null && category.id != 0 && category.id != -1 && category.parentId != selectedParentId) {
+            category.parentId = selectedParentId
+            db.insertCategory(category).executeAsBlocking()
+        }
+        // KMK <--
         updateLibrary?.invoke(category.id)
         return true
     }
@@ -139,6 +149,9 @@ class ManageCategoryDialog(
             binding.categoryTextLayout.isVisible = false
         }
         binding.editCategories.isVisible = category != null
+        // KMK -->
+        setupParentPicker()
+        // KMK <--
         binding.editCategories.setOnClickListener {
             router.popCurrentController()
             router.pushController(CategoryController().withFadeTransaction())
@@ -171,6 +184,49 @@ class ManageCategoryDialog(
             preferences.libraryUpdateInterval().get() > 0,
         )
     }
+
+    // KMK -->
+    private fun setupParentPicker() {
+        val current = category
+        val button = binding.parentCategory
+        if (current != null && (current.id ?: 0) <= 0) {
+            button.isVisible = false
+            return
+        }
+        selectedParentId = current?.parentId ?: 0
+        val all = db.getCategories().executeAsBlocking().filter { (it.id ?: 0) > 0 }
+
+        // A category can't become a child of itself or of one of its own descendants.
+        fun descendantIds(id: Int): Set<Int> {
+            val children = all.filter { it.parentId == id }.mapNotNull { it.id }
+            return children.toSet() + children.flatMap { descendantIds(it) }
+        }
+        val blocked = current?.id?.let { descendantIds(it) + it }.orEmpty()
+        val options = all.filter { it.id !in blocked }
+
+        fun refreshLabel() {
+            val name =
+                all.firstOrNull { it.id == selectedParentId }?.name
+                    ?: button.context.getString(R.string.parent_category_none)
+            button.text = button.context.getString(R.string.parent_category_value, name)
+        }
+        refreshLabel()
+        button.setOnClickListener {
+            val labels =
+                (listOf(button.context.getString(R.string.parent_category_none)) + options.map { it.name }).toTypedArray()
+            val checked = options.indexOfFirst { it.id == selectedParentId } + 1
+            button.context
+                .materialAlertDialog()
+                .setTitle(R.string.parent_category)
+                .setSingleChoiceItems(labels, checked) { dialog, which ->
+                    selectedParentId = if (which == 0) 0 else options[which - 1].id ?: 0
+                    refreshLabel()
+                    dialog.dismiss()
+                }.setNegativeButton(android.R.string.cancel, null)
+                .show()
+        }
+    }
+    // KMK <--
 
     /** Update a pref based on checkbox, and return if the pref is not empty */
     private fun updatePref(

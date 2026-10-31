@@ -23,6 +23,12 @@ class CategoryImpl : Category {
 
     override var langId: String? = null
 
+    // KMK -->
+    override var parentId: Int = 0
+
+    override var parentName: String? = null
+    // KMK <--
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || javaClass != other.javaClass) return false

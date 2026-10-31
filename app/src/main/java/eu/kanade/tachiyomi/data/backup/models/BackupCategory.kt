@@ -14,6 +14,9 @@ class BackupCategory(
     @ProtoNumber(100) var flags: Int = 0,
     // J2K Specific values
     @ProtoNumber(800) var mangaSort: Char? = null,
+    // KMK -->
+    @ProtoNumber(803) var parentName: String? = null,
+    // KMK <--
 ) {
     fun getCategoryImpl(): CategoryImpl =
         CategoryImpl().apply {
@@ -30,6 +33,7 @@ class BackupCategory(
                 order = category.order,
                 flags = category.flags,
                 mangaSort = category.mangaSort,
+                parentName = category.parentName,
             )
     }
 }

@@ -16,6 +16,7 @@ import eu.kanade.tachiyomi.data.database.tables.CategoryTable.COL_ID
 import eu.kanade.tachiyomi.data.database.tables.CategoryTable.COL_MANGA_ORDER
 import eu.kanade.tachiyomi.data.database.tables.CategoryTable.COL_NAME
 import eu.kanade.tachiyomi.data.database.tables.CategoryTable.COL_ORDER
+import eu.kanade.tachiyomi.data.database.tables.CategoryTable.COL_PARENT_ID
 import eu.kanade.tachiyomi.data.database.tables.CategoryTable.TABLE
 
 class CategoryTypeMapping :
@@ -41,7 +42,8 @@ class CategoryPutResolver : DefaultPutResolver<Category>() {
             .build()
 
     override fun mapToContentValues(obj: Category) =
-        ContentValues(4).apply {
+        ContentValues(5).apply {
+            put(COL_PARENT_ID, obj.parentId)
             put(COL_ID, obj.id)
             put(COL_NAME, obj.name)
             put(COL_ORDER, obj.order)
@@ -62,6 +64,10 @@ class CategoryGetResolver : DefaultGetResolver<Category>() {
             name = cursor.getString(cursor.getColumnIndex(COL_NAME))
             order = cursor.getInt(cursor.getColumnIndex(COL_ORDER))
             flags = cursor.getInt(cursor.getColumnIndex(COL_FLAGS))
+            // KMK -->
+            cursor.getColumnIndex(COL_PARENT_ID).takeIf { it >= 0 }?.let { parentId = cursor.getInt(it) }
+            cursor.getColumnIndex("parent_name").takeIf { it >= 0 }?.let { parentName = cursor.getString(it) }
+            // KMK <--
 
             val orderString = cursor.getString(cursor.getColumnIndex(COL_MANGA_ORDER))
             when {

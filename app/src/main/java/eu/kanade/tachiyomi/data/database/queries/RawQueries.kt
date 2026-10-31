@@ -342,6 +342,17 @@ fun getTotalChapterMangaQuery() =
 /**
  * Query to get the categories for a manga.
  */
+// KMK -->
+
+/** Categories in display order, with the name of their parent category when they have one. */
+fun getCategoriesQuery() =
+    """
+    SELECT C.*, P.${Category.COL_NAME} AS parent_name FROM ${Category.TABLE} C
+    LEFT JOIN ${Category.TABLE} P ON C.${Category.COL_PARENT_ID} = P.${Category.COL_ID} AND C.${Category.COL_PARENT_ID} != 0
+    ORDER BY C.${Category.COL_ORDER}
+"""
+// KMK <--
+
 fun getCategoriesForMangaQuery() =
     """
     SELECT ${Category.TABLE}.* FROM ${Category.TABLE}

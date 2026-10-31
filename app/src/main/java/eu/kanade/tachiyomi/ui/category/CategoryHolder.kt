@@ -46,7 +46,7 @@ class CategoryHolder(
      */
     fun bind(category: Category) {
         // Set capitalized title.
-        binding.title.text = category.name.replaceFirstChar { it.titlecase(Locale.getDefault()) }
+        binding.title.text = category.displayName.replaceFirstChar { it.titlecase(Locale.getDefault()) }
         binding.editText.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 submitChanges()

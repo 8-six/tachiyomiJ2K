@@ -53,7 +53,8 @@ architecture are recorded as `skipped` with the reason.
 | Auto Reread | partial | Setting + prompt/automatic reset when starting a fully read series; no tracker reread coordination or category/tracking automation |
 | Library bookmark-color filter | partial | Search term `bookmark_color:<name>` only; no filter-sheet control. Source language grouping/search not analysed |
 | Related manga (sequel/prequel) | partial | AniList only, overflow-menu dialog; no horizontal row on the manga page, no MangaBaka, no cover cards |
-| Nested / Smart categories | skipped (for now) | Flat categories; needs CategoryTable migration, backup fields and a UI rewrite |
+| Nested categories | partial | Parent assignment, "Parent › Child" labels, backup/restore; no tree tabs/chips, no include/exclude-descendant filters |
+| Smart categories / update schedules | not started | see TASKS.md |
 | Chapter blacklist | done (core) | DB v23 + backup 802; hide/reveal, reader/recents/next-unread/library counts aware; URL+scanlator identity fallback not needed (hidden by chapter row id) |
 | Scanlator priority + Smart Merge | done (core) | DB v24/v25 + backup 811/812, priority dialog, global toggle + per-manga override, library counts; deep-link resolve to the merged representative not done |
 | Unified tracker editor / feeds | skipped (for now) | Needs DB schema and backup work |

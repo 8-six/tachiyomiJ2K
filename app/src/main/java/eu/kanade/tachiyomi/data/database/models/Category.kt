@@ -29,6 +29,17 @@ interface Category : Serializable {
 
     var langId: String?
 
+    // KMK -->
+    /** Id of the parent category, or 0 for a top-level category. */
+    var parentId: Int
+
+    /** Name of the parent category (read-only, filled by the database query). */
+    var parentName: String?
+
+    val displayName: String
+        get() = parentName?.let { "$it › $name" } ?: name
+    // KMK <--
+
     fun isAscending(): Boolean = ((mangaSort?.minus('a') ?: 0) % 2) != 1
 
     fun sortingMode(nullAsDND: Boolean = false): LibrarySort? =

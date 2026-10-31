@@ -29,6 +29,17 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
+    <!-- KMK -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/parent_category"
+        style="@style/Widget.Material3Expressive.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:gravity="start|center_vertical"
+        android:text="@string/parent_category" />
+
     <eu.kanade.tachiyomi.widget.TriStateCheckBox
         android:id="@+id/download_new"
         android:layout_width="match_parent"

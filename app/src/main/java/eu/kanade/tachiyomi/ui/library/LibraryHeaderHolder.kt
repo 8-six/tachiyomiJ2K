@@ -180,7 +180,7 @@ class LibraryHeaderHolder(
             if ((category.isAlone || isFilteredList) && !category.isDynamic) {
                 ""
             } else {
-                category.name
+                category.displayName
             }
 
         binding.categoryTitle.text = categoryName +

@@ -480,7 +480,7 @@ open class LibraryController(
     fun saveActiveCategory(category: Category) {
         activeCategory = category.order
         val headerItem = getHeader() ?: return
-        binding.headerTitle.text = headerItem.category.name
+        binding.headerTitle.text = headerItem.category.displayName
         setActiveCategory()
     }
 
@@ -491,7 +491,7 @@ open class LibraryController(
             }
         if (currentCategory > -1) {
             binding.categoryRecycler.setCategories(currentCategory)
-            binding.headerTitle.text = presenter.categories[currentCategory].name
+            binding.headerTitle.text = presenter.categories[currentCategory].displayName
             setSubtitle()
         }
     }

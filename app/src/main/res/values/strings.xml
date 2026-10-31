@@ -70,6 +70,9 @@
     <string name="hide_chapter">Hide chapter</string>
     <string name="unhide_chapter">Unhide chapter</string>
     <string name="show_hidden_chapters">Show hidden chapters</string>
+    <string name="parent_category">Parent category</string>
+    <string name="parent_category_none">None (top level)</string>
+    <string name="parent_category_value">Parent category: %1$s</string>
     <string name="related_manga">Related manga</string>
     <string name="related_manga_none">No related manga found</string>
     <string name="bookmark_color_default">Default</string>

@@ -1,0 +1,37 @@
+name: Version bump
+
+on:
+  workflow_dispatch:
+    inputs:
+      kind:
+        description: "Bump kind (a patch bump past .10 rolls over to the next minor)"
+        type: choice
+        options: [patch, minor, major]
+        default: patch
+      create_tag:
+        description: "Also create and push the v<version> tag"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bump version
+        id: bump
+        run: echo "version=$(python3 .github/scripts/bump_version.py '${{ inputs.kind }}')" >> "$GITHUB_OUTPUT"
+
+      - name: Commit
+        run: |
+          git config user.name anonymous
+          git config user.email anonymous@users.noreply.github.com
+          git commit -am "Bump version to ${{ steps.bump.outputs.version }}"
+          if [ "${{ inputs.create_tag }}" = "true" ]; then
+            git tag "v${{ steps.bump.outputs.version }}"
+          fi
+          git push --follow-tags

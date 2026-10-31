@@ -34,6 +34,7 @@ from upstream TachiyomiJ2K are not repeated here.
 - The issue templates, About screen and tracker User-Agents link to this fork instead of upstream.
 
 ### Technical
+- Manual "Version bump" workflow backed by `.github/scripts/bump_version.py`: bumps `versionName`/`versionCode` in `buildSrc`, rolls a patch bump past .10 over to the next minor, fails on missing or ambiguous declarations, and can tag. The script was run locally; the workflow itself has not run on GitHub.
 - The dev flavor no longer tries to upload Crashlytics mapping files, which broke
   `assembleDevRelease` without `google-services.json`.
 - Raised the Gradle and Kotlin daemon heaps to 3 GB in `gradle.properties`. A debug build of the app

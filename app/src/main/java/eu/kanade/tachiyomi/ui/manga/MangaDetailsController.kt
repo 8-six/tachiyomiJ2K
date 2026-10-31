@@ -1338,6 +1338,9 @@ class MangaDetailsController :
         menu.findItem(R.id.action_scanlator_priority)?.isVisible =
             !presenter.isLockedFromSearch &&
             presenter.allChapterScanlators.size > 1
+        menu.findItem(R.id.action_related_manga)?.isVisible =
+            !presenter.isLockedFromSearch &&
+            anilistTrackId() != null
         menu.findItem(R.id.action_show_blacklisted)?.apply {
             isVisible = !presenter.isLockedFromSearch
             isChecked = presenter.showBlacklisted
@@ -1350,6 +1353,7 @@ class MangaDetailsController :
             R.id.action_edit -> openEditMangaDialog()
             // KMK -->
             R.id.action_scanlator_priority -> showScanlatorPriority()
+            R.id.action_related_manga -> showRelatedManga()
             R.id.action_smart_merge_mode -> showSmartMergeMode()
             R.id.action_show_blacklisted -> {
                 presenter.toggleShowBlacklisted()
@@ -1789,6 +1793,42 @@ class MangaDetailsController :
             }
         }
     }
+
+    // KMK -->
+    private fun anilistTrackId(): Long? =
+        presenter.trackList
+            .mapNotNull { it.track }
+            .firstOrNull { it.sync_id == eu.kanade.tachiyomi.data.track.TrackManager.ANILIST && it.media_id > 0 }
+            ?.media_id
+
+    private fun showRelatedManga() {
+        val mediaId = anilistTrackId() ?: return
+        val activity = activity ?: return
+        viewScope.launch {
+            val relations =
+                runCatching {
+                    Injekt.get<eu.kanade.tachiyomi.data.track.TrackManager>().aniList.getRelations(mediaId)
+                }.getOrElse {
+                    activity.toast(it.message ?: activity.getString(R.string.related_manga_none))
+                    return@launch
+                }.filter { it.first in setOf("SEQUEL", "PREQUEL", "PARENT", "SIDE_STORY", "ADAPTATION", "SPIN_OFF") }
+            if (relations.isEmpty()) {
+                activity.toast(R.string.related_manga_none)
+                return@launch
+            }
+            val labels =
+                relations
+                    .map { (type, title) -> type.lowercase().replace('_', ' ').replaceFirstChar { it.uppercase() } + ": " + title }
+                    .toTypedArray()
+            activity
+                .materialAlertDialog()
+                .setTitle(R.string.related_manga)
+                .setItems(labels) { _, index -> globalSearch(relations[index].second) }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
+        }
+    }
+    // KMK <--
 
     fun globalSearch(text: String) {
         if (isNotOnline()) return

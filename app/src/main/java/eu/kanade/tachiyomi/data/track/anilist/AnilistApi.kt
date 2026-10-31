@@ -163,6 +163,49 @@ class AnilistApi(
             }
         }
 
+    // KMK -->
+
+    /** Sequels/prequels (and other manga relations) AniList lists for [mediaId], as (relation type, title). */
+    suspend fun getRelations(mediaId: Long): List<Pair<String, String>> =
+        withIOContext {
+            val payload =
+                buildJsonObject {
+                    put("query", relationsQuery())
+                    putJsonObject("variables") {
+                        put("id", mediaId)
+                    }
+                }
+            with(json) {
+                client
+                    .newCall(POST(apiUrl, body = payload.toString().toRequestBody(jsonMime)))
+                    .awaitSuccess()
+                    .parseAs<JsonObject>()
+                    .let { response ->
+                        response["data"]
+                            ?.jsonObject
+                            ?.get("Media")
+                            ?.jsonObject
+                            ?.get("relations")
+                            ?.jsonObject
+                            ?.get("edges")
+                            ?.jsonArray
+                            .orEmpty()
+                            .mapNotNull { edge ->
+                                val node = edge.jsonObject["node"]?.jsonObject ?: return@mapNotNull null
+                                if (node["type"]?.jsonPrimitive?.contentOrNull != "MANGA") return@mapNotNull null
+                                val title = node["title"]?.jsonObject
+                                val name =
+                                    title?.get("english")?.jsonPrimitive?.contentOrNull
+                                        ?: title?.get("romaji")?.jsonPrimitive?.contentOrNull
+                                        ?: return@mapNotNull null
+                                val relation = edge.jsonObject["relationType"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+                                relation to name
+                            }
+                    }
+            }
+        }
+    // KMK <--
+
     suspend fun findLibManga(
         track: Track,
         userid: Int,
@@ -356,6 +399,29 @@ class AnilistApi(
             |}
             |
             """.trimMargin()
+
+        // KMK -->
+        fun relationsQuery() =
+            """
+            |query Relations(${'$'}id: Int) {
+                |Media(id: ${'$'}id, type: MANGA) {
+                    |relations {
+                        |edges {
+                            |relationType
+                            |node {
+                                |type
+                                |title {
+                                    |romaji
+                                    |english
+                                |}
+                            |}
+                        |}
+                    |}
+                |}
+            |}
+            |
+            """.trimMargin()
+        // KMK <--
 
         fun metadataQuery() =
             """

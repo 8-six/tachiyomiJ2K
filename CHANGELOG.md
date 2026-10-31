@@ -36,6 +36,9 @@ from upstream TachiyomiJ2K are not repeated here.
   `keystore.properties`, so updates install over each other.
 - The issue templates, About screen and tracker User-Agents link to this fork instead of upstream.
 
+### Fixed
+- Leaving the extension repositories screen refreshes the available extensions when the set of enabled repos changed, so adding, removing, enabling or disabling a repo shows up without a manual refresh or restart. Matches Komikku's behavior.
+
 ### Technical
 - Manual "Version bump" workflow backed by `.github/scripts/bump_version.py`: bumps `versionName`/`versionCode` in `buildSrc`, rolls a patch bump past .10 over to the next minor, fails on missing or ambiguous declarations, and can tag. The script was run locally; the workflow itself has not run on GitHub.
 - The dev flavor no longer tries to upload Crashlytics mapping files, which broke

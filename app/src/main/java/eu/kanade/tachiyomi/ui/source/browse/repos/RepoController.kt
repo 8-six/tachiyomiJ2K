@@ -9,7 +9,9 @@ import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.kanade.tachiyomi.R
+import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.databinding.CategoriesControllerBinding
+import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.ui.base.SmallToolbarInterface
 import eu.kanade.tachiyomi.ui.base.controller.BaseController
 import eu.kanade.tachiyomi.ui.main.MainActivity
@@ -19,6 +21,11 @@ import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.util.view.liftAppbarWith
 import eu.kanade.tachiyomi.util.view.snack
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 
 /**
  * Controller to manage the repos for the user's extensions.
@@ -56,6 +63,15 @@ class RepoController(
      */
     private val presenter = RepoPresenter(this)
 
+    // KMK -->
+    private val preferences: PreferencesHelper = Injekt.get()
+    private val extensionManager: ExtensionManager = Injekt.get()
+
+    private fun enabledRepos() = preferences.extensionRepos().get() - preferences.disabledExtensionRepos().get()
+
+    private var reposAtLastRefresh = enabledRepos()
+    // KMK <--
+
     /**
      * Returns the toolbar title to show when this controller is attached.
      */
@@ -91,6 +107,14 @@ class RepoController(
         snack?.dismiss()
         view.clearFocus()
         confirmDelete()
+        // KMK -->
+        // Adding, removing, enabling or disabling a repo must show up in the extension list
+        // without waiting for a manual refresh or an app restart.
+        if (enabledRepos() != reposAtLastRefresh) {
+            reposAtLastRefresh = enabledRepos()
+            GlobalScope.launch(Dispatchers.IO) { extensionManager.findAvailableExtensions() }
+        }
+        // KMK <--
         snack = null
         adapter = null
         super.onDestroyView(view)

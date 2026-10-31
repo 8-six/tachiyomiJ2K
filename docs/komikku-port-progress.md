@@ -45,6 +45,7 @@ architecture are recorded as `skipped` with the reason.
 | History distinct-manga count (s13.1) | partial | Shown in Recents Updates date headings; History view has no date headings. Blacklist/Smart Merge-aware continue-reading waits for those features. |
 | Historical / removed items (s24, s25) | skipped | Verification-only lists (reverted or unverified fork experiments); nothing to port |
 | Release interval prediction (s14.2) | partial | Per-title median-gap estimate on the manga page (unit tested). Not used for library update scheduling. |
+| Extension repo management (s12) | done | J2K already had repo enable/disable, metadata, icons, source prefs; added refresh of the extension list after repo changes. Built, not device-tested. |
 | Nested / Smart categories | skipped (for now) | Flat categories; needs CategoryTable migration, backup fields and a UI rewrite |
 | Chapter colored bookmarks / blacklist / Smart Merge | skipped (for now) | `Chapter.bookmark` is a Boolean end to end; needs migration and backup changes |
 | Unified tracker editor / feeds | skipped (for now) | Needs DB schema and backup work |

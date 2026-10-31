@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.reader.viewer.webtoon
 
 import android.graphics.Color
 import android.graphics.PointF
+import android.graphics.Rect
 import android.view.InputDevice
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -177,6 +178,20 @@ class WebtoonViewer(
 
         // KMK -->
         frame.disableZoom = config.disableZoom
+        recycler.addItemDecoration(
+            object : RecyclerView.ItemDecoration() {
+                override fun getItemOffsets(
+                    outRect: Rect,
+                    view: View,
+                    parent: RecyclerView,
+                    state: RecyclerView.State,
+                ) {
+                    val gap = (config.pageGap * view.resources.displayMetrics.density).roundToInt()
+                    if (gap > 0 && parent.getChildViewHolder(view) is WebtoonPageHolder) outRect.bottom = gap
+                }
+            },
+        )
+        config.pageGapChangedListener = { recycler.invalidateItemDecorations() }
         config.disableZoomChangedListener = { frame.disableZoom = it }
         // KMK <--
 

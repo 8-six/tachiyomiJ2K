@@ -209,6 +209,8 @@ class PreferencesHelper(
 
     // KMK -->
     fun webtoonDisableZoom() = flowPrefs.getBoolean(Keys.webtoonDisableZoom, false)
+
+    fun webtoonPageGap() = flowPrefs.getInt(Keys.webtoonPageGap, 0)
     // KMK <--
 
     fun readWithLongTap() = flowPrefs.getBoolean(Keys.readWithLongTap, true)

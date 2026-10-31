@@ -104,6 +104,7 @@ object PreferenceKeys {
 
     // KMK -->
     const val webtoonDisableZoom = "webtoon_disable_zoom"
+    const val webtoonPageGap = "webtoon_page_gap"
     // KMK <--
 
     const val autoUpdateTrack = "pref_auto_update_manga_sync_key"

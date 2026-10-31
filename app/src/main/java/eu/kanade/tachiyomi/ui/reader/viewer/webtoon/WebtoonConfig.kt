@@ -43,6 +43,11 @@ class WebtoonConfig(
     var disableZoom = false
         private set
 
+    var pageGapChangedListener: (() -> Unit)? = null
+
+    var pageGap = 0
+        private set
+
     var disableZoomChangedListener: ((Boolean) -> Unit)? = null
     // KMK <--
 
@@ -95,6 +100,10 @@ class WebtoonConfig(
             .register({ enableZoomOut = it }, { zoomPropertyChangedListener?.invoke(it) })
 
         // KMK -->
+        preferences
+            .webtoonPageGap()
+            .register({ pageGap = it }, { pageGapChangedListener?.invoke() })
+
         preferences
             .webtoonDisableZoom()
             .register({ disableZoom = it }, { disableZoomChangedListener?.invoke(it) })

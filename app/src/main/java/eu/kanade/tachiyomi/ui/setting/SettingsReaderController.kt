@@ -430,6 +430,13 @@ class SettingsReaderController : SettingsController() {
                 }
 
                 // KMK -->
+                sliderPreference {
+                    bindTo(preferences.webtoonPageGap())
+                    titleRes = R.string.webtoon_page_gap
+                    entryValues = (0..32 step 4).toList()
+                    valueFormatter = { if (it == 0) context.getString(R.string.none) else "${it}dp" }
+                }
+
                 switchPreference {
                     key = Keys.webtoonDisableZoom
                     titleRes = R.string.disable_pinch_zoom

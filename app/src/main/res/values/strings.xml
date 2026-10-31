@@ -487,6 +487,7 @@
     <string name="animate_page_transitions">Animate page transitions</string>
     <string name="enable_zoom_out">Enable zoom out</string>
     <string name="disable_pinch_zoom">Disable pinch to zoom</string>
+    <string name="webtoon_page_gap">Gap between pages</string>
     <string name="double_tap_anim_speed">Double tap animation speed</string>
     <string name="show_page_number">Show page number</string>
     <string name="page_preload_amount">Page preload amount</string>

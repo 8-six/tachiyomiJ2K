@@ -178,6 +178,7 @@ class MigrationProcessAdapter(
                         if (prevChapter != null) {
                             chapter.bookmark = prevChapter.bookmark
                             chapter.bookmark_color = prevChapter.bookmark_color
+                            chapter.blacklisted = prevChapter.blacklisted
                             chapter.read = prevChapter.read
                             chapter.date_fetch = prevChapter.date_fetch
                             prevHistoryList

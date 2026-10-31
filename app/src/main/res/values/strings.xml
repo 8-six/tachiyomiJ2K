@@ -54,6 +54,9 @@
     <string name="all_chapters_read">All chapters read</string>
     <string name="bookmarked">Bookmarked</string>
     <string name="bookmark_color">Bookmark color</string>
+    <string name="hide_chapter">Hide chapter</string>
+    <string name="unhide_chapter">Unhide chapter</string>
+    <string name="show_hidden_chapters">Show hidden chapters</string>
     <string name="bookmark_color_default">Default</string>
     <string name="bookmark_color_red">Red</string>
     <string name="bookmark_color_orange">Orange</string>

@@ -18,6 +18,9 @@ class ChapterSort(
         andFiltered: Boolean = true,
         filterForReader: Boolean = false,
         currentChapter: T? = null,
+        // KMK -->
+        includeBlacklisted: Boolean = false,
+        // KMK <--
     ): List<T> {
         val chapters =
             when {
@@ -27,7 +30,7 @@ class ChapterSort(
                         manga,
                         currentChapter,
                     )
-                andFiltered -> chapterFilter.filterChapters(rawChapters, manga)
+                andFiltered -> chapterFilter.filterChapters(rawChapters, manga, includeBlacklisted)
                 else -> rawChapters
             }
 

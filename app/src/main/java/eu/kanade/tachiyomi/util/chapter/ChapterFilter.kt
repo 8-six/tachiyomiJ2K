@@ -15,6 +15,9 @@ class ChapterFilter(
     fun <T : Chapter> filterChapters(
         chapters: List<T>,
         manga: Manga,
+        // KMK -->
+        includeBlacklisted: Boolean = false,
+        // KMK <--
     ): List<T> {
         val readEnabled = manga.readFilter(preferences) == Manga.CHAPTER_SHOW_READ
         val unreadEnabled = manga.readFilter(preferences) == Manga.CHAPTER_SHOW_UNREAD
@@ -24,7 +27,7 @@ class ChapterFilter(
         val notBookmarkEnabled = manga.bookmarkedFilter(preferences) == Manga.CHAPTER_SHOW_NOT_BOOKMARKED
 
         // if none of the filters are enabled skip the filtering of them
-        val filteredChapters = chapters.filterChaptersByScanlators(manga)
+        val filteredChapters = chapters.filterChaptersByScanlators(manga, includeBlacklisted)
         return if (readEnabled || unreadEnabled || downloadEnabled || notDownloadEnabled || bookmarkEnabled || notBookmarkEnabled) {
             filteredChapters.filter {
                 if (readEnabled &&
@@ -53,6 +56,12 @@ class ChapterFilter(
         var filteredChapters = chapters.filterChaptersByScanlators(manga)
         // if filter prefs aren't enabled don't even filter
         if (!preferences.skipRead() && !preferences.skipFiltered() && !preferences.skipDupe().get()) {
+            // KMK -->
+            // a revealed blacklisted chapter must still open in the reader
+            if (selectedChapter?.id != null && filteredChapters.none { it.id == selectedChapter.id }) {
+                return filteredChapters + selectedChapter
+            }
+            // KMK <--
             return filteredChapters
         }
 
@@ -97,10 +106,19 @@ class ChapterFilter(
 
     companion object {
         /** filters chapters for scanlators */
-        fun <T : Chapter> List<T>.filterChaptersByScanlators(manga: Manga): List<T> =
-            manga.filtered_scanlators?.let { filteredScanlatorString ->
+        fun <T : Chapter> List<T>.filterChaptersByScanlators(
+            manga: Manga,
+            // KMK -->
+            includeBlacklisted: Boolean = false,
+            // KMK <--
+        ): List<T> {
+            // KMK -->
+            val visible = if (includeBlacklisted) this else filter { !it.blacklisted }
+            // KMK <--
+            return manga.filtered_scanlators?.let { filteredScanlatorString ->
                 val filteredScanlators = ChapterUtil.getScanlators(filteredScanlatorString)
-                filter { ChapterUtil.getScanlators(it.scanlator).none { group -> filteredScanlators.contains(group) } }
-            } ?: this
+                visible.filter { ChapterUtil.getScanlators(it.scanlator).none { group -> filteredScanlators.contains(group) } }
+            } ?: visible
+        }
     }
 }

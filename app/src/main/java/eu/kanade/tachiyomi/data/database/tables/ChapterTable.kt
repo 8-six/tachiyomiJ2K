@@ -19,6 +19,8 @@ object ChapterTable {
 
     // KMK -->
     const val COL_BOOKMARK_COLOR = "bookmark_color"
+
+    const val COL_BLACKLISTED = "blacklisted"
     // KMK <--
 
     const val COL_DATE_FETCH = "date_fetch"
@@ -53,6 +55,7 @@ object ChapterTable {
             $COL_DATE_UPLOAD LONG NOT NULL,
             $COL_MEMO TEXT NOT NULL DEFAULT '{}',
             $COL_BOOKMARK_COLOR INTEGER NOT NULL DEFAULT 0,
+            $COL_BLACKLISTED INTEGER NOT NULL DEFAULT 0,
             FOREIGN KEY($COL_MANGA_ID) REFERENCES ${MangaTable.TABLE} (${MangaTable.COL_ID})
             ON DELETE CASCADE
             )"""
@@ -95,6 +98,9 @@ object ChapterTable {
 
     val addBookmarkColor: String
         get() = "ALTER TABLE $TABLE ADD COLUMN $COL_BOOKMARK_COLOR INTEGER NOT NULL DEFAULT 0"
+
+    val addBlacklisted: String
+        get() = "ALTER TABLE $TABLE ADD COLUMN $COL_BLACKLISTED INTEGER NOT NULL DEFAULT 0"
 
     val addMemo: String
         get() = "ALTER TABLE $TABLE ADD COLUMN $COL_MEMO TEXT NOT NULL DEFAULT '{}'"

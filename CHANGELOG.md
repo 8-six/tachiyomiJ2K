@@ -32,6 +32,7 @@ from upstream TachiyomiJ2K are not repeated here.
 - Edit panel switches to a panorama cover header when the cover is wide (width/height >= 1.2). Not device-tested.
 - Tracker sheet marks a tracker whose last refresh failed with an error-colored title and warning icon until a later refresh succeeds (in memory only). Not device-tested.
 - Colored chapter bookmarks: long-press a chapter on the manga page > "Bookmark color" picks one of 8 colors (also bookmarks the chapter). The color tints the bookmark in the chapter list and reader chapter list. Adapted from Komikku. Not device-tested; no color picker in the reader yet.
+- Chapter blacklist: long-press a chapter > "Hide chapter" removes it from the manga chapter list, reader navigation, next-unread lookups and Recents without deleting it, its history or bookmarks. "Show hidden chapters" in the manga overflow menu reveals them (not persisted) so they can be unhidden. Adapted from Komikku. Not device-tested; library unread counts are not blacklist-aware yet.
 
 ### Changed
 - The manga edit panel is rewritten as a Compose Material 3 bottom sheet, adapted from Komikku's
@@ -46,6 +47,7 @@ from upstream TachiyomiJ2K are not repeated here.
 - Leaving the extension repositories screen refreshes the available extensions when the set of enabled repos changed, so adding, removing, enabling or disabling a repo shows up without a manual refresh or restart. Matches Komikku's behavior.
 
 ### Technical
+- Database version 23 adds `chapters.blacklisted` (INTEGER NOT NULL DEFAULT 0). Backups carry it as `BackupChapter` ProtoNumber 802; older backups restore as not hidden and a restore keeps a local hidden flag. `ChapterBlacklistTest` covers the filter and the protobuf field.
 - Database version 22 adds `chapters.bookmark_color` (INTEGER NOT NULL DEFAULT 0, ARGB, 0 = theme default). Backups carry it as `BackupChapter` ProtoNumber 801; older backups restore with no color, and a restore keeps an existing local color when the backup has none. `BackupChapterTest` covers the field.
 - Manual "Version bump" workflow backed by `.github/scripts/bump_version.py`: bumps `versionName`/`versionCode` in `buildSrc`, rolls a patch bump past .10 over to the next minor, fails on missing or ambiguous declarations, and can tag. The script was run locally; the workflow itself has not run on GitHub.
 - The dev flavor no longer tries to upload Crashlytics mapping files, which broke

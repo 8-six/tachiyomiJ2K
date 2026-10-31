@@ -51,5 +51,6 @@ architecture are recorded as `skipped` with the reason.
 | Tracker error indicator | partial | In-memory flag in tracker sheet; preferred tracker/unified editor not ported |
 | Colored chapter bookmarks | partial | DB v22 + backup 801 + picker on chapter long-press; reader picker/Fillermarks not ported |
 | Nested / Smart categories | skipped (for now) | Flat categories; needs CategoryTable migration, backup fields and a UI rewrite |
-| Chapter colored bookmarks / blacklist / Smart Merge | skipped (for now) | `Chapter.bookmark` is a Boolean end to end; needs migration and backup changes |
+| Chapter blacklist | partial | DB v23 + backup 802; per-chapter hide, reveal toggle, reader/recents/next-unread aware; library counts, identity fallback rules not done |
+| Smart Merge / scanlator priority | skipped (for now) | `Chapter.bookmark` is a Boolean end to end; needs migration and backup changes |
 | Unified tracker editor / feeds | skipped (for now) | Needs DB schema and backup work |

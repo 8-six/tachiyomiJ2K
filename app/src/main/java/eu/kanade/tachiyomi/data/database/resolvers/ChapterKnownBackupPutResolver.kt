@@ -34,6 +34,7 @@ class ChapterKnownBackupPutResolver : PutResolver<Chapter>() {
             ChapterTable.COL_READ to chapter.read,
             ChapterTable.COL_BOOKMARK to chapter.bookmark,
             ChapterTable.COL_BOOKMARK_COLOR to chapter.bookmark_color,
+            ChapterTable.COL_BLACKLISTED to chapter.blacklisted,
             ChapterTable.COL_LAST_PAGE_READ to chapter.last_page_read,
         )
 }

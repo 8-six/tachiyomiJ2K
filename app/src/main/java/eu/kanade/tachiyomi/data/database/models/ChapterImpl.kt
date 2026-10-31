@@ -19,6 +19,8 @@ class ChapterImpl : Chapter {
 
     override var bookmark_color: Int = 0
 
+    override var blacklisted: Boolean = false
+
     override var last_page_read: Int = 0
 
     override var pages_left: Int = 0

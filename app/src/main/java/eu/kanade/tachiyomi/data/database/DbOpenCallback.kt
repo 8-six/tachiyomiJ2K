@@ -20,7 +20,7 @@ class DbOpenCallback : SupportSQLiteOpenHelper.Callback(DATABASE_VERSION) {
         /**
          * Version of the database.
          */
-        const val DATABASE_VERSION = 22
+        const val DATABASE_VERSION = 23
     }
 
     override fun onOpen(db: SupportSQLiteDatabase) {
@@ -157,6 +157,9 @@ class DbOpenCallback : SupportSQLiteOpenHelper.Callback(DATABASE_VERSION) {
         }
         if (oldVersion < 22) {
             db.execSQL(ChapterTable.addBookmarkColor)
+        }
+        if (oldVersion < 23) {
+            db.execSQL(ChapterTable.addBlacklisted)
         }
     }
 

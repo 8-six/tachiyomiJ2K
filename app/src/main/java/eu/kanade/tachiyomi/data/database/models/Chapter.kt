@@ -17,6 +17,9 @@ interface Chapter :
     // KMK -->
     /** ARGB color of the bookmark, 0 for the theme default. */
     var bookmark_color: Int
+
+    /** Hidden from the chapter list and reader navigation without being deleted. */
+    var blacklisted: Boolean
     // KMK <--
 
     var last_page_read: Int
@@ -50,6 +53,7 @@ interface Chapter :
         read = other.read
         bookmark = other.bookmark
         bookmark_color = other.bookmark_color
+        blacklisted = other.blacklisted
         last_page_read = other.last_page_read
         pages_left = other.pages_left
         date_fetch = other.date_fetch

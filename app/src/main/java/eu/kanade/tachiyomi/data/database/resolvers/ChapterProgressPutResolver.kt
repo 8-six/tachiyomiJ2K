@@ -34,6 +34,7 @@ class ChapterProgressPutResolver : PutResolver<Chapter>() {
             put(ChapterTable.COL_READ, chapter.read)
             put(ChapterTable.COL_BOOKMARK, chapter.bookmark)
             put(ChapterTable.COL_BOOKMARK_COLOR, chapter.bookmark_color)
+            put(ChapterTable.COL_BLACKLISTED, chapter.blacklisted)
             put(ChapterTable.COL_LAST_PAGE_READ, chapter.last_page_read)
             put(ChapterTable.COL_PAGES_LEFT, chapter.pages_left)
         }

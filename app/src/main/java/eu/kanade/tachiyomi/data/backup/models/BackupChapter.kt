@@ -27,6 +27,7 @@ data class BackupChapter(
     @ProtoNumber(800) var pagesLeft: Int = 0,
     // KMK -->
     @ProtoNumber(801) var bookmarkColor: Int = 0,
+    @ProtoNumber(802) var blacklisted: Boolean = false,
     // KMK <--
 ) {
     fun toChapterImpl(): ChapterImpl =
@@ -38,6 +39,7 @@ data class BackupChapter(
             read = this@BackupChapter.read
             bookmark = this@BackupChapter.bookmark
             bookmark_color = this@BackupChapter.bookmarkColor
+            blacklisted = this@BackupChapter.blacklisted
             last_page_read = this@BackupChapter.lastPageRead
             date_fetch = this@BackupChapter.dateFetch
             date_upload = this@BackupChapter.dateUpload
@@ -56,6 +58,7 @@ data class BackupChapter(
                 read = chapter.read,
                 bookmark = chapter.bookmark,
                 bookmarkColor = chapter.bookmark_color,
+                blacklisted = chapter.blacklisted,
                 lastPageRead = chapter.last_page_read,
                 dateFetch = chapter.date_fetch,
                 dateUpload = chapter.date_upload,

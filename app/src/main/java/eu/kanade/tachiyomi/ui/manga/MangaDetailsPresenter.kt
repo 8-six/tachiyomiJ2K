@@ -267,8 +267,37 @@ class MangaDetailsPresenter(
             return chapterList
         }
         getScrollType(chapterList)
-        return chapterSort.getChaptersSorted(chapterList)
+        // KMK -->
+        return chapterSort.getChaptersSorted(chapterList, includeBlacklisted = showBlacklisted)
+        // KMK <--
     }
+
+    // KMK -->
+
+    /** Whether blacklisted chapters are revealed in the list; not persisted. */
+    var showBlacklisted = false
+
+    /** Hides or restores the chapters; hidden chapters keep their history and bookmarks. */
+    fun setBlacklisted(
+        selectedChapters: List<ChapterItem>,
+        blacklisted: Boolean,
+    ) {
+        presenterScope.launch(Dispatchers.IO) {
+            selectedChapters.forEach { it.blacklisted = blacklisted }
+            db.updateChaptersProgress(selectedChapters).executeAsBlocking()
+            getChapters()
+            withContext(Dispatchers.Main) { view?.updateChapters(chapters) }
+        }
+    }
+
+    fun toggleShowBlacklisted() {
+        showBlacklisted = !showBlacklisted
+        presenterScope.launch(Dispatchers.IO) {
+            getChapters()
+            withContext(Dispatchers.Main) { view?.updateChapters(chapters) }
+        }
+    }
+    // KMK <--
 
     fun getChapterUrl(chapter: Chapter): String? {
         val source = source as? HttpSource ?: return null

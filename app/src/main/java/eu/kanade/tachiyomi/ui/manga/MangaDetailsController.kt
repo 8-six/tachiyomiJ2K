@@ -985,6 +985,13 @@ class MangaDetailsController :
         }
         // KMK -->
         items.add(MaterialMenuSheet.MenuSheetItem(5, R.drawable.ic_bookmark_24dp, R.string.bookmark_color))
+        items.add(
+            MaterialMenuSheet.MenuSheetItem(
+                6,
+                if (item.blacklisted) R.drawable.ic_eye_24dp else R.drawable.ic_eye_off_24dp,
+                if (item.blacklisted) R.string.unhide_chapter else R.string.hide_chapter,
+            ),
+        )
         // KMK <--
         val lastRead =
             presenter.allHistory.find { it.chapter_id == item.id }?.let {
@@ -1000,6 +1007,7 @@ class MangaDetailsController :
                     4 -> openChapterInWebView(item)
                     // KMK -->
                     5 -> setBookmarkColor(item)
+                    6 -> presenter.setBlacklisted(listOf(item), !item.blacklisted)
                     // KMK <--
                 }
                 true
@@ -1251,11 +1259,23 @@ class MangaDetailsController :
             presenter.manga.favorite &&
             (isMerged || mergeManager.canMerge(presenter.manga))
         menu.findItem(R.id.action_merged_sources)?.isVisible = !presenter.isLockedFromSearch && isMerged
+        // KMK -->
+        menu.findItem(R.id.action_show_blacklisted)?.apply {
+            isVisible = !presenter.isLockedFromSearch
+            isChecked = presenter.showBlacklisted
+        }
+        // KMK <--
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.action_edit -> openEditMangaDialog()
+            // KMK -->
+            R.id.action_show_blacklisted -> {
+                presenter.toggleShowBlacklisted()
+                activity?.invalidateOptionsMenu()
+            }
+            // KMK <--
             R.id.action_open_in_web_view -> openInWebView()
             R.id.action_refresh_tracking -> presenter.refreshTracking(true)
             R.id.action_sync_details -> syncDetailsFromTrackers()

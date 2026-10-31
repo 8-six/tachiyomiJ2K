@@ -602,6 +602,10 @@ class PreferencesHelper(
     fun flareSolverrTimeout() = flowPrefs.getInt("flaresolverr_timeout", 60)
 
     // KMK -->
+    fun sourceCategories() = flowPrefs.getString("source_categories", "{}")
+
+    fun globalSearchSourceCategory() = flowPrefs.getString("global_search_source_category", "")
+
     fun webhookEnabled() = flowPrefs.getBoolean("webhook_enabled", false)
 
     // The private prefix keeps the endpoint out of backups.

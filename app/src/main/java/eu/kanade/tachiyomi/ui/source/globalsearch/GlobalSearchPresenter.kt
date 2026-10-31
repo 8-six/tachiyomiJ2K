@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.source.CatalogueSource
 import eu.kanade.tachiyomi.source.Source
+import eu.kanade.tachiyomi.source.SourceCategories
 import eu.kanade.tachiyomi.source.SourceManager
 import eu.kanade.tachiyomi.source.model.MangasPage
 import eu.kanade.tachiyomi.source.model.SManga
@@ -133,6 +134,11 @@ open class GlobalSearchPresenter(
                 .filter { it.lang in languages }
                 .filterNot { it.id.toString() in hiddenCatalogues }
                 .sortedBy { "(${it.lang}) ${it.name}" }
+
+        // KMK -->
+        val categoryIds = if (sourceFilterEnabled) SourceCategories(preferences).activeIds() else null
+        if (categoryIds != null) return list.filter { it.id in categoryIds }
+        // KMK <--
 
         return if (sourceFilterEnabled && preferences.onlySearchPinned().get()) {
             list.filter { it.id.toString() in pinnedCatalogues }

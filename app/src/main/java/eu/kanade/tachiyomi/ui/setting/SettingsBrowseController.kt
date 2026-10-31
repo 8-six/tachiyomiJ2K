@@ -125,6 +125,20 @@ class SettingsBrowseController : SettingsController() {
                     startTextRes = R.string.all_enabled
                     endTextRes = R.string.pinned_only
                 }
+                // KMK -->
+                preference {
+                    titleRes = R.string.source_categories
+                    summaryRes = R.string.source_categories_summary
+                    onClick { activity?.let { SourceCategoriesDialog(it).showManager() } }
+                }
+                preference {
+                    titleRes = R.string.global_search_source_category
+                    preferences.globalSearchSourceCategory().asImmediateFlowIn(viewScope) { name ->
+                        summary = name.ifBlank { context.getString(R.string.none) }
+                    }
+                    onClick { activity?.let { SourceCategoriesDialog(it).showPicker {} } }
+                }
+                // KMK <--
             }
 
             preferenceCategory {

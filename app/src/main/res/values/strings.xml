@@ -221,6 +221,10 @@
     <string name="new_chapters_found">New chapters found</string>
     <string name="notification_size_warning">Large updates may lead to increased battery usage and sources becoming slower. Tap to learn more.</string>
     <string name="download_queue_size_warning">Warning: large bulk downloads may lead to sources becoming slower and/or blocking Tachiyomi. Tap to learn more.</string>
+    <string name="source_categories">Source categories</string>
+    <string name="source_categories_summary">Group sources to limit Global Search to a group</string>
+    <string name="new_source_category">New category</string>
+    <string name="global_search_source_category">Global search category</string>
     <string name="next_chapter_estimate">next around %1$s</string>
     <plurals name="n_manga_on_date">
         <item quantity="one">%1$s · %2$d manga</item>

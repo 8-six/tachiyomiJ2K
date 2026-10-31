@@ -48,7 +48,8 @@ architecture are recorded as `skipped` with the reason.
 | Extension repo management (s12) | done | J2K already had repo enable/disable, metadata, icons, source prefs; added refresh of the extension list after repo changes. Built, not device-tested. |
 | Source categories + scoped Global Search (s10.1, s10.2) | done (core) | Manage in Settings > Browse; picker in Global Search menu and Sources list menu. Filter-state isolation (s10.3) not done. Built, not device-tested. |
 | Webtoon disable pinch zoom | partial | Preference + switch; page gap slider in Settings > Reader; scale-type/refresh-rate options not ported |
-| Tracker error indicator | partial | In-memory flag in tracker sheet; preferred tracker/unified editor not ported |
+| Tracker error indicator | partial | In-memory flag in tracker sheet; unified editor not ported |
+| Per-manga preferred tracker | done | Overflow menu choice; DB v28, backup 813 |
 | Colored chapter bookmarks | partial | DB v22 + backup 801 + picker on chapter long-press; reader picker/Fillermarks not ported |
 | Auto Reread | partial | Setting + prompt/automatic reset when starting a fully read series; no tracker reread coordination or category/tracking automation |
 | Library bookmark-color filter | partial | Search term `bookmark_color:<name>` only; no filter-sheet control. Source language grouping/search not analysed |

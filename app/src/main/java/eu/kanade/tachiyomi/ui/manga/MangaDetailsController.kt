@@ -1059,6 +1059,26 @@ class MangaDetailsController :
             .show()
     }
 
+    private fun showPreferredTracker() {
+        val activity = activity ?: return
+        val services = presenter.trackedMetadataServices()
+        val labels =
+            (
+                listOf(
+                    activity.getString(R.string.follow_global_tracker),
+                ) + services.map { activity.getString(it.nameRes()) }
+            ).toTypedArray()
+        val checked = services.indexOfFirst { it.id == presenter.manga.preferred_tracker } + 1
+        activity
+            .materialAlertDialog()
+            .setTitle(R.string.preferred_tracker)
+            .setSingleChoiceItems(labels, checked) { dialog, which ->
+                presenter.setPreferredTracker(if (which == 0) 0 else services[which - 1].id)
+                dialog.dismiss()
+            }.setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
     private fun showScanlatorPriority() {
         val activity = activity ?: return
         val scanlators = presenter.allChapterScanlators.toList()
@@ -1332,6 +1352,9 @@ class MangaDetailsController :
             (isMerged || mergeManager.canMerge(presenter.manga))
         menu.findItem(R.id.action_merged_sources)?.isVisible = !presenter.isLockedFromSearch && isMerged
         // KMK -->
+        menu.findItem(R.id.action_preferred_tracker)?.isVisible =
+            !presenter.isLockedFromSearch &&
+            presenter.trackedMetadataServices().size > 1
         menu.findItem(R.id.action_smart_merge_mode)?.isVisible =
             !presenter.isLockedFromSearch &&
             presenter.allChapterScanlators.size > 1
@@ -1355,6 +1378,7 @@ class MangaDetailsController :
             R.id.action_scanlator_priority -> showScanlatorPriority()
             R.id.action_related_manga -> showRelatedManga()
             R.id.action_smart_merge_mode -> showSmartMergeMode()
+            R.id.action_preferred_tracker -> showPreferredTracker()
             R.id.action_show_blacklisted -> {
                 presenter.toggleShowBlacklisted()
                 activity?.invalidateOptionsMenu()

@@ -55,6 +55,7 @@ data class BackupManga(
     @ProtoNumber(805) var customGenre: List<String>? = null,
     @ProtoNumber(811) var scanlatorPriority: List<String> = emptyList(),
     @ProtoNumber(812) var smartMergeMode: Int = 0,
+    @ProtoNumber(813) var preferredTracker: Int = 0,
     @ProtoNumber(810) var mergedMembers: List<BackupMergedMember> = emptyList(),
 ) {
     fun getMangaImpl(): MangaImpl =
@@ -135,6 +136,7 @@ data class BackupManga(
                 excludedScanlators = ChapterUtil.getScanlators(manga.filtered_scanlators),
                 scanlatorPriority = ChapterUtil.getScanlators(manga.scanlator_priority),
                 smartMergeMode = manga.smart_merge_mode,
+                preferredTracker = manga.preferred_tracker,
                 memo = memoAdapter.encode(manga.memo),
             ).also { backupManga ->
                 customMangaManager?.getManga(manga)?.let {

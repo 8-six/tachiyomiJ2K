@@ -59,6 +59,8 @@ object MangaTable {
     const val COL_SCANLATOR_PRIORITY = "scanlator_priority"
 
     const val COL_SMART_MERGE_MODE = "smart_merge_mode"
+
+    const val COL_PREFERRED_TRACKER = "preferred_tracker"
     // KMK <--
 
     const val COL_UPDATE_STRATEGY = "update_strategy"
@@ -88,6 +90,7 @@ object MangaTable {
             $COL_FILTERED_SCANLATORS TEXT,
             $COL_SCANLATOR_PRIORITY TEXT,
             $COL_SMART_MERGE_MODE INTEGER NOT NULL DEFAULT 0,
+            $COL_PREFERRED_TRACKER INTEGER NOT NULL DEFAULT 0,
             $COL_UPDATE_STRATEGY INTEGER NOT NULL DEFAULT 0,
             $COL_MEMO TEXT NOT NULL DEFAULT '{}'
 
@@ -118,6 +121,9 @@ object MangaTable {
 
     val addSmartMergeMode: String
         get() = "ALTER TABLE $TABLE ADD COLUMN $COL_SMART_MERGE_MODE INTEGER NOT NULL DEFAULT 0"
+
+    val addPreferredTracker: String
+        get() = "ALTER TABLE $TABLE ADD COLUMN $COL_PREFERRED_TRACKER INTEGER NOT NULL DEFAULT 0"
 
     val addUpdateStrategy: String
         get() = "ALTER TABLE $TABLE ADD COLUMN $COL_UPDATE_STRATEGY INTEGER NOT NULL DEFAULT 0"

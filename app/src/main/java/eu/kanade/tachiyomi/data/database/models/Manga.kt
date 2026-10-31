@@ -38,6 +38,9 @@ interface Manga : SManga {
 
     /** 0 follows the global smart merge setting, 1 forces it on, 2 forces it off. */
     var smart_merge_mode: Int
+
+    /** Id of the tracker asked first for details of this manga, 0 follows the global preference. */
+    var preferred_tracker: Int
     // KMK <--
 
     fun isBlank() = id == Long.MIN_VALUE

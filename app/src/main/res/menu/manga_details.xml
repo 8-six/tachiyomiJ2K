@@ -54,6 +54,10 @@
         android:title="@string/scanlator_priority"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_preferred_tracker"
+        android:title="@string/preferred_tracker"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_smart_merge_mode"
         android:title="@string/smart_scanlator_merge"
         app:showAsAction="never" />

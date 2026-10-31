@@ -65,7 +65,9 @@ class TrackMetadataSync {
         manga: Manga,
         onlyEnabled: Boolean = false,
     ): List<Pair<Track, TrackService>> {
-        val preferred = trackPreferences.preferredMetadataTracker().get().toIntOrNull()
+        // KMK -->
+        val preferred = manga.preferred_tracker.takeIf { it != 0 } ?: trackPreferences.preferredMetadataTracker().get().toIntOrNull()
+        // KMK <--
         val priority = trackManager.metadataPriority
         return db
             .getTracks(manga)

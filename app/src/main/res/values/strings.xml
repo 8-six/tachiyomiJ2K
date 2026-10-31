@@ -88,6 +88,8 @@
     <string name="feed_move_up">Move up</string>
     <string name="feed_move_down">Move down</string>
     <string name="feed_remove">Remove feed</string>
+    <string name="preferred_tracker">Preferred tracker for details</string>
+    <string name="follow_global_tracker">Follow global setting</string>
     <string name="parent_category">Parent category</string>
     <string name="parent_category_none">None (top level)</string>
     <string name="parent_category_value">Parent category: %1$s</string>

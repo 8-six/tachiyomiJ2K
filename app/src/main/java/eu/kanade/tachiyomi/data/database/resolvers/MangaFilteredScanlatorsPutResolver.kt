@@ -34,5 +34,6 @@ class MangaFilteredScanlatorsPutResolver : PutResolver<Manga>() {
             MangaTable.COL_FILTERED_SCANLATORS to manga.filtered_scanlators,
             MangaTable.COL_SCANLATOR_PRIORITY to manga.scanlator_priority,
             MangaTable.COL_SMART_MERGE_MODE to manga.smart_merge_mode,
+            MangaTable.COL_PREFERRED_TRACKER to manga.preferred_tracker,
         )
 }

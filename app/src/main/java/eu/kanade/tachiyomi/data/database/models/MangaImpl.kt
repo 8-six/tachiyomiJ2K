@@ -91,6 +91,8 @@ open class MangaImpl : Manga {
 
     override var smart_merge_mode: Int = 0
 
+    override var preferred_tracker: Int = 0
+
     lateinit var ogTitle: String
         private set
     var ogAuthor: String? = null

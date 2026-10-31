@@ -298,6 +298,13 @@ class MangaDetailsPresenter(
         asyncUpdateMangaAndChapters()
     }
 
+    fun setPreferredTracker(serviceId: Int) {
+        manga.preferred_tracker = serviceId
+        db.updateMangaFilteredScanlators(manga).executeAsBlocking()
+    }
+
+    fun trackedMetadataServices() = tracks.mapNotNull { track -> loggedServices.find { it.id == track.sync_id && it.supportsMetadata } }
+
     fun setSmartMergeMode(mode: Int) {
         manga.smart_merge_mode = mode
         db.updateMangaFilteredScanlators(manga).executeAsBlocking()

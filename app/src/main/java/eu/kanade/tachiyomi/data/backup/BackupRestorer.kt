@@ -222,6 +222,7 @@ class BackupRestorer(
                 manga.filtered_scanlators = dbManga.filtered_scanlators
                 manga.scanlator_priority = dbManga.scanlator_priority
                 manga.smart_merge_mode = dbManga.smart_merge_mode
+                manga.preferred_tracker = dbManga.preferred_tracker
                 manga.copyFrom(dbManga)
                 db.insertManga(manga).executeAsBlocking()
                 // Fetch rest of manga information
@@ -238,8 +239,9 @@ class BackupRestorer(
             }
             if (manga.source == MERGED_SOURCE_ID) restoreMergedMembers(manga, backupManga.mergedMembers)
             // KMK -->
-            if (backupManga.scanlatorPriority.isNotEmpty() || backupManga.smartMergeMode != 0) {
+            if (backupManga.scanlatorPriority.isNotEmpty() || backupManga.smartMergeMode != 0 || backupManga.preferredTracker != 0) {
                 manga.smart_merge_mode = backupManga.smartMergeMode
+                manga.preferred_tracker = backupManga.preferredTracker
                 manga.scanlator_priority =
                     backupManga.scanlatorPriority
                         .distinct()

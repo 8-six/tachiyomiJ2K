@@ -46,6 +46,8 @@ from upstream TachiyomiJ2K are not repeated here.
 - Smart categories: a category can be bound to a tracker status (reading, completed, plan to read) and manga move into or out of it when their tracking changes; bound subcategories only apply to manga already in the parent branch. Each category can also have its own automatic update interval (6h to weekly).
 - Source feeds: Sources > Feeds opens a Material 3 sheet with persistent feeds (latest, popular or a saved search of a source). Each feed loads, fails and retries on its own, can be reordered or removed, and Refresh all reloads every feed.
 
+- Per-manga preferred tracker: choose which tracker supplies metadata autofill for a manga (overflow menu, shown when more than one tracker with metadata is linked), overriding the global preference.
+
 ### Changed
 - The manga edit panel is rewritten as a Compose Material 3 bottom sheet, adapted from Komikku's
   edit dialog. Fields have "restore original" buttons, tags are input chips, and pasting a cover
@@ -59,6 +61,7 @@ from upstream TachiyomiJ2K are not repeated here.
 - Leaving the extension repositories screen refreshes the available extensions when the set of enabled repos changed, so adding, removing, enabling or disabling a repo shows up without a manual refresh or restart. Matches Komikku's behavior.
 
 ### Technical
+- Database version 28 adds `mangas.preferred_tracker`; backups carry it in `BackupManga` ProtoNumber 813 (existing local value is kept on restore when the backup has none).
 - Added `BackupCategoryTest` for category hierarchy, tracker status and update interval backup fields (including old backups without them). Source refresh was reviewed and keeps bookmark color and hidden flags of existing chapters.
 - Feeds are stored as one JSON string preference (`source_feeds`), so they travel with app preference backups; saved-search feeds reference the saved search by id and are dropped when it is deleted. No database change. `SourceFeedsTest` covers ordering, de-duplication and serialization.
 - Database version 27 adds `categories.tracker_status`, `update_interval` and `update_last_run`. Backups carry the first two as `BackupCategory` ProtoNumber 804 and 805. `SmartCategorySyncTest` covers branch scoping and schedules.

@@ -19,6 +19,9 @@ import java.util.Date
 class DateItem(
     val date: Date,
     val addedString: Boolean = false,
+    // KMK -->
+    val mangaCount: Int = 0,
+    // KMK <--
 ) : AbstractHeaderItem<DateItem.Holder>() {
     override fun getLayoutRes(): Int = R.layout.recent_chapters_section_item
 
@@ -59,8 +62,15 @@ class DateItem(
 
         fun bind(item: DateItem) {
             val dateString = DateUtils.getRelativeTimeSpanString(item.date.time, now, DateUtils.DAY_IN_MILLIS)
+            val title = if (item.addedString) itemView.context.getString(R.string.fetched_, dateString) else dateString
+            // KMK -->
             sectionText.text =
-                if (item.addedString) itemView.context.getString(R.string.fetched_, dateString) else dateString
+                if (item.mangaCount > 0) {
+                    itemView.resources.getQuantityString(R.plurals.n_manga_on_date, item.mangaCount, title, item.mangaCount)
+                } else {
+                    title
+                }
+            // KMK <--
             lastUpdatedText.isVisible = false
             if (bindingAdapterPosition == 0) {
                 sectionText.updatePadding(

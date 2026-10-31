@@ -420,7 +420,18 @@ class RecentsPresenter(
                         }
                     val byDay = pairs.groupByTo(map) { getMapKey(it.first.history.last_read) }
                     byDay.flatMap {
-                        val dateItem = DateItem(it.key, true)
+                        // KMK -->
+                        // Distinct manga, not chapters: three chapters of one series count once.
+                        val dateItem =
+                            DateItem(
+                                it.key,
+                                true,
+                                it.value
+                                    .map { pair -> pair.first.manga.id }
+                                    .distinct()
+                                    .size,
+                            )
+                        // KMK <--
                         val sortByFetched = preferences.sortFetchedTime().get()
                         it.value
                             .map { item -> RecentMangaItem(item.first, item.second, dateItem) }

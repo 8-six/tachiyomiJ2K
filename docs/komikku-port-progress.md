@@ -42,6 +42,8 @@ architecture are recorded as `skipped` with the reason.
 | Discord Rich Presence (s18.2) | skipped | Needs Discord account token handling and an RPC client; Komikku says its exact current behavior is unverified |
 | Version bump workflow (s22) | done | Script tested locally (patch, rollover, failure); workflow untested on GitHub. Spotless/formatting checks not applicable (kotlinter fails on existing code) |
 | Storage overview (s19.1) | partial | Per-source size list + delete in Downloads settings. No per-type categories; merged manga do not exist in J2K. Built, not device-tested (SAF folders unverified). |
+| History distinct-manga count (s13.1) | partial | Shown in Recents Updates date headings; History view has no date headings. Blacklist/Smart Merge-aware continue-reading waits for those features. |
+| Historical / removed items (s24, s25) | skipped | Verification-only lists (reverted or unverified fork experiments); nothing to port |
 | Nested / Smart categories | skipped (for now) | Flat categories; needs CategoryTable migration, backup fields and a UI rewrite |
 | Chapter colored bookmarks / blacklist / Smart Merge | skipped (for now) | `Chapter.bookmark` is a Boolean end to end; needs migration and backup changes |
 | Unified tracker editor / feeds | skipped (for now) | Needs DB schema and backup work |

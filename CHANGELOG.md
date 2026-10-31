@@ -23,6 +23,7 @@ from upstream TachiyomiJ2K are not repeated here.
   with a Discord embed when it is a Discord webhook. Delivery uses a small bounded queue in the
   background, failures are only logged, and the URL is stored as a private preference so it is not in
   backups. Adapted from Komikku's webhooks; Discord Rich Presence is not ported.
+- Storage usage in Settings > Downloads: lists the downloads folder per source with its size and deletes the sources you tick after a confirmation. Only folders inside the downloads directory are listed. Simpler than Komikku's storage screen: no per-type categories and no merged-manga handling.
 
 ### Changed
 - The manga edit panel is rewritten as a Compose Material 3 bottom sheet, adapted from Komikku's

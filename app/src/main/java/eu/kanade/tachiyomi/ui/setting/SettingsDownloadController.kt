@@ -40,6 +40,13 @@ class SettingsDownloadController : SettingsController() {
                     summary = dir.filePath ?: path
                 }
             }
+            // KMK -->
+            preference {
+                titleRes = R.string.storage_usage
+                summaryRes = R.string.storage_usage_summary
+                onClick { activity?.let { DownloadStorageDialog(it, viewScope).show() } }
+            }
+            // KMK <--
             switchPreference {
                 key = Keys.downloadOnlyOverWifi
                 titleRes = R.string.only_download_over_wifi

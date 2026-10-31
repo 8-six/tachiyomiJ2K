@@ -41,6 +41,7 @@ architecture are recorded as `skipped` with the reason.
 | Webhooks (s18.1) | done | New-chapter events from library updates; generic JSON or Discord embed; bounded queue; URL is a private pref. Built, not tested against a real endpoint. |
 | Discord Rich Presence (s18.2) | skipped | Needs Discord account token handling and an RPC client; Komikku says its exact current behavior is unverified |
 | Version bump workflow (s22) | done | Script tested locally (patch, rollover, failure); workflow untested on GitHub. Spotless/formatting checks not applicable (kotlinter fails on existing code) |
+| Storage overview (s19.1) | partial | Per-source size list + delete in Downloads settings. No per-type categories; merged manga do not exist in J2K. Built, not device-tested (SAF folders unverified). |
 | Nested / Smart categories | skipped (for now) | Flat categories; needs CategoryTable migration, backup fields and a UI rewrite |
 | Chapter colored bookmarks / blacklist / Smart Merge | skipped (for now) | `Chapter.bookmark` is a Boolean end to end; needs migration and backup changes |
 | Unified tracker editor / feeds | skipped (for now) | Needs DB schema and backup work |

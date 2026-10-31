@@ -1397,4 +1397,6 @@
     <string name="reader_automation_duration">Stop after (minutes, 0 = never)</string>
     <string name="reader_automation_finished">Auto-scroll stopped</string>
     <string name="restore_original">Restore original</string>
+    <string name="move_tag_earlier">Move earlier</string>
+    <string name="move_tag_later">Move later</string>
 </resources>

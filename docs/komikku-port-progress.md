@@ -35,7 +35,7 @@ architecture are recorded as `skipped` with the reason.
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Manga edit panel (Compose M3 sheet) | partial | All previous behaviors kept, restore-original buttons added. Not done: tag drag-reorder, cover ratio switch. Built (dev debug) but not tested on a device. |
+| Manga edit panel (Compose M3 sheet) | partial | All previous behaviors kept, restore-original buttons added. Tags reorder via a tap menu (move earlier/later), not drag. Not done: cover ratio switch. Built (dev debug) but not tested on a device. |
 | Material 3 polish | partial | Only the Compose pieces used by the edit panel; no app-wide restyle |
 | Reader automation (auto-scroll / auto page flip, duration, keep awake) | partial | Not done: refresh-rate handling, webtoon pinch-zoom switch, gap preference. Built (dev debug) but not tested on a device. |
 | Nested / Smart categories | skipped (for now) | Flat categories; needs CategoryTable migration, backup fields and a UI rewrite |

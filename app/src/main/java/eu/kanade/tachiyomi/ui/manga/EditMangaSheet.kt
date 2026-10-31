@@ -104,6 +104,14 @@ class EditMangaState(
         seriesType = seriesTypeFor(newTags)
     }
 
+    fun moveTag(
+        from: Int,
+        to: Int,
+    ) {
+        if (from !in tags.indices || to !in tags.indices) return
+        tags.add(to, tags.removeAt(from))
+    }
+
     /** Moves the typed comma separated text into the tag list. */
     fun commitPendingTag() {
         val added = pendingTag.split(",").map { it.trim() }.filter { it.isNotEmpty() }
@@ -240,12 +248,33 @@ fun EditMangaSheet(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
-            state.tags.forEach { tag ->
+            state.tags.forEachIndexed { index, tag ->
                 val isCustom = state.originalGenres.none { it.equals(tag, ignoreCase = true) }
+                var menuOpen by remember { mutableStateOf(false) }
                 InputChip(
                     selected = isCustom,
-                    onClick = {},
-                    label = { Text(tag) },
+                    onClick = { menuOpen = true },
+                    label = {
+                        Text(tag)
+                        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.move_tag_earlier)) },
+                                enabled = index > 0,
+                                onClick = {
+                                    menuOpen = false
+                                    state.moveTag(index, index - 1)
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.move_tag_later)) },
+                                enabled = index < state.tags.lastIndex,
+                                onClick = {
+                                    menuOpen = false
+                                    state.moveTag(index, index + 1)
+                                },
+                            )
+                        }
+                    },
                     trailingIcon = {
                         Icon(
                             Icons.Default.Close,

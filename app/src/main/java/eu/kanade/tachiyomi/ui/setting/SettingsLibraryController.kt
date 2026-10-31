@@ -42,6 +42,13 @@ class SettingsLibraryController : SettingsController() {
                 }
 
                 // KMK -->
+                intListPreference(activity) {
+                    bindTo(preferences.autoReread())
+                    titleRes = R.string.auto_reread
+                    summaryRes = R.string.auto_reread_summary
+                    entriesRes = arrayOf(R.string.disabled, R.string.always_ask, R.string.reset_automatically)
+                    entryValues = listOf(0, 1, 2)
+                }
                 switchPreference {
                     bindTo(preferences.smartScanlatorMerge())
                     titleRes = R.string.smart_scanlator_merge

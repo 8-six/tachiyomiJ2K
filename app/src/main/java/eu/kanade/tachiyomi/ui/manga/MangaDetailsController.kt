@@ -1183,7 +1183,44 @@ class MangaDetailsController :
         presenter.markChaptersRead(chapters, false)
     }
 
+    // KMK -->
+
+    /** Whether opening [chapter] restarts a manga whose visible chapters are all read. */
+    private fun isRereadStart(chapter: Chapter): Boolean {
+        val visible = presenter.chapters
+        if (visible.isEmpty() || !visible.all { it.read }) return false
+        return visible.minByOrNull { it.chapter_number }?.id == chapter.id
+    }
+
     private fun openChapter(
+        chapter: Chapter,
+        sharedElement: View? = null,
+    ) {
+        val mode = presenter.preferences.autoReread().get()
+        val activity = activity
+        if (mode != 0 && activity != null && isRereadStart(chapter)) {
+            val reset = {
+                presenter.markChaptersRead(presenter.chapters, false)
+                openChapterNow(chapter, sharedElement)
+            }
+            if (mode == 2) {
+                reset()
+            } else {
+                activity
+                    .materialAlertDialog()
+                    .setMessage(R.string.auto_reread_prompt)
+                    .setPositiveButton(R.string.mark_unread_and_read) { _, _ -> reset() }
+                    .setNegativeButton(R.string.keep_read_state) { _, _ -> openChapterNow(chapter, sharedElement) }
+                    .setOnCancelListener { }
+                    .show()
+            }
+            return
+        }
+        openChapterNow(chapter, sharedElement)
+    }
+    // KMK <--
+
+    private fun openChapterNow(
         chapter: Chapter,
         sharedElement: View? = null,
     ) {

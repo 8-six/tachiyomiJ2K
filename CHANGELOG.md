@@ -36,6 +36,8 @@ from upstream TachiyomiJ2K are not repeated here.
 - Scanlator priority and smart merge: the manga overflow menu gets "Scanlator priority" (pick scanlators in order of preference), and Settings > Library gets "Smart scanlator merge" (off by default). When on, each chapter number shows a single release, the one from the best ranked scanlator, then the earliest in the source list; excluded scanlators and hidden chapters are applied first and stay hidden. Chapters without a recognized number are never merged, and nothing is deleted. Adapted from Komikku. The manga overflow menu has a per-manga "Smart scanlator merge" override (follow global / always on / always off), and library unread/read counts follow the merge. Not device-tested.
 - Source category chooser: the Global Search overflow menu can switch the active source category for that search, and the Sources list overflow menu filters the list to one category (new `browse_source_category` preference). Adapted from Komikku. Not device-tested.
 
+- Auto Reread (adapted from Komikku): Settings > Library > Auto Reread (off / always ask / reset automatically). Opening the first chapter of a fully read series offers to mark every chapter unread (or does it automatically). Tracker reread coordination is not included.
+
 ### Changed
 - The manga edit panel is rewritten as a Compose Material 3 bottom sheet, adapted from Komikku's
   edit dialog. Fields have "restore original" buttons, tags are input chips, and pasting a cover

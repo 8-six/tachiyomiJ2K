@@ -61,6 +61,12 @@
     <string name="smart_merge_always">Always on for this manga</string>
     <string name="smart_merge_never">Always off for this manga</string>
     <string name="browse_source_category">Source category</string>
+    <string name="auto_reread">Auto reread</string>
+    <string name="auto_reread_summary">When you start a completed manga over, mark its chapters unread</string>
+    <string name="reset_automatically">Reset automatically</string>
+    <string name="auto_reread_prompt">All chapters are read. Mark them as unread to read again?</string>
+    <string name="mark_unread_and_read">Mark unread</string>
+    <string name="keep_read_state">Keep read state</string>
     <string name="hide_chapter">Hide chapter</string>
     <string name="unhide_chapter">Unhide chapter</string>
     <string name="show_hidden_chapters">Show hidden chapters</string>

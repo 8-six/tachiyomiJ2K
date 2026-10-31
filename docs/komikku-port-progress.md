@@ -50,6 +50,7 @@ architecture are recorded as `skipped` with the reason.
 | Webtoon disable pinch zoom | partial | Preference + switch; page gap slider in Settings > Reader; scale-type/refresh-rate options not ported |
 | Tracker error indicator | partial | In-memory flag in tracker sheet; preferred tracker/unified editor not ported |
 | Colored chapter bookmarks | partial | DB v22 + backup 801 + picker on chapter long-press; reader picker/Fillermarks not ported |
+| Auto Reread | partial | Setting + prompt/automatic reset when starting a fully read series; no tracker reread coordination or category/tracking automation |
 | Nested / Smart categories | skipped (for now) | Flat categories; needs CategoryTable migration, backup fields and a UI rewrite |
 | Chapter blacklist | done (core) | DB v23 + backup 802; hide/reveal, reader/recents/next-unread/library counts aware; URL+scanlator identity fallback not needed (hidden by chapter row id) |
 | Scanlator priority + Smart Merge | done (core) | DB v24/v25 + backup 811/812, priority dialog, global toggle + per-manga override, library counts; deep-link resolve to the merged representative not done |

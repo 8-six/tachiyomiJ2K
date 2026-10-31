@@ -472,6 +472,9 @@ class PreferencesHelper(
 
     // KMK -->
     fun smartScanlatorMerge() = flowPrefs.getBoolean("smart_scanlator_merge", false)
+
+    /** 0 off, 1 ask, 2 reset automatically when a completed manga is restarted. */
+    fun autoReread() = flowPrefs.getInt("auto_reread", 0)
     // KMK <--
 
     fun useBiometrics() = flowPrefs.getBoolean(Keys.useBiometrics, false)

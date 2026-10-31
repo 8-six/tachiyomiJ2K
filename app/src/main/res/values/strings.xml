@@ -1006,6 +1006,9 @@
     <string name="flaresolverr" translatable="false">FlareSolverr</string>
     <string name="flaresolverr_summary">Use your own FlareSolverr instance to solve Cloudflare challenges. Falls back to the built-in solver if it fails</string>
     <string name="flaresolverr_url">FlareSolverr URL</string>
+    <string name="webhook">Webhook</string>
+    <string name="webhook_summary">Send new chapters found by library updates to a webhook (Discord webhooks are supported)</string>
+    <string name="webhook_url">Webhook URL</string>
     <string name="flaresolverr_timeout">FlareSolverr timeout</string>
     <string name="flaresolverr_test">Test FlareSolverr connection</string>
     <string name="flaresolverr_testing">Testing FlareSolverr…</string>

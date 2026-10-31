@@ -601,6 +601,18 @@ class PreferencesHelper(
 
     fun flareSolverrTimeout() = flowPrefs.getInt("flaresolverr_timeout", 60)
 
+    // KMK -->
+    fun webhookEnabled() = flowPrefs.getBoolean("webhook_enabled", false)
+
+    // The private prefix keeps the endpoint out of backups.
+    fun webhookUrl() =
+        flowPrefs.getString(
+            eu.kanade.tachiyomi.data.preference.Preference
+                .privateKey("webhook_url"),
+            "",
+        )
+    // KMK <--
+
     fun showSeriesInShortcuts() = prefs.getBoolean(Keys.showSeriesInShortcuts, true)
 
     fun showSourcesInShortcuts() = prefs.getBoolean(Keys.showSourcesInShortcuts, true)

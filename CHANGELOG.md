@@ -19,6 +19,10 @@ from upstream TachiyomiJ2K are not repeated here.
   stop-after duration are saved. It stops at the end of the reader, when the app is paused, when the
   reading mode changes or when the duration runs out, and keeps the screen on while running. Adapted
   from Komikku's automation feature, not its code.
+- Optional webhook (Settings > Advanced): library updates post new chapters as JSON to a URL you set,
+  with a Discord embed when it is a Discord webhook. Delivery uses a small bounded queue in the
+  background, failures are only logged, and the URL is stored as a private preference so it is not in
+  backups. Adapted from Komikku's webhooks; Discord Rich Presence is not ported.
 
 ### Changed
 - The manga edit panel is rewritten as a Compose Material 3 bottom sheet, adapted from Komikku's

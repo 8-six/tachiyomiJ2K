@@ -38,6 +38,8 @@ architecture are recorded as `skipped` with the reason.
 | Manga edit panel (Compose M3 sheet) | partial | All previous behaviors kept, restore-original buttons added. Tags reorder via a tap menu (move earlier/later), not drag. Not done: cover ratio switch. Built (dev debug) but not tested on a device. |
 | Material 3 polish | partial | Only the Compose pieces used by the edit panel; no app-wide restyle |
 | Reader automation (auto-scroll / auto page flip, duration, keep awake) | partial | Not done: refresh-rate handling, webtoon pinch-zoom switch, gap preference. Built (dev debug) but not tested on a device. |
+| Webhooks (s18.1) | done | New-chapter events from library updates; generic JSON or Discord embed; bounded queue; URL is a private pref. Built, not tested against a real endpoint. |
+| Discord Rich Presence (s18.2) | skipped | Needs Discord account token handling and an RPC client; Komikku says its exact current behavior is unverified |
 | Nested / Smart categories | skipped (for now) | Flat categories; needs CategoryTable migration, backup fields and a UI rewrite |
 | Chapter colored bookmarks / blacklist / Smart Merge | skipped (for now) | `Chapter.bookmark` is a Boolean end to end; needs migration and backup changes |
 | Unified tracker editor / feeds | skipped (for now) | Needs DB schema and backup work |

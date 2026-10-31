@@ -91,6 +91,7 @@ class LibraryUpdateJob(
     private val downloadManager: DownloadManager = Injekt.get()
     private val trackManager: TrackManager = Injekt.get()
     private val mangaShortcutManager: MangaShortcutManager = Injekt.get()
+    private val webhookNotifier: WebhookNotifier = Injekt.get()
 
     private var extraDeferredJobs = mutableListOf<Deferred<Any>>()
 
@@ -367,6 +368,11 @@ class LibraryUpdateJob(
         }
         if (newUpdates.isNotEmpty()) {
             notifier.showResultNotification(newUpdates)
+            // KMK -->
+            webhookNotifier.notifyNewChapters(
+                newUpdates.map { (manga, chapters) -> WebhookNotifier.NewChapters(manga.title, chapters.map { it.name }) },
+            )
+            // KMK <--
             if (!wasStopped && preferences.refreshCoversToo().get() && !isStopped) {
                 val remainingDetails = newUpdates.keys.filterNot { it.id?.let(detailsRefreshedMangaIds::contains) == true }
                 if (remainingDetails.isNotEmpty()) {

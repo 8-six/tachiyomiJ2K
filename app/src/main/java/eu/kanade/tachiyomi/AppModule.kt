@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.database.DatabaseHelper
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.library.CustomMangaManager
+import eu.kanade.tachiyomi.data.library.WebhookNotifier
 import eu.kanade.tachiyomi.data.preference.AndroidPreferenceStore
 import eu.kanade.tachiyomi.data.preference.PreferenceStore
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
@@ -57,6 +58,10 @@ class AppModule(
         addSingletonFactory { DownloadManager(app) }
 
         addSingletonFactory { CustomMangaManager(app) }
+
+        // KMK -->
+        addSingletonFactory { WebhookNotifier(get(), get()) }
+        // KMK <--
 
         addSingletonFactory { TrackManager(app) }
 

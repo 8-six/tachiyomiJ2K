@@ -360,6 +360,18 @@ class SettingsAdvancedController : SettingsController() {
                         }
                     }
                 }
+                // KMK -->
+                switchPreference {
+                    bindTo(preferences.webhookEnabled())
+                    titleRes = R.string.webhook
+                    summaryRes = R.string.webhook_summary
+                }
+                editTextPreference(activity) {
+                    bindTo(preferences.webhookUrl())
+                    titleRes = R.string.webhook_url
+                    visibleIf(preferences.webhookEnabled()) { it }
+                }
+                // KMK <--
                 editTextPreference(activity) {
                     bindTo(preferences.defaultUserAgent())
                     titleRes = R.string.user_agent_string

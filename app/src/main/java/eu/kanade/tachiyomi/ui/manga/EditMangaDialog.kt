@@ -1,67 +1,41 @@
 package eu.kanade.tachiyomi.ui.manga
 
 import android.app.Dialog
-import android.content.Context
 import android.net.Uri
 import android.os.Bundle
-import android.view.ActionMode
-import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuItem
-import android.view.View
-import android.view.WindowManager
-import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
-import androidx.core.view.children
-import androidx.core.view.isVisible
-import coil.load
-import coil.request.Parameters
-import com.google.android.material.chip.Chip
-import com.google.android.material.chip.ChipGroup
+import androidx.activity.ComponentActivity
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.DatabaseHelper
 import eu.kanade.tachiyomi.data.database.models.Manga
-import eu.kanade.tachiyomi.data.image.coil.MangaCoverFetcher
-import eu.kanade.tachiyomi.data.image.coil.loadManga
 import eu.kanade.tachiyomi.data.track.TrackMetadataSync
 import eu.kanade.tachiyomi.data.track.model.TrackMangaMetadata
-import eu.kanade.tachiyomi.databinding.EditMangaDialogBinding
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.source.LocalSource
-import eu.kanade.tachiyomi.source.icon
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.ui.base.controller.DialogController
 import eu.kanade.tachiyomi.util.isLocal
-import eu.kanade.tachiyomi.util.lang.chop
-import eu.kanade.tachiyomi.util.system.ImageUtil
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import eu.kanade.tachiyomi.util.system.clipboardHasImage
-import eu.kanade.tachiyomi.util.system.dpToPx
 import eu.kanade.tachiyomi.util.system.getClipboardImageUri
-import eu.kanade.tachiyomi.util.system.isInNightMode
 import eu.kanade.tachiyomi.util.system.launchUI
 import eu.kanade.tachiyomi.util.system.materialAlertDialog
 import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.util.system.withIOContext
-import eu.kanade.tachiyomi.util.view.applyTagColors
-import eu.kanade.tachiyomi.util.view.tagChipColors
-import eu.kanade.tachiyomi.widget.TachiyomiTextInputEditText
+import eu.kanade.tachiyomi.widget.ComposeBottomSheetDialog
 import timber.log.Timber
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
 
+// KMK -->
+// Compose Material 3 edit panel; behaviour of the previous XML dialog is kept
+// KMK <--
 class EditMangaDialog : DialogController {
     private val manga: Manga
 
-    private var customCoverUri: Uri? = null
-
-    private var willResetCover = false
-
-    lateinit var binding: EditMangaDialogBinding
-    private val languages = mutableListOf<String>()
-    private val originalGenres by lazy { manga.getOriginalGenres().orEmpty() }
+    private var state: EditMangaState? = null
 
     private val infoController
         get() = targetController as MangaDetailsController
@@ -86,44 +60,37 @@ class EditMangaDialog : DialogController {
     }
 
     override fun onCreateDialog(savedViewState: Bundle?): Dialog {
-        binding = EditMangaDialogBinding.inflate(activity!!.layoutInflater)
-        val dialog =
-            activity!!.materialAlertDialog().apply {
-                setView(binding.root)
-                setNegativeButton(android.R.string.cancel, null)
-                setPositiveButton(R.string.save) { _, _ -> onPositiveButtonClick() }
-            }
-        onViewCreated()
-        val updateScrollIndicators = {
-            binding.scrollIndicatorDown.isVisible = binding.scrollView.canScrollVertically(1)
-        }
-        binding.scrollView.setOnScrollChangeListener { _, _, _, _, _ ->
-            updateScrollIndicators()
-        }
-        binding.scrollView.post {
-            updateScrollIndicators()
-        }
-        return dialog.create()
+        val activity = activity as ComponentActivity
+        val state = createState(activity).also { state = it }
+        val dialog = ComposeBottomSheetDialog(activity)
+        val actions =
+            EditMangaActions(
+                onCoverClick = { infoController.changeCover() },
+                canPasteCover = { activity.clipboardHasImage() },
+                onPasteCover = { activity.getClipboardImageUri()?.let(::updateCover) },
+                onAutofill = { autofillFromTracker(state) },
+                onResetTags = { resetTags(state) },
+                onSave = {
+                    save(state)
+                    dialog.dismiss()
+                },
+                onCancel = { dialog.dismiss() },
+            )
+        dialog.setContent { EditMangaSheet(state, actions) }
+        dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
+        dialog.behavior.skipCollapsed = true
+        return dialog
     }
 
-    fun onViewCreated() {
-        binding.mangaCover.loadManga(manga)
+    private fun createState(activity: ComponentActivity): EditMangaState {
         val isLocal = manga.isLocal()
-
-        binding.mangaLang.isVisible = isLocal
+        val languages = mutableListOf("")
         if (isLocal) {
-            if (manga.title != manga.url) {
-                binding.title.append(manga.title)
-            }
-            binding.title.hint = "${resources?.getString(R.string.title)}: ${manga.url}"
-            binding.mangaAuthor.append(manga.author ?: "")
-            binding.mangaArtist.append(manga.artist ?: "")
-            binding.mangaDescription.append(manga.description ?: "")
-            val preferences = infoController.presenter.preferences
             val extensionManager: ExtensionManager by injectLazy()
-            val activeLangs = preferences.enabledLanguages().get()
-
-            languages.add("")
+            val activeLangs =
+                infoController.presenter.preferences
+                    .enabledLanguages()
+                    .get()
             languages.addAll(
                 extensionManager.availableExtensionsFlow.value
                     .groupBy { it.lang }
@@ -131,125 +98,54 @@ class EditMangaDialog : DialogController {
                     .sortedWith(
                         compareBy(
                             { it !in activeLangs },
-                            { LocaleHelper.getSourceDisplayName(it, binding.root.context) },
+                            { LocaleHelper.getSourceDisplayName(it, activity) },
                         ),
                     ).filter { it != "all" && it != "other" },
             )
-            binding.mangaLang.setEntries(
-                languages.map {
-                    LocaleHelper.getSourceDisplayName(it, binding.root.context)
-                },
-            )
-            binding.mangaLang.setSelection(
-                languages
-                    .indexOf(LocalSource.getMangaLang(manga, binding.root.context))
-                    .takeIf { it > -1 } ?: 0,
-            )
-        } else {
-            if (manga.title != manga.originalTitle) {
-                binding.title.append(manga.title)
-            }
-            if (manga.author != manga.originalAuthor) {
-                binding.mangaAuthor.append(manga.author ?: "")
-            }
-            if (manga.artist != manga.originalArtist) {
-                binding.mangaArtist.append(manga.artist ?: "")
-            }
-            if (manga.description != manga.originalDescription) {
-                binding.mangaDescription.append(manga.description ?: "")
-            }
-            binding.title.appendOriginalTextOnLongClick(manga.originalTitle)
-            binding.mangaAuthor.appendOriginalTextOnLongClick(manga.originalAuthor)
-            binding.mangaArtist.appendOriginalTextOnLongClick(manga.originalArtist)
-            binding.mangaDescription.appendOriginalTextOnLongClick(manga.originalDescription)
-            binding.title.hint = "${resources?.getString(R.string.title)}: ${manga.originalTitle}"
-            if (manga.originalAuthor != null) {
-                binding.mangaAuthor.hint = "${resources?.getString(R.string.author)}: ${manga.originalAuthor}"
-            }
-            if (manga.originalArtist != null) {
-                binding.mangaArtist.hint = "${resources?.getString(R.string.artist)}: ${manga.originalArtist}"
-            }
-            if (manga.originalDescription != null) {
-                binding.mangaDescription.hint =
-                    "${resources?.getString(R.string.description)}: ${manga.originalDescription?.replace(
-                        "\n",
-                        " ",
-                    )?.chop(20)}"
-            }
         }
-        setGenreTags(manga.getGenres().orEmpty())
-        if (!isLocal) {
-            binding.mangaStatus.originalPosition = manga.originalStatus
-            binding.seriesType.originalPosition = manga.seriesType(true) - 1
-            infoController.presenter.source.icon()?.let { icon ->
-                val bitD = ImageUtil.resizeBitMapDrawable(icon, resources, 24.dpToPx)
-                binding.mangaStatus.originalIcon = bitD ?: icon
-                binding.seriesType.originalIcon = bitD ?: icon
-            }
-        }
-        binding.mangaStatus.setSelection(manga.status.coerceIn(SManga.UNKNOWN, SManga.ON_HIATUS))
-        val oldType = manga.seriesType()
-        binding.seriesType.setSelection(oldType - 1)
-        binding.seriesType.onItemSelectedListener = {
-            binding.resetsReadingMode.isVisible = it + 1 != oldType
-        }
-        binding.mangaGenresTags.clearFocus()
-        binding.coverLayout.setOnClickListener {
-            infoController.changeCover()
-        }
-        binding.coverLayout.setOnLongClickListener { view ->
-            if (!view.context.clipboardHasImage()) return@setOnLongClickListener false
-            view.startActionMode(pasteCoverActionModeCallback(view), ActionMode.TYPE_FLOATING)
-            true
-        }
-        binding.autofillFromTracker.setOnClickListener { autofillFromTracker() }
-        binding.resetTags.setOnClickListener { resetTags() }
-        binding.resetTags.text =
-            resources?.getString(
-                if (manga.originalGenre.isNullOrBlank() || isLocal) {
-                    R.string.clear_tags
-                } else {
-                    R.string.reset_tags
-                },
-            )
-        binding.addTagChip.setOnClickListener {
-            binding.addTagChip.isVisible = false
-            binding.addTagEditText.isVisible = true
-            binding.addTagEditText.requestFocus()
-            showKeyboard()
-        }
-        binding.addTagEditText.setOnFocusChangeListener { v, hasFocus ->
-            if (!hasFocus && v.parent != null) {
-                addTags()
-            }
-        }
-        binding.addTagEditText.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
-                addTags(true)
-                binding.addTagEditText.clearFocus()
-                hideKeyboard()
+        return EditMangaState(
+            manga = manga,
+            isLocal = isLocal,
+            originalGenres = manga.getOriginalGenres().orEmpty(),
+            oldSeriesType = manga.seriesType(),
+            languages = languages,
+            languageName = { LocaleHelper.getSourceDisplayName(it, activity) },
+            seriesTypeFor = { manga.seriesType(customTags = it.joinToString(", ")) },
+        ).apply {
+            // Fields stay empty unless they differ from the source's values
+            if (isLocal) {
+                if (manga.title != manga.url) title = manga.title
+                author = manga.author.orEmpty()
+                artist = manga.artist.orEmpty()
+                description = manga.description.orEmpty()
+                lang = LocalSource.getMangaLang(manga, activity)
+                if (lang !in languages) lang = ""
             } else {
-                binding.addTagChip.isVisible = true
-                binding.addTagEditText.isVisible = false
+                if (manga.title != manga.originalTitle) title = manga.title
+                if (manga.author != manga.originalAuthor) author = manga.author.orEmpty()
+                if (manga.artist != manga.originalArtist) artist = manga.artist.orEmpty()
+                if (manga.description != manga.originalDescription) description = manga.description.orEmpty()
             }
-            true
-        }
-
-        binding.resetCover.isVisible = !isLocal
-        binding.resetCover.setOnClickListener {
-            binding.mangaCover.load(
-                manga,
-                builder = {
-                    parameters(Parameters.Builder().set(MangaCoverFetcher.useCustomCover, false).build())
-                },
-            )
-            customCoverUri = null
-            willResetCover = true
+            status = manga.status.coerceIn(SManga.UNKNOWN, SManga.ON_HIATUS)
+            tags.addAll(manga.getGenres().orEmpty())
         }
     }
 
-    private fun autofillFromTracker() {
-        val context = binding.root.context
+    private fun resetTags(state: EditMangaState) {
+        if (manga.genre.isNullOrBlank() || manga.isLocal()) {
+            state.setTags(emptyList())
+        } else {
+            state.setTags(manga.getOriginalGenres().orEmpty())
+            state.seriesType = manga.seriesType(true)
+        }
+    }
+
+    fun updateCover(uri: Uri) {
+        state?.cover = CoverChange.Custom(uri)
+    }
+
+    private fun autofillFromTracker(state: EditMangaState) {
+        val context = activity ?: return
         launchUI {
             val sync = TrackMetadataSync()
             val sources = sync.getSources(manga)
@@ -257,6 +153,7 @@ class EditMangaDialog : DialogController {
                 sources.isEmpty() -> context.toast(R.string.no_tracker_with_metadata)
                 sources.size == 1 ->
                     applyTrackerMetadata(
+                        state,
                         sync,
                         context.getString(sources.first().second.nameRes()),
                     ) { sync.fetchAll(manga) }
@@ -267,218 +164,77 @@ class EditMangaDialog : DialogController {
                             listOf(context.getString(R.string.all_trackers_combined)) +
                                 sources.map { context.getString(it.second.nameRes()) }
                         ).toTypedArray()
-                    activity
-                        ?.materialAlertDialog()
-                        ?.setTitle(R.string.select_tracker)
-                        ?.setItems(names) { _, index ->
+                    context
+                        .materialAlertDialog()
+                        .setTitle(R.string.select_tracker)
+                        .setItems(names) { _, index ->
                             launchUI {
                                 if (index == 0) {
-                                    applyTrackerMetadata(sync, names[0]) { sync.fetchAll(manga) }
+                                    applyTrackerMetadata(state, sync, names[0]) { sync.fetchAll(manga) }
                                 } else {
                                     val (track, service) = sources[index - 1]
-                                    applyTrackerMetadata(sync, names[index]) { sync.fetch(track, service) }
+                                    applyTrackerMetadata(state, sync, names[index]) { sync.fetch(track, service) }
                                 }
                             }
-                        }?.show()
+                        }.show()
                 }
             }
         }
     }
 
     private suspend fun applyTrackerMetadata(
+        state: EditMangaState,
         sync: TrackMetadataSync,
         name: String,
         load: suspend () -> TrackMangaMetadata,
     ) {
-        val context = binding.root.context
-        binding.autofillFromTracker.isEnabled = false
+        val context = activity ?: return
+        state.autofillBusy = true
         try {
             val metadata = withIOContext { load() }
-            metadata.title?.let { binding.title.setText(it) }
-            metadata.authors?.let { binding.mangaAuthor.setText(it) }
-            metadata.artists?.let { binding.mangaArtist.setText(it) }
-            sync.descriptionFor(metadata)?.let { binding.mangaDescription.setText(it) }
-            metadata.status?.let { binding.mangaStatus.setSelection(it.coerceIn(SManga.UNKNOWN, SManga.ON_HIATUS)) }
+            metadata.title?.let { state.title = it }
+            metadata.authors?.let { state.author = it }
+            metadata.artists?.let { state.artist = it }
+            sync.descriptionFor(metadata)?.let { state.description = it }
+            metadata.status?.let { state.status = it.coerceIn(SManga.UNKNOWN, SManga.ON_HIATUS) }
             if (TrackMangaMetadata.Field.TAGS in sync.enabledFields()) {
-                sync.tagsFor(binding.mangaGenresTags.tags.toList(), metadata)?.let { tags ->
-                    setGenreTags(tags)
-                    binding.seriesType.setSelection(manga.seriesType(customTags = tags.joinToString(", ")) - 1)
-                }
+                sync.tagsFor(state.tags.toList(), metadata)?.let { state.setTags(it) }
             }
             metadata.coverUrl?.let { url ->
                 sync.downloadCover(context, url)?.let { updateCover(it) }
             }
             if (metadata.warnings.isNotEmpty()) {
-                context.toast(context.getString(R.string.tracker_metadata_warning, metadata.warnings.joinToString()), Toast.LENGTH_LONG)
+                context.toast(
+                    context.getString(R.string.tracker_metadata_warning, metadata.warnings.joinToString()),
+                    Toast.LENGTH_LONG,
+                )
             }
         } catch (e: Exception) {
             Timber.e(e)
             context.toast(context.getString(R.string.tracker_metadata_error, name, e.message.orEmpty()))
         } finally {
-            binding.autofillFromTracker.isEnabled = true
+            state.autofillBusy = false
         }
     }
 
-    private fun addTags(textCanBeBlank: Boolean = false) {
-        if ((textCanBeBlank || !binding.addTagEditText.text.isNullOrBlank()) &&
-            binding.addTagEditText.isVisible
-        ) {
-            val newTags =
-                binding.addTagEditText.text
-                    .toString()
-                    .split(",")
-                    .mapNotNull { tag -> tag.trim().takeUnless { it.isBlank() } }
-            val tags: List<String> = binding.mangaGenresTags.tags.toList() + newTags
-            binding.addTagEditText.setText("")
-            setGenreTags(tags)
-            binding.seriesType.setSelection(manga.seriesType(customTags = tags.joinToString(", ")) - 1)
-            binding.addTagChip.isVisible = true
-            binding.addTagEditText.isVisible = false
-        }
-    }
-
-    private fun TachiyomiTextInputEditText.appendOriginalTextOnLongClick(originalText: String?) {
-        setOnLongClickListener {
-            if (this.text.isNullOrBlank()) {
-                this.append(originalText ?: "")
-                true
-            } else {
-                false
-            }
-        }
-    }
-
-    private fun showKeyboard() {
-        val inputMethodManager: InputMethodManager =
-            binding.root.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        inputMethodManager.showSoftInput(
-            binding.addTagEditText,
-            WindowManager.LayoutParams
-                .SOFT_INPUT_ADJUST_PAN,
-        )
-    }
-
-    private fun hideKeyboard() {
-        val inputMethodManager: InputMethodManager =
-            binding.root.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        inputMethodManager.hideSoftInputFromWindow(binding.addTagEditText.windowToken, 0)
-    }
-
-    private fun setGenreTags(genres: List<String>) {
-        with(binding.mangaGenresTags) {
-            val addTagChip = binding.addTagChip
-            val addTagEditText = binding.addTagEditText
-            removeAllViews()
-            val dark = context.isInNightMode()
-            val amoled =
-                infoController.presenter.preferences
-                    .themeDarkAmoled()
-                    .get()
-            val tagColors = tagChipColors(dark, amoled)
-            genres.forEach { genreText ->
-                val chip =
-                    LayoutInflater.from(binding.root.context).inflate(
-                        R.layout.genre_chip,
-                        this,
-                        false,
-                    ) as Chip
-                val id = View.generateViewId()
-                chip.id = id
-                val isCustom = originalGenres.none { it.equals(genreText, ignoreCase = true) }
-                chip.applyTagColors(tagColors, isCustom)
-                chip.text = genreText
-                chip.isCloseIconVisible = true
-                chip.setOnCloseIconClickListener { view ->
-                    this.removeView(view)
-                    val tags: List<String> = tags.toList() - (view as Chip).text.toString()
-                    binding.seriesType.setSelection(
-                        manga.seriesType(
-                            customTags =
-                                tags.joinToString(
-                                    ", ",
-                                ),
-                        ) - 1,
-                    )
-                }
-                this.addView(chip)
-            }
-            addView(addTagChip)
-            addView(addTagEditText)
-        }
-    }
-
-    private val ChipGroup.tags: Array<String>
-        get() =
-            children
-                .toList()
-                .filterIsInstance<Chip>()
-                .filter { it.isCloseIconVisible }
-                .map { it.text.toString() }
-                .toTypedArray()
-
-    private fun resetTags() {
-        if (manga.genre.isNullOrBlank() || manga.isLocal()) {
-            setGenreTags(emptyList())
-        } else {
-            setGenreTags(manga.getOriginalGenres().orEmpty())
-            binding.seriesType.setSelection(manga.seriesType(true) - 1)
-            binding.resetsReadingMode.isVisible = false
-        }
-    }
-
-    fun updateCover(uri: Uri) {
-        willResetCover = false
-        binding.mangaCover.load(uri)
-        customCoverUri = uri
-    }
-
-    private fun pasteCoverActionModeCallback(view: View): ActionMode.Callback =
-        object : ActionMode.Callback {
-            override fun onCreateActionMode(
-                mode: ActionMode?,
-                menu: Menu?,
-            ): Boolean {
-                menu?.add(0, MENU_PASTE, 0, android.R.string.paste)
-                return true
-            }
-
-            override fun onPrepareActionMode(
-                mode: ActionMode?,
-                menu: Menu?,
-            ): Boolean = false
-
-            override fun onActionItemClicked(
-                mode: ActionMode?,
-                item: MenuItem?,
-            ): Boolean {
-                if (item?.itemId != MENU_PASTE) return false
-                val uri = view.context.getClipboardImageUri() ?: return false
-                updateCover(uri)
-                mode?.finish()
-                return true
-            }
-
-            override fun onDestroyActionMode(mode: ActionMode?) = Unit
-        }
-
-    private fun onPositiveButtonClick() {
-        addTags()
+    private fun save(state: EditMangaState) {
+        state.commitPendingTag()
+        val cover = state.cover
         infoController.presenter.updateManga(
-            binding.title.text.toString(),
-            binding.mangaAuthor.text.toString(),
-            binding.mangaArtist.text.toString(),
-            customCoverUri,
-            binding.mangaDescription.text.toString(),
-            binding.mangaGenresTags.tags,
-            binding.mangaStatus.selectedPosition,
-            if (binding.resetsReadingMode.isVisible) binding.seriesType.selectedPosition + 1 else null,
-            languages.getOrNull(binding.mangaLang.selectedPosition),
-            willResetCover,
+            state.title,
+            state.author,
+            state.artist,
+            (cover as? CoverChange.Custom)?.uri,
+            state.description,
+            state.tags.toTypedArray(),
+            state.status,
+            if (state.resetsReadingMode) state.seriesType else null,
+            if (state.isLocal) state.lang else null,
+            cover is CoverChange.Reset,
         )
     }
 
     private companion object {
         const val KEY_MANGA = "manga_id"
-        const val MENU_PASTE = 1
     }
 }

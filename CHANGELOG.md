@@ -21,6 +21,9 @@ from upstream TachiyomiJ2K are not repeated here.
   from Komikku's automation feature, not its code.
 
 ### Changed
+- The manga edit panel is rewritten as a Compose Material 3 bottom sheet, adapted from Komikku's
+  edit dialog. Fields have "restore original" buttons, tags are input chips, and pasting a cover
+  from the clipboard moved to the cover's long-press menu. Tag drag-reordering is not ported.
 - Release and beta builds are signed with a stable local key read from the git-ignored
   `keystore.properties`, so updates install over each other.
 - The issue templates, About screen and tracker User-Agents link to this fork instead of upstream.

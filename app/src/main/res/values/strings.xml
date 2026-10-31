@@ -1396,4 +1396,5 @@
     <string name="reader_automation_flip_interval">Seconds per page (paged)</string>
     <string name="reader_automation_duration">Stop after (minutes, 0 = never)</string>
     <string name="reader_automation_finished">Auto-scroll stopped</string>
+    <string name="restore_original">Restore original</string>
 </resources>

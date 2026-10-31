@@ -50,6 +50,10 @@
         android:title="@string/scanlator_priority"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_smart_merge_mode"
+        android:title="@string/smart_scanlator_merge"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_show_blacklisted"
         android:checkable="true"
         android:title="@string/show_hidden_chapters"

@@ -26,6 +26,7 @@ import eu.kanade.tachiyomi.data.database.tables.MangaTable.COL_INITIALIZED
 import eu.kanade.tachiyomi.data.database.tables.MangaTable.COL_LAST_UPDATE
 import eu.kanade.tachiyomi.data.database.tables.MangaTable.COL_MEMO
 import eu.kanade.tachiyomi.data.database.tables.MangaTable.COL_SCANLATOR_PRIORITY
+import eu.kanade.tachiyomi.data.database.tables.MangaTable.COL_SMART_MERGE_MODE
 import eu.kanade.tachiyomi.data.database.tables.MangaTable.COL_SOURCE
 import eu.kanade.tachiyomi.data.database.tables.MangaTable.COL_STATUS
 import eu.kanade.tachiyomi.data.database.tables.MangaTable.COL_THUMBNAIL_URL
@@ -79,6 +80,7 @@ class MangaPutResolver : DefaultPutResolver<Manga>() {
             put(COL_DATE_ADDED, obj.date_added)
             put(COL_FILTERED_SCANLATORS, obj.filtered_scanlators)
             put(COL_SCANLATOR_PRIORITY, obj.scanlator_priority)
+            put(COL_SMART_MERGE_MODE, obj.smart_merge_mode)
             put(COL_UPDATE_STRATEGY, obj.update_strategy.let(updateStrategyAdapter::encode))
             put(COL_MEMO, obj.memo.let(memoAdapter::encode))
         }
@@ -108,6 +110,7 @@ interface BaseMangaGetResolver {
         date_added = cursor.getLong(cursor.getColumnIndex(COL_DATE_ADDED))
         filtered_scanlators = cursor.getString(cursor.getColumnIndex(COL_FILTERED_SCANLATORS))
         scanlator_priority = cursor.getString(cursor.getColumnIndex(COL_SCANLATOR_PRIORITY))
+        smart_merge_mode = cursor.getInt(cursor.getColumnIndex(COL_SMART_MERGE_MODE))
         update_strategy =
             cursor.getInt(cursor.getColumnIndex(COL_UPDATE_STRATEGY)).let(
                 updateStrategyAdapter::decode,

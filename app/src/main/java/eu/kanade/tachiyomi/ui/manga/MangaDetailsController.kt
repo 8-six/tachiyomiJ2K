@@ -1043,6 +1043,22 @@ class MangaDetailsController :
     }
 
     // KMK -->
+    private fun showSmartMergeMode() {
+        val activity = activity ?: return
+        val labels =
+            listOf(R.string.smart_merge_follow_global, R.string.smart_merge_always, R.string.smart_merge_never)
+                .map { activity.getString(it) }
+                .toTypedArray()
+        activity
+            .materialAlertDialog()
+            .setTitle(R.string.smart_scanlator_merge)
+            .setSingleChoiceItems(labels, presenter.manga.smart_merge_mode) { dialog, which ->
+                presenter.setSmartMergeMode(which)
+                dialog.dismiss()
+            }.setNegativeButton(android.R.string.cancel, null)
+            .show()
+    }
+
     private fun showScanlatorPriority() {
         val activity = activity ?: return
         val scanlators = presenter.allChapterScanlators.toList()
@@ -1279,6 +1295,9 @@ class MangaDetailsController :
             (isMerged || mergeManager.canMerge(presenter.manga))
         menu.findItem(R.id.action_merged_sources)?.isVisible = !presenter.isLockedFromSearch && isMerged
         // KMK -->
+        menu.findItem(R.id.action_smart_merge_mode)?.isVisible =
+            !presenter.isLockedFromSearch &&
+            presenter.allChapterScanlators.size > 1
         menu.findItem(R.id.action_scanlator_priority)?.isVisible =
             !presenter.isLockedFromSearch &&
             presenter.allChapterScanlators.size > 1
@@ -1294,6 +1313,7 @@ class MangaDetailsController :
             R.id.action_edit -> openEditMangaDialog()
             // KMK -->
             R.id.action_scanlator_priority -> showScanlatorPriority()
+            R.id.action_smart_merge_mode -> showSmartMergeMode()
             R.id.action_show_blacklisted -> {
                 presenter.toggleShowBlacklisted()
                 activity?.invalidateOptionsMenu()

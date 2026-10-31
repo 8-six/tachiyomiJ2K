@@ -34,6 +34,8 @@ import eu.kanade.tachiyomi.ui.library.filter.FilterBottomSheet.Companion.STATE_I
 import eu.kanade.tachiyomi.ui.library.filter.FilterBottomSheet.Companion.STATE_INCLUDE
 import eu.kanade.tachiyomi.ui.recents.RecentsPresenter
 import eu.kanade.tachiyomi.util.chapter.ChapterFilter
+import eu.kanade.tachiyomi.util.chapter.ChapterFilter.Companion.filterChaptersByScanlators
+import eu.kanade.tachiyomi.util.chapter.ChapterFilter.Companion.smartMergeEnabled
 import eu.kanade.tachiyomi.util.chapter.ChapterSort
 import eu.kanade.tachiyomi.util.isLocal
 import eu.kanade.tachiyomi.util.lang.capitalizeWords
@@ -814,10 +816,34 @@ class LibraryPresenter(
      *
      * @return an list of all the manga in a itemized form.
      */
+    // KMK -->
+
+    /** Recomputes read/unread counts from the chapters smart merge would show; SQL cannot rank scanlators. */
+    private fun applySmartMergeCounts(libraryManga: List<LibraryManga>) {
+        val byId = libraryManga.distinctBy { it.id }.associateBy { it.id }
+        val chaptersByManga =
+            byId.keys
+                .filterNotNull()
+                .chunked(500)
+                .flatMap { db.getChapters(it).executeAsBlocking() }
+                .groupBy { it.manga_id }
+        libraryManga.forEach { manga ->
+            if (!smartMergeEnabled(manga)) return@forEach
+            val chapters = chaptersByManga[manga.id] ?: return@forEach
+            val merged = chapters.filterChaptersByScanlators(manga, smartMerge = true)
+            manga.unread = merged.count { !it.read }
+            manga.read = merged.count { it.read }
+        }
+    }
+    // KMK <--
+
     private fun getLibraryFromDB(): Pair<List<LibraryItem>, List<LibraryItem>> {
         removeArticles = preferences.removeArticles().get()
         val categories = db.getCategories().executeAsBlocking().toMutableList()
         var libraryManga = db.getLibraryMangas().executeAsBlocking()
+        // KMK -->
+        if (preferences.smartScanlatorMerge().get() || libraryManga.any { it.smart_merge_mode == 1 }) applySmartMergeCounts(libraryManga)
+        // KMK <--
         val showAll = showAllCategories
         if (groupType > BY_DEFAULT) {
             libraryManga = libraryManga.distinctBy { it.id }

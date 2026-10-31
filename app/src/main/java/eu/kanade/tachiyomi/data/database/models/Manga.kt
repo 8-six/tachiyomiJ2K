@@ -35,6 +35,9 @@ interface Manga : SManga {
     // KMK -->
     /** Preferred scanlators, best first, in the same format as [filtered_scanlators]. */
     var scanlator_priority: String?
+
+    /** 0 follows the global smart merge setting, 1 forces it on, 2 forces it off. */
+    var smart_merge_mode: Int
     // KMK <--
 
     fun isBlank() = id == Long.MIN_VALUE

@@ -20,7 +20,7 @@ class DbOpenCallback : SupportSQLiteOpenHelper.Callback(DATABASE_VERSION) {
         /**
          * Version of the database.
          */
-        const val DATABASE_VERSION = 24
+        const val DATABASE_VERSION = 25
     }
 
     override fun onOpen(db: SupportSQLiteDatabase) {
@@ -163,6 +163,9 @@ class DbOpenCallback : SupportSQLiteOpenHelper.Callback(DATABASE_VERSION) {
         }
         if (oldVersion < 24) {
             db.execSQL(MangaTable.addScanlatorPriority)
+        }
+        if (oldVersion < 25) {
+            db.execSQL(MangaTable.addSmartMergeMode)
         }
     }
 

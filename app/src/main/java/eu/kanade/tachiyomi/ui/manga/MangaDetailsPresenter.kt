@@ -297,6 +297,12 @@ class MangaDetailsPresenter(
         asyncUpdateMangaAndChapters()
     }
 
+    fun setSmartMergeMode(mode: Int) {
+        manga.smart_merge_mode = mode
+        db.updateMangaFilteredScanlators(manga).executeAsBlocking()
+        asyncUpdateMangaAndChapters()
+    }
+
     fun toggleShowBlacklisted() {
         showBlacklisted = !showBlacklisted
         presenterScope.launch(Dispatchers.IO) {

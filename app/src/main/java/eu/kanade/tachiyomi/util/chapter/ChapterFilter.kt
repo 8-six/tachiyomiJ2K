@@ -110,7 +110,7 @@ class ChapterFilter(
             manga: Manga,
             // KMK -->
             includeBlacklisted: Boolean = false,
-            smartMerge: Boolean = smartMergeEnabled(),
+            smartMerge: Boolean = smartMergeEnabled(manga),
             // KMK <--
         ): List<T> {
             // KMK -->
@@ -127,7 +127,14 @@ class ChapterFilter(
         }
 
         // KMK -->
-        private fun smartMergeEnabled(): Boolean = Injekt.get<PreferencesHelper>().smartScanlatorMerge().get()
+
+        /** Per-manga mode first, then the global setting. */
+        fun smartMergeEnabled(manga: Manga): Boolean =
+            when (manga.smart_merge_mode) {
+                1 -> true
+                2 -> false
+                else -> Injekt.get<PreferencesHelper>().smartScanlatorMerge().get()
+            }
 
         /**
          * Keeps one chapter per recognized chapter number: the one whose scanlators rank best in [priority]

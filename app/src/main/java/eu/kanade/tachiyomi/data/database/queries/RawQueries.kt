@@ -26,7 +26,7 @@ val libraryQuery =
         LEFT JOIN (
             SELECT ${Chapter.COL_MANGA_ID}, COUNT(*) AS count
             FROM ${Chapter.TABLE}
-            WHERE ${Chapter.COL_READ} = 0
+            WHERE ${Chapter.COL_READ} = 0 AND ${Chapter.COL_BLACKLISTED} = 0
             GROUP BY ${Chapter.COL_MANGA_ID}
         ) AS CC
         ON ${Manga.COL_ID} = CC.${Chapter.COL_MANGA_ID}
@@ -34,14 +34,14 @@ val libraryQuery =
             SELECT ${Chapter.TABLE}.${Chapter.COL_MANGA_ID}, GROUP_CONCAT(IFNULL(${Chapter.TABLE}.${Chapter.COL_SCANLATOR}, "N/A"), " [.] ") AS unread
             FROM ${Chapter.TABLE}
             JOIN ${Manga.TABLE} FS ON FS.${Manga.COL_ID} = ${Chapter.TABLE}.${Chapter.COL_MANGA_ID}
-            WHERE ${Chapter.COL_READ} = 0 AND FS.${Manga.COL_FILTERED_SCANLATORS} IS NOT NULL
+            WHERE ${Chapter.COL_READ} = 0 AND ${Chapter.COL_BLACKLISTED} = 0 AND FS.${Manga.COL_FILTERED_SCANLATORS} IS NOT NULL
             GROUP BY ${Chapter.TABLE}.${Chapter.COL_MANGA_ID}
         ) AS C
         ON ${Manga.COL_ID} = C.${Chapter.COL_MANGA_ID}
         LEFT JOIN (
             SELECT ${Chapter.COL_MANGA_ID}, COUNT(*) AS count
             FROM ${Chapter.TABLE}
-            WHERE ${Chapter.COL_READ} = 1
+            WHERE ${Chapter.COL_READ} = 1 AND ${Chapter.COL_BLACKLISTED} = 0
             GROUP BY ${Chapter.COL_MANGA_ID}
         ) AS RC
         ON ${Manga.COL_ID} = RC.${Chapter.COL_MANGA_ID}
@@ -49,14 +49,14 @@ val libraryQuery =
             SELECT ${Chapter.TABLE}.${Chapter.COL_MANGA_ID}, GROUP_CONCAT(IFNULL(${Chapter.TABLE}.${Chapter.COL_SCANLATOR}, "N/A"), " [.] ") AS hasread
             FROM ${Chapter.TABLE}
             JOIN ${Manga.TABLE} FS ON FS.${Manga.COL_ID} = ${Chapter.TABLE}.${Chapter.COL_MANGA_ID}
-            WHERE ${Chapter.COL_READ} = 1 AND FS.${Manga.COL_FILTERED_SCANLATORS} IS NOT NULL
+            WHERE ${Chapter.COL_READ} = 1 AND ${Chapter.COL_BLACKLISTED} = 0 AND FS.${Manga.COL_FILTERED_SCANLATORS} IS NOT NULL
             GROUP BY ${Chapter.TABLE}.${Chapter.COL_MANGA_ID}
         ) AS R
         ON ${Manga.COL_ID} = R.${Chapter.COL_MANGA_ID}
         LEFT JOIN (
             SELECT ${Chapter.COL_MANGA_ID}, COUNT(*) AS bookmarkCount
             FROM ${Chapter.TABLE}
-            WHERE ${Chapter.COL_BOOKMARK} = 1
+            WHERE ${Chapter.COL_BOOKMARK} = 1 AND ${Chapter.COL_BLACKLISTED} = 0
             GROUP BY ${Chapter.COL_MANGA_ID}
         ) AS B
         ON ${Manga.COL_ID} = B.${Chapter.COL_MANGA_ID}
@@ -249,7 +249,7 @@ fun getAllRecentsType(
         SELECT ${Chapter.TABLE}.${Chapter.COL_MANGA_ID},${Chapter.TABLE}.${Chapter.COL_ID} as ${History.COL_CHAPTER_ID},MAX(${Chapter.TABLE}.${Chapter.COL_DATE_UPLOAD}) 
         FROM ${Chapter.TABLE} JOIN ${Manga.TABLE}
         ON ${Manga.TABLE}.${Manga.COL_ID} = ${Chapter.TABLE}.${Chapter.COL_MANGA_ID}
-        WHERE ${Chapter.COL_READ} = 0
+        WHERE ${Chapter.COL_READ} = 0 AND ${Chapter.COL_BLACKLISTED} = 0
         GROUP BY ${Chapter.TABLE}.${Chapter.COL_MANGA_ID}) AS newest_chapter
     ON ${Chapter.TABLE}.${Chapter.COL_MANGA_ID} = newest_chapter.${Chapter.COL_MANGA_ID}
     WHERE ${Manga.COL_FAVORITE} = 1

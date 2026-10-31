@@ -32,5 +32,6 @@ class MangaFilteredScanlatorsPutResolver : PutResolver<Manga>() {
     fun mapToContentValues(manga: Manga) =
         contentValuesOf(
             MangaTable.COL_FILTERED_SCANLATORS to manga.filtered_scanlators,
+            MangaTable.COL_SCANLATOR_PRIORITY to manga.scanlator_priority,
         )
 }

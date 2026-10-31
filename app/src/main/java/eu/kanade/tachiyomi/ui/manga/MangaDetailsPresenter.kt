@@ -290,6 +290,13 @@ class MangaDetailsPresenter(
         }
     }
 
+    fun setScanlatorPriority(priority: List<String>) {
+        manga.scanlator_priority =
+            priority.takeIf { it.isNotEmpty() }?.joinToString(ChapterUtil.scanlatorSeparator)
+        db.updateMangaFilteredScanlators(manga).executeAsBlocking()
+        asyncUpdateMangaAndChapters()
+    }
+
     fun toggleShowBlacklisted() {
         showBlacklisted = !showBlacklisted
         presenterScope.launch(Dispatchers.IO) {

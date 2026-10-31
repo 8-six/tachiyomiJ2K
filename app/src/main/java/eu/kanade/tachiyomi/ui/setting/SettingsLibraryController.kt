@@ -41,6 +41,14 @@ class SettingsLibraryController : SettingsController() {
                     defaultValue = false
                 }
 
+                // KMK -->
+                switchPreference {
+                    bindTo(preferences.smartScanlatorMerge())
+                    titleRes = R.string.smart_scanlator_merge
+                    summaryRes = R.string.smart_scanlator_merge_summary
+                }
+                // KMK <--
+
                 switchPreference {
                     key = Keys.showLibrarySearchSuggestions
                     titleRes = R.string.search_suggestions

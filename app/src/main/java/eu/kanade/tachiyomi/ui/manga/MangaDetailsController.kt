@@ -101,6 +101,7 @@ import eu.kanade.tachiyomi.ui.source.browse.BrowseSourceController
 import eu.kanade.tachiyomi.ui.source.globalsearch.GlobalSearchController
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
 import eu.kanade.tachiyomi.util.addOrRemoveToFavorites
+import eu.kanade.tachiyomi.util.chapter.ChapterUtil
 import eu.kanade.tachiyomi.util.chapter.updateTrackChapterMarkedAsRead
 import eu.kanade.tachiyomi.util.isLocal
 import eu.kanade.tachiyomi.util.moveCategories
@@ -1042,6 +1043,24 @@ class MangaDetailsController :
     }
 
     // KMK -->
+    private fun showScanlatorPriority() {
+        val activity = activity ?: return
+        val scanlators = presenter.allChapterScanlators.toList()
+        val ranked = ChapterUtil.getScanlators(presenter.manga.scanlator_priority).filter { it in scanlators }.toMutableList()
+        activity
+            .materialAlertDialog()
+            .setTitle(R.string.scanlator_priority)
+            .setMultiChoiceItems(
+                scanlators.map { name -> name }.toTypedArray(),
+                scanlators.map { it in ranked }.toBooleanArray(),
+            ) { _, which, checked ->
+                if (checked) ranked.add(scanlators[which]) else ranked.remove(scanlators[which])
+            }.setNegativeButton(android.R.string.cancel, null)
+            .setPositiveButton(android.R.string.ok) { _, _ -> presenter.setScanlatorPriority(ranked.toList()) }
+            .setNeutralButton(R.string.reset) { _, _ -> presenter.setScanlatorPriority(emptyList()) }
+            .show()
+    }
+
     private fun setBookmarkColor(item: ChapterItem) {
         val activity = activity ?: return
         BookmarkColorDialog.show(activity, item.bookmark_color) { color ->
@@ -1260,6 +1279,9 @@ class MangaDetailsController :
             (isMerged || mergeManager.canMerge(presenter.manga))
         menu.findItem(R.id.action_merged_sources)?.isVisible = !presenter.isLockedFromSearch && isMerged
         // KMK -->
+        menu.findItem(R.id.action_scanlator_priority)?.isVisible =
+            !presenter.isLockedFromSearch &&
+            presenter.allChapterScanlators.size > 1
         menu.findItem(R.id.action_show_blacklisted)?.apply {
             isVisible = !presenter.isLockedFromSearch
             isChecked = presenter.showBlacklisted
@@ -1271,6 +1293,7 @@ class MangaDetailsController :
         when (item.itemId) {
             R.id.action_edit -> openEditMangaDialog()
             // KMK -->
+            R.id.action_scanlator_priority -> showScanlatorPriority()
             R.id.action_show_blacklisted -> {
                 presenter.toggleShowBlacklisted()
                 activity?.invalidateOptionsMenu()

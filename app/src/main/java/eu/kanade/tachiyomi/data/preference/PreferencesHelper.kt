@@ -470,6 +470,10 @@ class PreferencesHelper(
 
     fun skipDupe() = flowPrefs.getBoolean("skip_dupe", false)
 
+    // KMK -->
+    fun smartScanlatorMerge() = flowPrefs.getBoolean("smart_scanlator_merge", false)
+    // KMK <--
+
     fun useBiometrics() = flowPrefs.getBoolean(Keys.useBiometrics, false)
 
     fun lockAfter() = flowPrefs.getInt(Keys.lockAfter, 0)

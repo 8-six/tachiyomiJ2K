@@ -32,6 +32,11 @@ interface Manga : SManga {
 
     var filtered_scanlators: String?
 
+    // KMK -->
+    /** Preferred scanlators, best first, in the same format as [filtered_scanlators]. */
+    var scanlator_priority: String?
+    // KMK <--
+
     fun isBlank() = id == Long.MIN_VALUE
 
     fun isHidden() = status == -1

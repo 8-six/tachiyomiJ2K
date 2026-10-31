@@ -46,6 +46,10 @@
 
     <!-- KMK -->
     <item
+        android:id="@+id/action_scanlator_priority"
+        android:title="@string/scanlator_priority"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_show_blacklisted"
         android:checkable="true"
         android:title="@string/show_hidden_chapters"

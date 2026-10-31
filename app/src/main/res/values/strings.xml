@@ -54,6 +54,9 @@
     <string name="all_chapters_read">All chapters read</string>
     <string name="bookmarked">Bookmarked</string>
     <string name="bookmark_color">Bookmark color</string>
+    <string name="scanlator_priority">Scanlator priority</string>
+    <string name="smart_scanlator_merge">Smart scanlator merge</string>
+    <string name="smart_scanlator_merge_summary">Show one release per chapter number, preferring each manga\'s scanlator priority</string>
     <string name="hide_chapter">Hide chapter</string>
     <string name="unhide_chapter">Unhide chapter</string>
     <string name="show_hidden_chapters">Show hidden chapters</string>

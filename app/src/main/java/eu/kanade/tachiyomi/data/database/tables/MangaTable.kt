@@ -53,6 +53,10 @@ object MangaTable {
 
     const val COL_FILTERED_SCANLATORS = "filtered_scanlators"
 
+    // KMK -->
+    const val COL_SCANLATOR_PRIORITY = "scanlator_priority"
+    // KMK <--
+
     const val COL_UPDATE_STRATEGY = "update_strategy"
 
     const val COL_MEMO = "memo"
@@ -78,6 +82,7 @@ object MangaTable {
             $COL_CHAPTER_FLAGS INTEGER NOT NULL,
             $COL_DATE_ADDED LONG,
             $COL_FILTERED_SCANLATORS TEXT,
+            $COL_SCANLATOR_PRIORITY TEXT,
             $COL_UPDATE_STRATEGY INTEGER NOT NULL DEFAULT 0,
             $COL_MEMO TEXT NOT NULL DEFAULT '{}'
 
@@ -102,6 +107,9 @@ object MangaTable {
 
     val addFilteredScanlators: String
         get() = "ALTER TABLE $TABLE ADD COLUMN $COL_FILTERED_SCANLATORS TEXT"
+
+    val addScanlatorPriority: String
+        get() = "ALTER TABLE $TABLE ADD COLUMN $COL_SCANLATOR_PRIORITY TEXT"
 
     val addUpdateStrategy: String
         get() = "ALTER TABLE $TABLE ADD COLUMN $COL_UPDATE_STRATEGY INTEGER NOT NULL DEFAULT 0"

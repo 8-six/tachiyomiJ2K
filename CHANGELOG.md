@@ -33,6 +33,7 @@ from upstream TachiyomiJ2K are not repeated here.
 - Tracker sheet marks a tracker whose last refresh failed with an error-colored title and warning icon until a later refresh succeeds (in memory only). Not device-tested.
 - Colored chapter bookmarks: long-press a chapter on the manga page > "Bookmark color" picks one of 8 colors (also bookmarks the chapter). The color tints the bookmark in the chapter list and reader chapter list. Adapted from Komikku. Not device-tested; no color picker in the reader yet.
 - Chapter blacklist: long-press a chapter > "Hide chapter" removes it from the manga chapter list, reader navigation, next-unread lookups and Recents without deleting it, its history or bookmarks. "Show hidden chapters" in the manga overflow menu reveals them (not persisted) so they can be unhidden. Adapted from Komikku. Not device-tested; library unread counts are not blacklist-aware yet.
+- Scanlator priority and smart merge: the manga overflow menu gets "Scanlator priority" (pick scanlators in order of preference), and Settings > Library gets "Smart scanlator merge" (off by default). When on, each chapter number shows a single release, the one from the best ranked scanlator, then the earliest in the source list; excluded scanlators and hidden chapters are applied first and stay hidden. Chapters without a recognized number are never merged, and nothing is deleted. Adapted from Komikku. Not device-tested; there is no per-manga on/off override and library counts do not follow the merge.
 
 ### Changed
 - The manga edit panel is rewritten as a Compose Material 3 bottom sheet, adapted from Komikku's
@@ -47,6 +48,7 @@ from upstream TachiyomiJ2K are not repeated here.
 - Leaving the extension repositories screen refreshes the available extensions when the set of enabled repos changed, so adding, removing, enabling or disabling a repo shows up without a manual refresh or restart. Matches Komikku's behavior.
 
 ### Technical
+- Database version 24 adds `mangas.scanlator_priority` (TEXT, scanlators joined with ` & `, best first). Backups carry it as `BackupManga` ProtoNumber 811; older backups restore with no priority and a restore over an existing manga keeps its local priority.
 - Database version 23 adds `chapters.blacklisted` (INTEGER NOT NULL DEFAULT 0). Backups carry it as `BackupChapter` ProtoNumber 802; older backups restore as not hidden and a restore keeps a local hidden flag. `ChapterBlacklistTest` covers the filter and the protobuf field.
 - Database version 22 adds `chapters.bookmark_color` (INTEGER NOT NULL DEFAULT 0, ARGB, 0 = theme default). Backups carry it as `BackupChapter` ProtoNumber 801; older backups restore with no color, and a restore keeps an existing local color when the backup has none. `BackupChapterTest` covers the field.
 - Manual "Version bump" workflow backed by `.github/scripts/bump_version.py`: bumps `versionName`/`versionCode` in `buildSrc`, rolls a patch bump past .10 over to the next minor, fails on missing or ambiguous declarations, and can tag. The script was run locally; the workflow itself has not run on GitHub.

@@ -110,15 +110,41 @@ class ChapterFilter(
             manga: Manga,
             // KMK -->
             includeBlacklisted: Boolean = false,
+            smartMerge: Boolean = smartMergeEnabled(),
             // KMK <--
         ): List<T> {
             // KMK -->
             val visible = if (includeBlacklisted) this else filter { !it.blacklisted }
             // KMK <--
-            return manga.filtered_scanlators?.let { filteredScanlatorString ->
-                val filteredScanlators = ChapterUtil.getScanlators(filteredScanlatorString)
-                visible.filter { ChapterUtil.getScanlators(it.scanlator).none { group -> filteredScanlators.contains(group) } }
-            } ?: visible
+            val scanlatorFiltered =
+                manga.filtered_scanlators?.let { filteredScanlatorString ->
+                    val filteredScanlators = ChapterUtil.getScanlators(filteredScanlatorString)
+                    visible.filter { ChapterUtil.getScanlators(it.scanlator).none { group -> filteredScanlators.contains(group) } }
+                } ?: visible
+            // KMK -->
+            return if (smartMerge) scanlatorFiltered.smartMerged(ChapterUtil.getScanlators(manga.scanlator_priority)) else scanlatorFiltered
+            // KMK <--
         }
+
+        // KMK -->
+        private fun smartMergeEnabled(): Boolean = Injekt.get<PreferencesHelper>().smartScanlatorMerge().get()
+
+        /**
+         * Keeps one chapter per recognized chapter number: the one whose scanlators rank best in [priority]
+         * (unlisted scanlators rank last), then the earliest in the source list. Nothing is deleted.
+         */
+        fun <T : Chapter> List<T>.smartMerged(priority: List<String>): List<T> {
+            fun rank(chapter: T): Int =
+                ChapterUtil
+                    .getScanlators(chapter.scanlator)
+                    .minOfOrNull { priority.indexOf(it).takeIf { index -> index >= 0 } ?: Int.MAX_VALUE }
+                    ?: Int.MAX_VALUE
+            val best =
+                filter { it.isRecognizedNumber }
+                    .groupBy { it.chapter_number }
+                    .mapValues { (_, group) -> group.minWithOrNull(compareBy<T>({ rank(it) }, { it.source_order })) }
+            return filter { !it.isRecognizedNumber || best[it.chapter_number] === it }
+        }
+        // KMK <--
     }
 }

@@ -208,6 +208,7 @@ class BackupRestorer(
                 // Copy information from manga already in database
                 manga.id = dbManga.id
                 manga.filtered_scanlators = dbManga.filtered_scanlators
+                manga.scanlator_priority = dbManga.scanlator_priority
                 manga.copyFrom(dbManga)
                 db.insertManga(manga).executeAsBlocking()
                 // Fetch rest of manga information
@@ -223,6 +224,12 @@ class BackupRestorer(
                 )
             }
             if (manga.source == MERGED_SOURCE_ID) restoreMergedMembers(manga, backupManga.mergedMembers)
+            // KMK -->
+            if (backupManga.scanlatorPriority.isNotEmpty()) {
+                manga.scanlator_priority = backupManga.scanlatorPriority.distinct().joinToString(ChapterUtil.scanlatorSeparator)
+                db.updateMangaFilteredScanlators(manga).executeAsBlocking()
+            }
+            // KMK <--
         } catch (e: Exception) {
             val sourceName = sourceMapping[manga.source] ?: manga.source.toString()
             errors.add(Date() to "${manga.title} [$sourceName]: ${e.message}")

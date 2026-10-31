@@ -27,6 +27,12 @@ class CategoryImpl : Category {
     override var parentId: Int = 0
 
     override var parentName: String? = null
+
+    override var trackerStatus: Int = 0
+
+    override var updateInterval: Int = 0
+
+    override var updateLastRun: Long = 0
     // KMK <--
 
     override fun equals(other: Any?): Boolean {

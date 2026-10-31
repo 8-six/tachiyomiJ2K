@@ -70,6 +70,11 @@
     <string name="hide_chapter">Hide chapter</string>
     <string name="unhide_chapter">Unhide chapter</string>
     <string name="show_hidden_chapters">Show hidden chapters</string>
+    <string name="smart_category_status">Tracker status</string>
+    <string name="smart_category_status_value">Tracker status: %1$s</string>
+    <string name="category_update_schedule">Update schedule</string>
+    <string name="category_update_schedule_value">Update schedule: %1$s</string>
+    <string name="follow_global_schedule">Follow global schedule</string>
     <string name="parent_category">Parent category</string>
     <string name="parent_category_none">None (top level)</string>
     <string name="parent_category_value">Parent category: %1$s</string>

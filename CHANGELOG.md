@@ -43,6 +43,7 @@ from upstream TachiyomiJ2K are not repeated here.
 - Related manga (adapted from Komikku): manga tracked on AniList get a "Related manga" overflow-menu action listing sequels, prequels, side stories and similar relations; tapping one opens Global Search for it. Shown as a dialog list, not a horizontal row; MangaBaka relations are not included.
 
 - Nested categories (adapted from Komikku): a category can be given a parent in Manage category. Child categories show as "Parent › Child" in the library header and category manager. Parent choices exclude the category itself and its descendants.
+- Smart categories: a category can be bound to a tracker status (reading, completed, plan to read) and manga move into or out of it when their tracking changes; bound subcategories only apply to manga already in the parent branch. Each category can also have its own automatic update interval (6h to weekly).
 
 ### Changed
 - The manga edit panel is rewritten as a Compose Material 3 bottom sheet, adapted from Komikku's
@@ -57,6 +58,7 @@ from upstream TachiyomiJ2K are not repeated here.
 - Leaving the extension repositories screen refreshes the available extensions when the set of enabled repos changed, so adding, removing, enabling or disabling a repo shows up without a manual refresh or restart. Matches Komikku's behavior.
 
 ### Technical
+- Database version 27 adds `categories.tracker_status`, `update_interval` and `update_last_run`. Backups carry the first two as `BackupCategory` ProtoNumber 804 and 805. `SmartCategorySyncTest` covers branch scoping and schedules.
 - Database version 26 adds `categories.parent_id`; `getCategories()` now uses a raw query joining the parent name. Backups carry the parent by name (`BackupCategory` ProtoNumber 803) and restore re-links parents after inserting categories.
 - Database version 25 adds `mangas.smart_merge_mode` (INTEGER NOT NULL DEFAULT 0; 0 global, 1 on, 2 off), backed up as `BackupManga` ProtoNumber 812.
 - Database version 24 adds `mangas.scanlator_priority` (TEXT, scanlators joined with ` & `, best first). Backups carry it as `BackupManga` ProtoNumber 811; older backups restore with no priority and a restore over an existing manga keeps its local priority.

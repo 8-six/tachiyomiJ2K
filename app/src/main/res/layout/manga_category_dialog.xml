@@ -40,6 +40,26 @@
         android:gravity="start|center_vertical"
         android:text="@string/parent_category" />
 
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/smart_status"
+        style="@style/Widget.Material3Expressive.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:gravity="start|center_vertical"
+        android:text="@string/smart_category_status" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/update_interval"
+        style="@style/Widget.Material3Expressive.Button.TextButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:gravity="start|center_vertical"
+        android:text="@string/category_update_schedule" />
+
     <eu.kanade.tachiyomi.widget.TriStateCheckBox
         android:id="@+id/download_new"
         android:layout_width="match_parent"

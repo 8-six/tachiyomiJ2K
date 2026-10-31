@@ -5,6 +5,7 @@ import eu.kanade.tachiyomi.data.database.models.Chapter
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.track.DelayedTrackingUpdateJob
+import eu.kanade.tachiyomi.data.track.SmartCategorySync
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.TrackService
 import eu.kanade.tachiyomi.util.system.isOnline
@@ -43,6 +44,9 @@ fun syncChaptersWithTrackServiceTwoWay(
             try {
                 service.update(remoteTrack)
                 db.insertTrack(remoteTrack).executeAsBlocking()
+                // KMK -->
+                SmartCategorySync.sync(db, remoteTrack.manga_id)
+                // KMK <--
             } catch (e: Throwable) {
                 Timber.w(e)
             }
@@ -146,6 +150,9 @@ suspend fun updateTrackChapterRead(
                     track.last_chapter_read = newChapterRead
                     service.update(track, true)
                     db.insertTrack(track).executeAsBlocking()
+                    // KMK -->
+                    SmartCategorySync.sync(db, track.manga_id)
+                    // KMK <--
                 } catch (e: Exception) {
                     Timber.e(e)
                     failures.add(service to e.localizedMessage)

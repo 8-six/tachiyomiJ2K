@@ -16,6 +16,8 @@ class BackupCategory(
     @ProtoNumber(800) var mangaSort: Char? = null,
     // KMK -->
     @ProtoNumber(803) var parentName: String? = null,
+    @ProtoNumber(804) var trackerStatus: Int = 0,
+    @ProtoNumber(805) var updateInterval: Int = 0,
     // KMK <--
 ) {
     fun getCategoryImpl(): CategoryImpl =
@@ -24,6 +26,8 @@ class BackupCategory(
             flags = this@BackupCategory.flags
             order = this@BackupCategory.order
             mangaSort = this@BackupCategory.mangaSort
+            trackerStatus = this@BackupCategory.trackerStatus
+            updateInterval = this@BackupCategory.updateInterval
         }
 
     companion object {
@@ -34,6 +38,8 @@ class BackupCategory(
                 flags = category.flags,
                 mangaSort = category.mangaSort,
                 parentName = category.parentName,
+                trackerStatus = category.trackerStatus,
+                updateInterval = category.updateInterval,
             )
     }
 }

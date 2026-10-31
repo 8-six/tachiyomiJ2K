@@ -17,6 +17,9 @@ import eu.kanade.tachiyomi.data.database.tables.CategoryTable.COL_MANGA_ORDER
 import eu.kanade.tachiyomi.data.database.tables.CategoryTable.COL_NAME
 import eu.kanade.tachiyomi.data.database.tables.CategoryTable.COL_ORDER
 import eu.kanade.tachiyomi.data.database.tables.CategoryTable.COL_PARENT_ID
+import eu.kanade.tachiyomi.data.database.tables.CategoryTable.COL_TRACKER_STATUS
+import eu.kanade.tachiyomi.data.database.tables.CategoryTable.COL_UPDATE_INTERVAL
+import eu.kanade.tachiyomi.data.database.tables.CategoryTable.COL_UPDATE_LAST_RUN
 import eu.kanade.tachiyomi.data.database.tables.CategoryTable.TABLE
 
 class CategoryTypeMapping :
@@ -42,8 +45,11 @@ class CategoryPutResolver : DefaultPutResolver<Category>() {
             .build()
 
     override fun mapToContentValues(obj: Category) =
-        ContentValues(5).apply {
+        ContentValues(8).apply {
             put(COL_PARENT_ID, obj.parentId)
+            put(COL_TRACKER_STATUS, obj.trackerStatus)
+            put(COL_UPDATE_INTERVAL, obj.updateInterval)
+            put(COL_UPDATE_LAST_RUN, obj.updateLastRun)
             put(COL_ID, obj.id)
             put(COL_NAME, obj.name)
             put(COL_ORDER, obj.order)
@@ -66,6 +72,9 @@ class CategoryGetResolver : DefaultGetResolver<Category>() {
             flags = cursor.getInt(cursor.getColumnIndex(COL_FLAGS))
             // KMK -->
             cursor.getColumnIndex(COL_PARENT_ID).takeIf { it >= 0 }?.let { parentId = cursor.getInt(it) }
+            cursor.getColumnIndex(COL_TRACKER_STATUS).takeIf { it >= 0 }?.let { trackerStatus = cursor.getInt(it) }
+            cursor.getColumnIndex(COL_UPDATE_INTERVAL).takeIf { it >= 0 }?.let { updateInterval = cursor.getInt(it) }
+            cursor.getColumnIndex(COL_UPDATE_LAST_RUN).takeIf { it >= 0 }?.let { updateLastRun = cursor.getLong(it) }
             cursor.getColumnIndex("parent_name").takeIf { it >= 0 }?.let { parentName = cursor.getString(it) }
             // KMK <--
 

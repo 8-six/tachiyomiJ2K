@@ -36,6 +36,15 @@ interface Category : Serializable {
     /** Name of the parent category (read-only, filled by the database query). */
     var parentName: String?
 
+    /** Normalized tracker status (see SmartCategorySync) this category is bound to, 0 for none. */
+    var trackerStatus: Int
+
+    /** Hours between automatic updates of this category, 0 to follow the global schedule. */
+    var updateInterval: Int
+
+    /** Epoch millis of the last scheduled update that included this category. */
+    var updateLastRun: Long
+
     val displayName: String
         get() = parentName?.let { "$it › $name" } ?: name
     // KMK <--

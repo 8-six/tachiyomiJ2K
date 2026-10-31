@@ -37,6 +37,7 @@ import eu.kanade.tachiyomi.data.preference.MANGA_NON_COMPLETED
 import eu.kanade.tachiyomi.data.preference.MANGA_NON_READ
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.track.EnhancedTrackService
+import eu.kanade.tachiyomi.data.track.SmartCategorySync
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.extension.ExtensionUpdateJob
 import eu.kanade.tachiyomi.source.SourceManager
@@ -349,6 +350,9 @@ class LibraryUpdateJob(
                     try {
                         val newTrack = service.refresh(track)
                         db.insertTrack(newTrack).executeAsBlocking()
+                        // KMK -->
+                        SmartCategorySync.sync(db, newTrack.manga_id)
+                        // KMK <--
 
                         if (service is EnhancedTrackService || preferences.autoSyncProgressFromTrackers()) {
                             syncChaptersWithTrackServiceTwoWay(db, db.getChapters(manga).executeAsBlocking(), newTrack, service)
@@ -556,7 +560,16 @@ class LibraryUpdateJob(
      * @return a list of manga to update
      */
     private fun getMangaToUpdate(categoryId: Int): List<LibraryManga> {
-        val libraryManga = db.getLibraryMangas().executeAsBlocking()
+        // KMK -->
+        val allLibraryManga = db.getLibraryMangas().executeAsBlocking()
+        val libraryManga =
+            if (categoryId == -1) {
+                val dueIds = CategoryUpdateSchedule.dueCategoryIds(db, System.currentTimeMillis())
+                allLibraryManga.filter { it.category in dueIds }
+            } else {
+                allLibraryManga
+            }
+        // KMK <--
 
         val listToUpdate =
             if (categoryId != -1) {

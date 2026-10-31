@@ -24,6 +24,7 @@ import eu.kanade.tachiyomi.data.library.CustomMangaManager
 import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.track.EnhancedTrackService
+import eu.kanade.tachiyomi.data.track.SmartCategorySync
 import eu.kanade.tachiyomi.data.track.TrackManager
 import eu.kanade.tachiyomi.data.track.TrackMetadataSync
 import eu.kanade.tachiyomi.data.track.TrackPreferences
@@ -1102,6 +1103,9 @@ class MangaDetailsPresenter(
                 withContext(Dispatchers.IO) {
                     if (binding != null) {
                         db.insertTrack(binding).executeAsBlocking()
+                        // KMK -->
+                        SmartCategorySync.sync(db, binding.manga_id)
+                        // KMK <--
                         if (trackPreferences.autoSyncMetadata().get() && service.supportsMetadata) autoSyncMetadata()
                     }
 
@@ -1188,7 +1192,12 @@ class MangaDetailsPresenter(
                     null
                 }
             if (binding != null) {
-                withContext(Dispatchers.IO) { db.insertTrack(binding).executeAsBlocking() }
+                withContext(Dispatchers.IO) {
+                    db.insertTrack(binding).executeAsBlocking()
+                    // KMK -->
+                    SmartCategorySync.sync(db, binding.manga_id)
+                    // KMK <--
+                }
                 fetchTracks()
             } else {
                 trackRefreshDone()

@@ -34,6 +34,8 @@ class ManageCategoryDialog(
 
     // KMK -->
     private var selectedParentId = 0
+    private var selectedTrackerStatus = 0
+    private var selectedInterval = 0
     // KMK <--
 
     private val preferences by injectLazy<PreferencesHelper>()
@@ -127,8 +129,18 @@ class ManageCategoryDialog(
             LibraryUpdateJob.setupTask(preferences.context, 0)
         }
         // KMK -->
-        if (category.id != null && category.id != 0 && category.id != -1 && category.parentId != selectedParentId) {
+        if (category.id != null &&
+            category.id != 0 &&
+            category.id != -1 &&
+            (
+                category.parentId != selectedParentId ||
+                    category.trackerStatus != selectedTrackerStatus ||
+                    category.updateInterval != selectedInterval
+            )
+        ) {
             category.parentId = selectedParentId
+            category.trackerStatus = selectedTrackerStatus
+            category.updateInterval = selectedInterval
             db.insertCategory(category).executeAsBlocking()
         }
         // KMK <--
@@ -151,6 +163,7 @@ class ManageCategoryDialog(
         binding.editCategories.isVisible = category != null
         // KMK -->
         setupParentPicker()
+        setupSmartPickers()
         // KMK <--
         binding.editCategories.setOnClickListener {
             router.popCurrentController()
@@ -186,6 +199,90 @@ class ManageCategoryDialog(
     }
 
     // KMK -->
+    private fun setupSmartPickers() {
+        val current = category
+        val statusButton = binding.smartStatus
+        val intervalButton = binding.updateInterval
+        if (current != null && (current.id ?: 0) <= 0) {
+            statusButton.isVisible = false
+            intervalButton.isVisible = false
+            return
+        }
+        selectedTrackerStatus = current?.trackerStatus ?: 0
+        selectedInterval = current?.updateInterval ?: 0
+        val statuses =
+            listOf(
+                0 to R.string.none,
+                eu.kanade.tachiyomi.data.track.SmartCategorySync.STATUS_READING to R.string.reading,
+                eu.kanade.tachiyomi.data.track.SmartCategorySync.STATUS_COMPLETED to R.string.completed,
+                eu.kanade.tachiyomi.data.track.SmartCategorySync.STATUS_PLANNING to R.string.plan_to_read,
+            )
+        val intervals =
+            listOf(
+                0 to R.string.follow_global_schedule,
+                6 to R.string.every_6_hours,
+                12 to R.string.every_12_hours,
+                24 to R.string.daily,
+                48 to R.string.every_2_days,
+                72 to R.string.every_3_days,
+                168 to R.string.weekly,
+            )
+
+        fun refresh() {
+            val ctx = statusButton.context
+            statusButton.text =
+                ctx.getString(
+                    R.string.smart_category_status_value,
+                    ctx.getString(statuses.first { it.first == selectedTrackerStatus }.second),
+                )
+            intervalButton.text =
+                ctx.getString(
+                    R.string.category_update_schedule_value,
+                    ctx.getString(
+                        intervals.firstOrNull { it.first == selectedInterval }?.second ?: R.string.follow_global_schedule,
+                    ),
+                )
+        }
+        refresh()
+        statusButton.setOnClickListener {
+            val ctx = it.context
+            ctx
+                .materialAlertDialog()
+                .setTitle(R.string.smart_category_status)
+                .setSingleChoiceItems(
+                    statuses.map { s -> ctx.getString(s.second) }.toTypedArray(),
+                    statuses.indexOfFirst { s ->
+                        s.first ==
+                            selectedTrackerStatus
+                    },
+                ) { dialog, which ->
+                    selectedTrackerStatus = statuses[which].first
+                    refresh()
+                    dialog.dismiss()
+                }.setNegativeButton(android.R.string.cancel, null)
+                .show()
+        }
+        intervalButton.setOnClickListener {
+            val ctx = it.context
+            ctx
+                .materialAlertDialog()
+                .setTitle(R.string.category_update_schedule)
+                .setSingleChoiceItems(
+                    intervals.map { s -> ctx.getString(s.second) }.toTypedArray(),
+                    intervals
+                        .indexOfFirst { s ->
+                            s.first ==
+                                selectedInterval
+                        }.coerceAtLeast(0),
+                ) { dialog, which ->
+                    selectedInterval = intervals[which].first
+                    refresh()
+                    dialog.dismiss()
+                }.setNegativeButton(android.R.string.cancel, null)
+                .show()
+        }
+    }
+
     private fun setupParentPicker() {
         val current = category
         val button = binding.parentCategory

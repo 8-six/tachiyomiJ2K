@@ -59,6 +59,7 @@ from upstream TachiyomiJ2K are not repeated here.
 - Leaving the extension repositories screen refreshes the available extensions when the set of enabled repos changed, so adding, removing, enabling or disabling a repo shows up without a manual refresh or restart. Matches Komikku's behavior.
 
 ### Technical
+- Added `BackupCategoryTest` for category hierarchy, tracker status and update interval backup fields (including old backups without them). Source refresh was reviewed and keeps bookmark color and hidden flags of existing chapters.
 - Feeds are stored as one JSON string preference (`source_feeds`), so they travel with app preference backups; saved-search feeds reference the saved search by id and are dropped when it is deleted. No database change. `SourceFeedsTest` covers ordering, de-duplication and serialization.
 - Database version 27 adds `categories.tracker_status`, `update_interval` and `update_last_run`. Backups carry the first two as `BackupCategory` ProtoNumber 804 and 805. `SmartCategorySyncTest` covers branch scoping and schedules.
 - Database version 26 adds `categories.parent_id`; `getCategories()` now uses a raw query joining the parent name. Backups carry the parent by name (`BackupCategory` ProtoNumber 803) and restore re-links parents after inserting categories.

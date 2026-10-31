@@ -9,8 +9,8 @@ natively, never copied as files. Status: `todo`, `wip`, `done`, `partial`, `skip
 | Item | Status | Notes |
 |------|--------|-------|
 | Anonymous commit identity | done | Repo-local git config; rule in `AGENTS.md` |
-| Updater / About / tracker User-Agent point to 8-six | partial | `GITHUB_REPO` already `8-six/tachiyomiJ2K`; remaining `Jays2Kings` links are listed in the plan below |
-| Stable release signing | todo | Needs `keystore.properties` signing config; Play Integrity cannot be satisfied by a sideloaded fork |
+| Updater / About / tracker User-Agent point to 8-six | done | `GITHUB_REPO` already `8-six/tachiyomiJ2K`; About, issue templates and tracker User-Agents changed |
+| Stable release signing | done | `fork` signing config from `keystore.properties`; Play Integrity cannot be satisfied by a sideloaded fork |
 | Build environment | done | SDK in `~/Android/Sdk`, JDK 21, build cache on. Configuration cache is rejected by the oss-licenses plugin |
 
 ## Plan (batches, in order)
@@ -33,6 +33,11 @@ architecture are recorded as `skipped` with the reason.
 
 ## Done so far
 
-Nothing from the port is implemented yet.
-
+| Item | Status | Notes |
+|------|--------|-------|
+| Manga edit panel (Compose M3 sheet) | partial | All previous behaviors kept, restore-original buttons added. Not done: tag drag-reorder, cover ratio switch. Built (dev debug) but not tested on a device. |
+| Material 3 polish | partial | Only the Compose pieces used by the edit panel; no app-wide restyle |
 | Reader automation (auto-scroll / auto page flip, duration, keep awake) | partial | Not done: refresh-rate handling, webtoon pinch-zoom switch, gap preference. Built (dev debug) but not tested on a device. |
+| Nested / Smart categories | skipped (for now) | Flat categories; needs CategoryTable migration, backup fields and a UI rewrite |
+| Chapter colored bookmarks / blacklist / Smart Merge | skipped (for now) | `Chapter.bookmark` is a Boolean end to end; needs migration and backup changes |
+| Unified tracker editor / feeds | skipped (for now) | Needs DB schema and backup work |

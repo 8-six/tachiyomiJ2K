@@ -177,6 +177,7 @@ class MigrationProcessAdapter(
                             prevMangaChapters.find { it.isRecognizedNumber && it.chapter_number == chapter.chapter_number }
                         if (prevChapter != null) {
                             chapter.bookmark = prevChapter.bookmark
+                            chapter.bookmark_color = prevChapter.bookmark_color
                             chapter.read = prevChapter.read
                             chapter.date_fetch = prevChapter.date_fetch
                             prevHistoryList

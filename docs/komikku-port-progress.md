@@ -49,6 +49,7 @@ architecture are recorded as `skipped` with the reason.
 | Source categories + scoped Global Search (s10.1, s10.2) | partial | Manage/pick in Settings > Browse; no filter on the Sources list, no in-search chooser. Built, not device-tested. |
 | Webtoon disable pinch zoom | partial | Preference + switch; page gap slider in Settings > Reader; scale-type/refresh-rate options not ported |
 | Tracker error indicator | partial | In-memory flag in tracker sheet; preferred tracker/unified editor not ported |
+| Colored chapter bookmarks | partial | DB v22 + backup 801 + picker on chapter long-press; reader picker/Fillermarks not ported |
 | Nested / Smart categories | skipped (for now) | Flat categories; needs CategoryTable migration, backup fields and a UI rewrite |
 | Chapter colored bookmarks / blacklist / Smart Merge | skipped (for now) | `Chapter.bookmark` is a Boolean end to end; needs migration and backup changes |
 | Unified tracker editor / feeds | skipped (for now) | Needs DB schema and backup work |

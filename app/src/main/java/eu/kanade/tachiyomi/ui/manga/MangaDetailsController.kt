@@ -85,6 +85,7 @@ import eu.kanade.tachiyomi.ui.main.FloatingSearchInterface
 import eu.kanade.tachiyomi.ui.main.HingeSupportedController
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.main.SearchActivity
+import eu.kanade.tachiyomi.ui.manga.chapter.BookmarkColorDialog
 import eu.kanade.tachiyomi.ui.manga.chapter.ChapterHolder
 import eu.kanade.tachiyomi.ui.manga.chapter.ChapterItem
 import eu.kanade.tachiyomi.ui.manga.chapter.ChaptersSortBottomSheet
@@ -982,6 +983,9 @@ class MangaDetailsController :
                 ),
             )
         }
+        // KMK -->
+        items.add(MaterialMenuSheet.MenuSheetItem(5, R.drawable.ic_bookmark_24dp, R.string.bookmark_color))
+        // KMK <--
         val lastRead =
             presenter.allHistory.find { it.chapter_id == item.id }?.let {
                 activity?.timeSpanFromNow(R.string.read_, it.last_read) + "\n"
@@ -994,6 +998,9 @@ class MangaDetailsController :
                     2 -> startReadRange(position, RangeMode.Read)
                     3 -> startReadRange(position, RangeMode.Unread)
                     4 -> openChapterInWebView(item)
+                    // KMK -->
+                    5 -> setBookmarkColor(item)
+                    // KMK <--
                 }
                 true
             }
@@ -1025,6 +1032,15 @@ class MangaDetailsController :
             chapterPopupMenu = null
         }
     }
+
+    // KMK -->
+    private fun setBookmarkColor(item: ChapterItem) {
+        val activity = activity ?: return
+        BookmarkColorDialog.show(activity, item.bookmark_color) { color ->
+            presenter.setBookmarkColor(listOf(item), color)
+        }
+    }
+    // KMK <--
 
     private fun markPreviousAs(
         chapter: ChapterItem,

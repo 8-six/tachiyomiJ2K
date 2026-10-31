@@ -257,6 +257,7 @@ class MergeManager(
                     }
                     if (!chapter.bookmark && original?.bookmark == true) {
                         chapter.bookmark = true
+                        chapter.bookmark_color = original.bookmark_color
                         updated = true
                     }
                     updated

@@ -20,7 +20,7 @@ class DbOpenCallback : SupportSQLiteOpenHelper.Callback(DATABASE_VERSION) {
         /**
          * Version of the database.
          */
-        const val DATABASE_VERSION = 21
+        const val DATABASE_VERSION = 22
     }
 
     override fun onOpen(db: SupportSQLiteDatabase) {
@@ -154,6 +154,9 @@ class DbOpenCallback : SupportSQLiteOpenHelper.Callback(DATABASE_VERSION) {
         if (oldVersion < 21) {
             db.execSQL(MergedMangaTable.createTableQuery)
             db.execSQL(MergedMangaTable.createMangaIdIndexQuery)
+        }
+        if (oldVersion < 22) {
+            db.execSQL(ChapterTable.addBookmarkColor)
         }
     }
 

@@ -325,6 +325,9 @@ class BackupRestorer(
                 if (!chapter.bookmark && dbChapter.bookmark) {
                     chapter.bookmark = dbChapter.bookmark
                 }
+                if (chapter.bookmark_color == 0 && dbChapter.bookmark_color != 0) {
+                    chapter.bookmark_color = dbChapter.bookmark_color
+                }
             }
 
             chapter.manga_id = manga.id

@@ -68,7 +68,7 @@ class ChapterUtil {
                         .create(textView.resources, R.drawable.ic_bookmark_24dp, context.theme)
                         ?.also {
                             it.setBounds(0, 0, textView.textSize.toInt(), textView.textSize.toInt())
-                            it.setTintList(ColorStateList.valueOf(bookmarkedColor(context)))
+                            it.setTintList(ColorStateList.valueOf(bookmarkedColor(context, chapter)))
                         }
                 } else {
                     null
@@ -128,7 +128,7 @@ class ChapterUtil {
             chapter: Chapter,
         ): Int =
             when {
-                chapter.bookmark -> bookmarkedColor(context)
+                chapter.bookmark -> bookmarkedColor(context, chapter)
                 else -> readColor(context)
             }
 
@@ -136,7 +136,10 @@ class ChapterUtil {
 
         private fun unreadColor(context: Context): Int = context.getResourceColor(R.attr.colorOnBackground)
 
-        private fun bookmarkedColor(context: Context): Int = context.getResourceColor(R.attr.colorPrimary)
+        private fun bookmarkedColor(
+            context: Context,
+            chapter: Chapter,
+        ): Int = chapter.bookmark_color.takeIf { it != 0 } ?: context.getResourceColor(R.attr.colorPrimary)
 
         private val volumeRegex = Regex("""(vol|volume)\.? *([0-9]+)?""", RegexOption.IGNORE_CASE)
         private val seasonRegex = Regex("""(Season |S)([0-9]+)?""")

@@ -536,6 +536,25 @@ class MangaDetailsPresenter(
         }
     }
 
+    // KMK -->
+
+    /** Sets the bookmark color of the chapters, bookmarking them when a color is picked. */
+    fun setBookmarkColor(
+        selectedChapters: List<ChapterItem>,
+        color: Int,
+    ) {
+        presenterScope.launch(Dispatchers.IO) {
+            selectedChapters.forEach {
+                it.bookmark_color = color
+                if (color != 0) it.bookmark = true
+            }
+            db.updateChaptersProgress(selectedChapters).executeAsBlocking()
+            getChapters()
+            withContext(Dispatchers.Main) { view?.updateChapters(chapters) }
+        }
+    }
+    // KMK <--
+
     /**
      * Mark the selected chapter list as read/unread.
      * @param selectedChapters the list of selected chapters.

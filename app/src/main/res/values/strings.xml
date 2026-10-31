@@ -53,6 +53,15 @@
     <string name="chapter_x_of_y">Chapter %1$d of %2$d</string>
     <string name="all_chapters_read">All chapters read</string>
     <string name="bookmarked">Bookmarked</string>
+    <string name="bookmark_color">Bookmark color</string>
+    <string name="bookmark_color_default">Default</string>
+    <string name="bookmark_color_red">Red</string>
+    <string name="bookmark_color_orange">Orange</string>
+    <string name="bookmark_color_yellow">Yellow</string>
+    <string name="bookmark_color_green">Green</string>
+    <string name="bookmark_color_blue">Blue</string>
+    <string name="bookmark_color_purple">Purple</string>
+    <string name="bookmark_color_pink">Pink</string>
     <string name="not_bookmarked">Not bookmarked</string>
     <string name="marked_as_read">Marked as read</string>
     <string name="marked_as_unread">Marked as unread</string>

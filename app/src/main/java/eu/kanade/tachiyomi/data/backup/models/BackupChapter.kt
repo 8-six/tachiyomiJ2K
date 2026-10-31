@@ -25,6 +25,9 @@ data class BackupChapter(
     @ProtoNumber(13) var memo: String = "{}",
     // J2K specific values
     @ProtoNumber(800) var pagesLeft: Int = 0,
+    // KMK -->
+    @ProtoNumber(801) var bookmarkColor: Int = 0,
+    // KMK <--
 ) {
     fun toChapterImpl(): ChapterImpl =
         ChapterImpl().apply {
@@ -34,6 +37,7 @@ data class BackupChapter(
             scanlator = this@BackupChapter.scanlator
             read = this@BackupChapter.read
             bookmark = this@BackupChapter.bookmark
+            bookmark_color = this@BackupChapter.bookmarkColor
             last_page_read = this@BackupChapter.lastPageRead
             date_fetch = this@BackupChapter.dateFetch
             date_upload = this@BackupChapter.dateUpload
@@ -51,6 +55,7 @@ data class BackupChapter(
                 scanlator = chapter.scanlator,
                 read = chapter.read,
                 bookmark = chapter.bookmark,
+                bookmarkColor = chapter.bookmark_color,
                 lastPageRead = chapter.last_page_read,
                 dateFetch = chapter.date_fetch,
                 dateUpload = chapter.date_upload,

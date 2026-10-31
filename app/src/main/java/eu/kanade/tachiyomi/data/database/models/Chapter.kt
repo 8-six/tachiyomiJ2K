@@ -14,6 +14,11 @@ interface Chapter :
 
     var bookmark: Boolean
 
+    // KMK -->
+    /** ARGB color of the bookmark, 0 for the theme default. */
+    var bookmark_color: Int
+    // KMK <--
+
     var last_page_read: Int
 
     var pages_left: Int
@@ -44,6 +49,7 @@ interface Chapter :
         manga_id = other.manga_id
         read = other.read
         bookmark = other.bookmark
+        bookmark_color = other.bookmark_color
         last_page_read = other.last_page_read
         pages_left = other.pages_left
         date_fetch = other.date_fetch

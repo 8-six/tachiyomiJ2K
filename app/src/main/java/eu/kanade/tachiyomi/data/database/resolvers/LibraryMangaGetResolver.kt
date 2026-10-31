@@ -24,6 +24,15 @@ class LibraryMangaGetResolver :
         manga.read =
             cursor.resolveChapterCount(manga, MangaTable.COL_READ_COUNT, MangaTable.COL_HAS_READ)
         manga.bookmarkCount = cursor.getInt(cursor.getColumnIndex(MangaTable.COL_BOOKMARK_COUNT))
+        // KMK -->
+        manga.bookmarkColors =
+            cursor
+                .getString(cursor.getColumnIndex(MangaTable.COL_BOOKMARK_COLORS))
+                .orEmpty()
+                .split(",")
+                .mapNotNull { it.toIntOrNull() }
+                .toSet()
+        // KMK <--
         manga.score = cursor.getFloat(cursor.getColumnIndex(MangaTable.COL_SCORE))
 
         return manga

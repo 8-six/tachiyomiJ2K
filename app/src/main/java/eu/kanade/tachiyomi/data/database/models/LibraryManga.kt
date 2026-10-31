@@ -8,6 +8,11 @@ class LibraryManga : MangaImpl() {
 
     var bookmarkCount: Int = 0
 
+    // KMK -->
+    /** Distinct colors (ARGB, 0 = default) of this manga's visible bookmarked chapters. */
+    var bookmarkColors: Set<Int> = emptySet()
+    // KMK <--
+
     /** Average normalized (10-point) score across the trackers this manga is scored on, or 0 if untracked/unscored. */
     var score: Float = 0f
 

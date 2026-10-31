@@ -24,6 +24,11 @@ object BookmarkColorDialog {
             R.string.bookmark_color_pink to Color.rgb(0xEC, 0x40, 0x7A),
         )
 
+    private val searchNames = listOf("default", "red", "orange", "yellow", "green", "blue", "purple", "pink")
+
+    /** Color for an English name used in library search (`bookmark_color:red`), or null if unknown. */
+    fun colorForName(name: String): Int? = searchNames.indexOf(name.lowercase()).takeIf { it >= 0 }?.let { palette[it].second }
+
     fun show(
         activity: Activity,
         current: Int,

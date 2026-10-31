@@ -21,6 +21,7 @@ val libraryQuery =
             COALESCE(CC.count, 0) AS ${Manga.COL_UNREAD_COUNT}, COALESCE(C.unread, '') AS ${Manga.COL_UNREAD},
             COALESCE(RC.count, 0) AS ${Manga.COL_READ_COUNT}, COALESCE(R.hasread, '') AS ${Manga.COL_HAS_READ},
             COALESCE(B.bookmarkCount, 0) AS ${Manga.COL_BOOKMARK_COUNT},
+            COALESCE(B.bookmarkColors, '') AS ${Manga.COL_BOOKMARK_COLORS},
             COALESCE(S.score, 0) AS ${Manga.COL_SCORE}
         FROM ${Manga.TABLE}
         LEFT JOIN (
@@ -54,7 +55,7 @@ val libraryQuery =
         ) AS R
         ON ${Manga.COL_ID} = R.${Chapter.COL_MANGA_ID}
         LEFT JOIN (
-            SELECT ${Chapter.COL_MANGA_ID}, COUNT(*) AS bookmarkCount
+            SELECT ${Chapter.COL_MANGA_ID}, COUNT(*) AS bookmarkCount, GROUP_CONCAT(DISTINCT ${Chapter.COL_BOOKMARK_COLOR}) AS bookmarkColors
             FROM ${Chapter.TABLE}
             WHERE ${Chapter.COL_BOOKMARK} = 1 AND ${Chapter.COL_BLACKLISTED} = 0
             GROUP BY ${Chapter.COL_MANGA_ID}

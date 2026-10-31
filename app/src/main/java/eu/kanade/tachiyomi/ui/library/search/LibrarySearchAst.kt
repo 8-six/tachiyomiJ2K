@@ -13,6 +13,7 @@ enum class MangaField(
     LANGUAGE("language", "lang", fieldOnly = true),
     SOURCE_ID("source_id", "sourceid", "src_id", "srcid", fieldOnly = true),
     SERIES_TYPE("type", "st", fieldOnly = true),
+    BOOKMARK_COLOR("bookmark_color", "bookmarkcolor", "bmcolor", fieldOnly = true),
     ;
 
     companion object {

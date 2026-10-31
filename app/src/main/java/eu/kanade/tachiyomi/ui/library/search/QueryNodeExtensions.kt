@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.library.search
 
 import eu.kanade.tachiyomi.ui.library.LibraryItem
+import eu.kanade.tachiyomi.ui.manga.chapter.BookmarkColorDialog
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -35,6 +36,7 @@ private fun GeneralQueryNode.matches(item: LibraryItem): Boolean {
                 MangaField.LANGUAGE,
                 MangaField.SOURCE_ID,
                 MangaField.SERIES_TYPE,
+                MangaField.BOOKMARK_COLOR,
                 -> error("How did we get here?")
             }
         }
@@ -70,6 +72,16 @@ private fun FieldQueryNode.matches(item: LibraryItem): Boolean {
                 value.isNotEmpty() && item.matchesSeriesType(value)
             }
 
+            // KMK -->
+            MangaField.BOOKMARK_COLOR -> {
+                if (value.isEmpty()) {
+                    manga.bookmarkCount == 0
+                } else {
+                    BookmarkColorDialog.colorForName(value)?.let { it in manga.bookmarkColors } ?: false
+                }
+            }
+            // KMK <--
+
             else -> {
                 val text =
                     when (field) {
@@ -80,7 +92,7 @@ private fun FieldQueryNode.matches(item: LibraryItem): Boolean {
                         MangaField.LANGUAGE -> item.searchLanguage()
 
                         // unreachable; added here to make `when` exhaustive
-                        MangaField.GENRE, MangaField.SOURCE, MangaField.SOURCE_ID, MangaField.SERIES_TYPE ->
+                        MangaField.GENRE, MangaField.SOURCE, MangaField.SOURCE_ID, MangaField.SERIES_TYPE, MangaField.BOOKMARK_COLOR ->
                             error("How did we get here?")
                     }
 

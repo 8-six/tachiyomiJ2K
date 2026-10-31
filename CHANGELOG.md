@@ -38,6 +38,8 @@ from upstream TachiyomiJ2K are not repeated here.
 
 - Auto Reread (adapted from Komikku): Settings > Library > Auto Reread (off / always ask / reset automatically). Opening the first chapter of a fully read series offers to mark every chapter unread (or does it automatically). Tracker reread coordination is not included.
 
+- Library search by bookmark color (adapted from Komikku): `bookmark_color:red` (also `bmcolor:`, colors default/red/orange/yellow/green/blue/purple/pink) finds manga with a visible chapter bookmarked in that color; an empty value finds manga without bookmarks. Supports negation like other field terms.
+
 ### Changed
 - The manga edit panel is rewritten as a Compose Material 3 bottom sheet, adapted from Komikku's
   edit dialog. Fields have "restore original" buttons, tags are input chips, and pasting a cover

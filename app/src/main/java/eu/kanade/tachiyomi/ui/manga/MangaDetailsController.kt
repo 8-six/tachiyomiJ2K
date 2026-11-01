@@ -1365,9 +1365,6 @@ class MangaDetailsController :
         menu.findItem(R.id.action_edit_trackers)?.isVisible =
             !presenter.isLockedFromSearch &&
             presenter.trackList.any { it.track != null }
-        menu.findItem(R.id.action_related_manga)?.isVisible =
-            !presenter.isLockedFromSearch &&
-            (anilistTrackId() != null || mangaBakaTrackId() != null)
         menu.findItem(R.id.action_show_blacklisted)?.apply {
             isVisible = !presenter.isLockedFromSearch
             isChecked = presenter.showBlacklisted
@@ -1380,7 +1377,6 @@ class MangaDetailsController :
             R.id.action_edit -> openEditMangaDialog()
             // KMK -->
             R.id.action_scanlator_priority -> showScanlatorPriority()
-            R.id.action_related_manga -> showRelatedManga()
             R.id.action_edit_trackers -> showUnifiedTrackerEditor()
             R.id.action_smart_merge_mode -> showSmartMergeMode()
             R.id.action_preferred_tracker -> showPreferredTracker()
@@ -1848,11 +1844,15 @@ class MangaDetailsController :
             .firstOrNull { it.sync_id == eu.kanade.tachiyomi.data.track.TrackManager.MANGABAKA && it.media_id > 0 }
             ?.media_id
 
-    private fun showRelatedManga() {
+    private var suggestionsKey: Pair<Long?, Long?>? = null
+
+    /** Asks the linked trackers for related and recommended series once per set of tracker ids. */
+    private fun loadSuggestions() {
         val aniListId = anilistTrackId()
         val mangaBakaId = mangaBakaTrackId()
-        if (aniListId == null && mangaBakaId == null) return
-        val activity = activity ?: return
+        val key = aniListId to mangaBakaId
+        if ((aniListId == null && mangaBakaId == null) || key == suggestionsKey) return
+        suggestionsKey = key
         viewScope.launch {
             val trackManager = Injekt.get<eu.kanade.tachiyomi.data.track.TrackManager>()
             // Either service may fail or lack data; use whatever answers
@@ -1861,35 +1861,46 @@ class MangaDetailsController :
                     aniListId?.let { id -> runCatching { trackManager.aniList.getRelations(id) } },
                     mangaBakaId?.let { id -> runCatching { trackManager.mangaBaka.getRelations(id) } },
                 )
-            if (results.all { it.isFailure }) {
-                activity.toast(results.first().exceptionOrNull()?.message ?: activity.getString(R.string.related_manga_none))
-                return@launch
-            }
-            val relations =
+            results.forEach { result -> result.exceptionOrNull()?.let { Timber.w(it, "Could not load suggestions") } }
+            val allowed = setOf("SEQUEL", "PREQUEL", "PARENT", "SIDE_STORY", "ADAPTATION", "SPIN_OFF", "SERIES")
+            presenter.suggestions =
                 results
                     .flatMap { it.getOrDefault(emptyList()) }
-                    .map { (type, title) -> type.uppercase() to title }
-                    .filter { it.first in setOf("SEQUEL", "PREQUEL", "PARENT", "SIDE_STORY", "ADAPTATION", "SPIN_OFF", "SERIES") }
-                    .distinctBy { it.second.lowercase() }
-            if (relations.isEmpty()) {
-                activity.toast(R.string.related_manga_none)
-                return@launch
-            }
-            val labels =
-                relations
-                    .map { (type, title) -> type.lowercase().replace('_', ' ').replaceFirstChar { it.uppercase() } + ": " + title }
-                    .toTypedArray()
-            activity
-                .materialAlertDialog()
-                .setTitle(R.string.related_manga)
-                .setItems(labels) { _, index -> globalSearch(relations[index].second) }
-                .setNegativeButton(android.R.string.cancel, null)
-                .show()
+                    .filter { it.relation == null || it.relation.uppercase() in allowed }
+                    .distinctBy { it.title.lowercase() }
+                    .sortedBy { it.relation == null }
+            getHeader()?.bindSuggestions()
         }
+    }
+
+    /** The full list of suggestions, as a dialog, opened from the arrow of the suggestions row. */
+    override fun showSuggestions() {
+        val activity = activity ?: return
+        val suggestions = presenter.suggestions
+        if (suggestions.isEmpty()) {
+            activity.toast(R.string.related_manga_none)
+            return
+        }
+        val labels =
+            suggestions
+                .map { suggestion ->
+                    val relation =
+                        suggestion.relation
+                            ?.lowercase()
+                            ?.replace('_', ' ')
+                            ?.replaceFirstChar { it.uppercase() }
+                    if (relation != null) "$relation: ${suggestion.title}" else suggestion.title
+                }.toTypedArray()
+        activity
+            .materialAlertDialog()
+            .setTitle(R.string.related_manga)
+            .setItems(labels) { _, index -> globalSearch(suggestions[index].title) }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
     // KMK <--
 
-    fun globalSearch(text: String) {
+    override fun globalSearch(text: String) {
         if (isNotOnline()) return
         router.pushController(GlobalSearchController(text).withFadeTransaction())
     }
@@ -2140,6 +2151,9 @@ class MangaDetailsController :
 
     fun refreshTracker() {
         getHeader()?.updateTracking()
+        // KMK -->
+        loadSuggestions()
+        // KMK <--
     }
 
     fun trackRefreshDone() {

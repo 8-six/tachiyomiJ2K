@@ -165,8 +165,8 @@ class AnilistApi(
 
     // KMK -->
 
-    /** Sequels/prequels (and other manga relations) AniList lists for [mediaId], as (relation type, title). */
-    suspend fun getRelations(mediaId: Long): List<Pair<String, String>> =
+    /** Sequels/prequels (and other manga relations) AniList lists for [mediaId], then the series users recommend for it. */
+    suspend fun getRelations(mediaId: Long): List<eu.kanade.tachiyomi.data.track.model.Suggestion> =
         withIOContext {
             val payload =
                 buildJsonObject {
@@ -181,26 +181,48 @@ class AnilistApi(
                     .awaitSuccess()
                     .parseAs<JsonObject>()
                     .let { response ->
-                        response["data"]
-                            ?.jsonObject
-                            ?.get("Media")
-                            ?.jsonObject
-                            ?.get("relations")
-                            ?.jsonObject
-                            ?.get("edges")
-                            ?.jsonArray
-                            .orEmpty()
-                            .mapNotNull { edge ->
-                                val node = edge.jsonObject["node"]?.jsonObject ?: return@mapNotNull null
-                                if (node["type"]?.jsonPrimitive?.contentOrNull != "MANGA") return@mapNotNull null
-                                val title = node["title"]?.jsonObject
-                                val name =
-                                    title?.get("english")?.jsonPrimitive?.contentOrNull
-                                        ?: title?.get("romaji")?.jsonPrimitive?.contentOrNull
-                                        ?: return@mapNotNull null
-                                val relation = edge.jsonObject["relationType"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
-                                relation to name
-                            }
+                        val media = response["data"]?.jsonObject?.get("Media")?.jsonObject
+
+                        fun suggestionOf(
+                            relation: String?,
+                            node: JsonObject?,
+                        ): eu.kanade.tachiyomi.data.track.model.Suggestion? {
+                            node ?: return null
+                            if (node["type"]?.jsonPrimitive?.contentOrNull != "MANGA") return null
+                            val title = node["title"]?.jsonObject
+                            val name =
+                                title?.get("english")?.jsonPrimitive?.contentOrNull
+                                    ?: title?.get("romaji")?.jsonPrimitive?.contentOrNull
+                                    ?: return null
+                            val cover =
+                                node["coverImage"]
+                                    ?.jsonObject
+                                    ?.get("large")
+                                    ?.jsonPrimitive
+                                    ?.contentOrNull
+                            return eu.kanade.tachiyomi.data.track.model
+                                .Suggestion(relation, name, cover)
+                        }
+                        val relations =
+                            media
+                                ?.get("relations")
+                                ?.jsonObject
+                                ?.get("edges")
+                                ?.jsonArray
+                                .orEmpty()
+                                .mapNotNull { edge ->
+                                    val relation = edge.jsonObject["relationType"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+                                    suggestionOf(relation, edge.jsonObject["node"]?.jsonObject)
+                                }
+                        val recommendations =
+                            media
+                                ?.get("recommendations")
+                                ?.jsonObject
+                                ?.get("nodes")
+                                ?.jsonArray
+                                .orEmpty()
+                                .mapNotNull { suggestionOf(null, it.jsonObject["mediaRecommendation"]?.jsonObject) }
+                        relations + recommendations
                     }
             }
         }
@@ -413,6 +435,23 @@ class AnilistApi(
                                 |title {
                                     |romaji
                                     |english
+                                |}
+                                |coverImage {
+                                    |large
+                                |}
+                            |}
+                        |}
+                    |}
+                    |recommendations(perPage: 12, sort: RATING_DESC) {
+                        |nodes {
+                            |mediaRecommendation {
+                                |type
+                                |title {
+                                    |romaji
+                                    |english
+                                |}
+                                |coverImage {
+                                    |large
                                 |}
                             |}
                         |}

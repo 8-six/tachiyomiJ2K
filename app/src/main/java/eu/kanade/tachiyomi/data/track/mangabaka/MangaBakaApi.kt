@@ -273,7 +273,7 @@ class MangaBakaApi(
      * Sequels/prequels (and similar relations) of series [id] as (relation type, title). Titles of at
      * most [MAX_RELATIONS] related series are fetched, one request each.
      */
-    suspend fun getRelations(id: Long): List<Pair<String, String>> =
+    suspend fun getRelations(id: Long): List<eu.kanade.tachiyomi.data.track.model.Suggestion> =
         withIOContext {
             val relations =
                 with(json) {
@@ -293,7 +293,12 @@ class MangaBakaApi(
                         type to target
                     }.take(MAX_RELATIONS)
             relations.mapNotNull { (type, target) ->
-                runCatching { getSeries(target) }.getOrNull()?.title?.let { type to it }
+                runCatching { getSeries(target) }.getOrNull()?.let { item ->
+                    item.title?.let {
+                        eu.kanade.tachiyomi.data.track.model
+                            .Suggestion(type, it, item.cover.bestUrl())
+                    }
+                }
             }
         }
     // KMK <--

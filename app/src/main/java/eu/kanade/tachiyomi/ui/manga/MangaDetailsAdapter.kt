@@ -199,6 +199,12 @@ class MangaDetailsAdapter(
 
         fun mangaPresenter(): MangaDetailsPresenter
 
+        // KMK -->
+        fun globalSearch(text: String)
+
+        fun showSuggestions()
+        // KMK <--
+
         fun prepareToShareManga()
 
         fun openInWebView()

@@ -55,6 +55,7 @@ from upstream TachiyomiJ2K are not repeated here.
 - Library search filter sheet: Bookmark color field (red, orange, yellow, green, blue, purple, pink) that builds the `bmcolor:` search term.
 - "Edit all trackers" sheet (Compose Material 3) in the manga overflow menu: status, chapter progress and score for every linked tracker in one place (adapted from Komikku's unified tracker editor).
 - Edit panel: a cover picker (grid like search results) with the current cover, the source's own and every cover the linked trackers offer, including all MangaBaka covers; picking one downloads it. Each field (title, author, artist, description, status, tags) has a sync button that asks the linked trackers and shows a preview of what each has before applying it.
+- Manga details: a "Suggestions" row of covers under the description (related series from AniList and MangaBaka plus AniList recommendations); tapping a cover searches for it, and the arrow opens the full list. It replaces the "Related manga" menu entry (adapted from Komikku).
 
 ### Changed
 - The edit panel opens as a half-height drawer with a fixed header (drag handle, title, Save/Cancel) instead of covering the whole screen, and stops below the status bar when expanded.

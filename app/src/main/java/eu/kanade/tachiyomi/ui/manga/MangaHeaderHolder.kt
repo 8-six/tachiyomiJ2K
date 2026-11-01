@@ -437,6 +437,9 @@ class MangaHeaderHolder(
             binding.mangaAuthor.text = listOfNotNull(manga.author?.trim(), manga.artist?.trim()).joinToString(", ")
         }
         setDescription()
+        // KMK -->
+        bindSuggestions()
+        // KMK <--
 
         binding.mangaSummary.post {
             if (binding.subItemGroup.isVisible) {
@@ -905,6 +908,28 @@ class MangaHeaderHolder(
         outlineHsl[2] = (outlineHsl[2] + (0.25f * if (bgHsl[2] > 0.5f) -1 else 1)).coerceIn(0f, 1f)
         return ColorUtils.HSLToColor(outlineHsl)
     }
+
+    // KMK -->
+
+    /** Shows the related and recommended series of the trackers in a row of covers under the description. */
+    fun bindSuggestions() {
+        val binding = binding ?: return
+        val controller = adapter.delegate
+        val suggestions = controller.mangaPresenter().suggestions
+        val row = binding.suggestionsRow ?: return
+        row.isVisible = suggestions.isNotEmpty()
+        if (suggestions.isEmpty()) return
+        row.setContent {
+            eu.kanade.tachiyomi.util.compose.AppComposeTheme {
+                SuggestionsRow(
+                    suggestions = suggestions,
+                    onOpen = { controller.globalSearch(it) },
+                    onSeeAll = { controller.showSuggestions() },
+                )
+            }
+        }
+    }
+    // KMK <--
 
     fun updateTracking() {
         binding ?: return

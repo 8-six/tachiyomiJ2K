@@ -48,7 +48,7 @@ class Anilist(
     override val supportsMetadata: Boolean = true
 
     // KMK -->
-    suspend fun getRelations(mediaId: Long) = api.getRelations(mediaId)
+    suspend fun getRelations(mediaId: Long): List<eu.kanade.tachiyomi.data.track.model.Suggestion> = api.getRelations(mediaId)
     // KMK <--
 
     override suspend fun getMangaMetadata(track: Track): TrackMangaMetadata =

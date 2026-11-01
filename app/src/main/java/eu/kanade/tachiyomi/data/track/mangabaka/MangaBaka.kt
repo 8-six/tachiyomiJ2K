@@ -91,7 +91,7 @@ class MangaBaka(
     override val supportsMetadata: Boolean = true
 
     // KMK -->
-    suspend fun getRelations(mediaId: Long) = api.getRelations(mediaId)
+    suspend fun getRelations(mediaId: Long): List<eu.kanade.tachiyomi.data.track.model.Suggestion> = api.getRelations(mediaId)
 
     /** Every safe cover (volumes, seasons, ...) of a series, for picking one by hand. */
     suspend fun getCoverCandidates(mediaId: Long): List<TrackMangaMetadata.CoverCandidate> =

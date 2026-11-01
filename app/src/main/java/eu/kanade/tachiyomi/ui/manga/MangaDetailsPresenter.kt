@@ -104,6 +104,11 @@ class MangaDetailsPresenter(
 
     var trackList: List<TrackItem> = emptyList()
 
+    // KMK -->
+    /** Related and recommended series from the trackers, shown under the description. */
+    var suggestions: List<eu.kanade.tachiyomi.data.track.model.Suggestion> = emptyList()
+    // KMK <--
+
     var chapters: List<ChapterItem> = emptyList()
         private set
 

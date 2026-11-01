@@ -17,6 +17,7 @@ import eu.kanade.tachiyomi.ui.setting.SettingsGeneralController
 import eu.kanade.tachiyomi.ui.setting.SettingsLibraryController
 import eu.kanade.tachiyomi.ui.setting.SettingsReaderController
 import eu.kanade.tachiyomi.ui.setting.SettingsSecurityController
+import eu.kanade.tachiyomi.ui.setting.SettingsTrackerDetailsController
 import eu.kanade.tachiyomi.ui.setting.SettingsTrackingController
 import eu.kanade.tachiyomi.util.system.isLTR
 import eu.kanade.tachiyomi.util.system.launchNow
@@ -41,6 +42,7 @@ object SettingsSearchHelper {
             SettingsLibraryController::class,
             SettingsReaderController::class,
             SettingsTrackingController::class,
+            SettingsTrackerDetailsController::class,
         )
 
     /**

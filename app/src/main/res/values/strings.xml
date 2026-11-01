@@ -91,6 +91,12 @@
     <string name="preferred_tracker">Preferred tracker for details</string>
     <string name="follow_global_tracker">Follow global setting</string>
     <string name="edit_all_trackers">Edit all trackers</string>
+    <string name="tracking_progress">Progress</string>
+    <string name="tracker_details_settings">Tracker details</string>
+    <string name="tracker_details_settings_summary">What is synced from trackers to a series and how</string>
+    <string name="tracker_details_sync">Syncing</string>
+    <string name="tracker_details_tags_titles">Tags and titles</string>
+    <string name="tracker_details_per_tracker_info">Trackers that are turned off are skipped by automatic syncs. You can still pick any tracker by hand when editing a series.</string>
     <string name="parent_category">Parent category</string>
     <string name="parent_category_none">None (top level)</string>
     <string name="parent_category_value">Parent category: %1$s</string>
@@ -997,10 +1003,9 @@
     <string name="sync_progress_from_trackers_up_to_chapter">Marked chapters as read up to chapter %1$d from trackers</string>
     <string name="tracker_details">Tracker details</string>
     <string name="no_tracker_provides_details">None of this series\' trackers is set to provide details</string>
-    <string name="tracker_details_per_tracker">Auto-sync from each tracker</string>
+    <string name="tracker_details_per_tracker">Trackers used</string>
     <string name="tracker_details_use_tracker_">Use %1$s</string>
-    <string name="tracker_details_use_tracker_summary">Takes part when syncing details. Turn off to leave this tracker out of automatic syncs</string>
-    <string name="tracker_details_from_tracker_">Details from %1$s</string>
+        <string name="tracker_details_from_tracker_">Details from %1$s</string>
     <string name="tracker_details_cover_selection">Cover</string>
     <string name="tracker_details_cover_best_quality">The sharpest of all trackers</string>
     <string name="tracker_details_cover_first_tracker">The one of the first tracker that has one</string>

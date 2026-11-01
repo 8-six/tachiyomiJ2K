@@ -1364,7 +1364,7 @@ class MangaDetailsController :
             presenter.allChapterScanlators.size > 1
         menu.findItem(R.id.action_related_manga)?.isVisible =
             !presenter.isLockedFromSearch &&
-            anilistTrackId() != null
+            (anilistTrackId() != null || mangaBakaTrackId() != null)
         menu.findItem(R.id.action_show_blacklisted)?.apply {
             isVisible = !presenter.isLockedFromSearch
             isChecked = presenter.showBlacklisted
@@ -1826,17 +1826,35 @@ class MangaDetailsController :
             .firstOrNull { it.sync_id == eu.kanade.tachiyomi.data.track.TrackManager.ANILIST && it.media_id > 0 }
             ?.media_id
 
+    private fun mangaBakaTrackId(): Long? =
+        presenter.trackList
+            .mapNotNull { it.track }
+            .firstOrNull { it.sync_id == eu.kanade.tachiyomi.data.track.TrackManager.MANGABAKA && it.media_id > 0 }
+            ?.media_id
+
     private fun showRelatedManga() {
-        val mediaId = anilistTrackId() ?: return
+        val aniListId = anilistTrackId()
+        val mangaBakaId = mangaBakaTrackId()
+        if (aniListId == null && mangaBakaId == null) return
         val activity = activity ?: return
         viewScope.launch {
+            val trackManager = Injekt.get<eu.kanade.tachiyomi.data.track.TrackManager>()
+            // Either service may fail or lack data; use whatever answers
+            val results =
+                listOfNotNull(
+                    aniListId?.let { id -> runCatching { trackManager.aniList.getRelations(id) } },
+                    mangaBakaId?.let { id -> runCatching { trackManager.mangaBaka.getRelations(id) } },
+                )
+            if (results.all { it.isFailure }) {
+                activity.toast(results.first().exceptionOrNull()?.message ?: activity.getString(R.string.related_manga_none))
+                return@launch
+            }
             val relations =
-                runCatching {
-                    Injekt.get<eu.kanade.tachiyomi.data.track.TrackManager>().aniList.getRelations(mediaId)
-                }.getOrElse {
-                    activity.toast(it.message ?: activity.getString(R.string.related_manga_none))
-                    return@launch
-                }.filter { it.first in setOf("SEQUEL", "PREQUEL", "PARENT", "SIDE_STORY", "ADAPTATION", "SPIN_OFF") }
+                results
+                    .flatMap { it.getOrDefault(emptyList()) }
+                    .map { (type, title) -> type.uppercase() to title }
+                    .filter { it.first in setOf("SEQUEL", "PREQUEL", "PARENT", "SIDE_STORY", "ADAPTATION", "SPIN_OFF", "SERIES") }
+                    .distinctBy { it.second.lowercase() }
             if (relations.isEmpty()) {
                 activity.toast(R.string.related_manga_none)
                 return@launch

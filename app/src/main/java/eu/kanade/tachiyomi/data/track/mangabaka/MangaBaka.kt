@@ -90,6 +90,10 @@ class MangaBaka(
 
     override val supportsMetadata: Boolean = true
 
+    // KMK -->
+    suspend fun getRelations(mediaId: Long) = api.getRelations(mediaId)
+    // KMK <--
+
     override suspend fun getMangaMetadata(track: Track): TrackMangaMetadata {
         val item = api.getSeries(track.media_id) ?: throw Exception("Could not find manga")
         return MangaBakaMetadataBuilder(api, trackPreferences).build(item)

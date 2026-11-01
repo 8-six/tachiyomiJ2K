@@ -29,6 +29,11 @@ import eu.kanade.tachiyomi.util.PkceUtil
 import eu.kanade.tachiyomi.util.system.withIOContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
 import okhttp3.FormBody
 import okhttp3.Headers.Companion.headersOf
@@ -262,6 +267,37 @@ class MangaBakaApi(
             }
         }
 
+    // KMK -->
+
+    /**
+     * Sequels/prequels (and similar relations) of series [id] as (relation type, title). Titles of at
+     * most [MAX_RELATIONS] related series are fetched, one request each.
+     */
+    suspend fun getRelations(id: Long): List<Pair<String, String>> =
+        withIOContext {
+            val relations =
+                with(json) {
+                    client
+                        .newCall(GET("$API_BASE_URL/v1/series/$id"))
+                        .awaitSuccess()
+                        .parseAs<kotlinx.serialization.json.JsonObject>()
+                }["data"]
+                    ?.jsonObject
+                    ?.get("relationships_v2")
+                    ?.jsonArray
+                    .orEmpty()
+                    .mapNotNull { relation ->
+                        val type = relation.jsonObject["relation_type"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+                        val target = relation.jsonObject["to_series_id"]?.jsonPrimitive?.longOrNull ?: return@mapNotNull null
+                        if (type !in RELATION_TYPES) return@mapNotNull null
+                        type to target
+                    }.take(MAX_RELATIONS)
+            relations.mapNotNull { (type, target) ->
+                runCatching { getSeries(target) }.getOrNull()?.title?.let { type to it }
+            }
+        }
+    // KMK <--
+
     /** The extra covers (volumes, seasons, ...) of a series, up to [MAX_IMAGE_PAGES] pages of them. */
     suspend fun getSeriesImages(id: Long): List<MangaBakaImage> =
         withIOContext {
@@ -350,6 +386,8 @@ class MangaBakaApi(
         private const val CLIENT_ID = "ppVWLKHpvCXGgHnuCMBPqnbGTrVRmpqh"
 
         private const val BASE_URL = "https://mangabaka.org"
+        private const val MAX_RELATIONS = 12
+        private val RELATION_TYPES = setOf("sequel", "prequel", "parent", "side_story", "spin_off", "adaptation", "series")
         private const val API_BASE_URL = "https://api.mangabaka.org"
         private const val LIBRARY_API_URL = "$API_BASE_URL/v1/my/library"
         private const val OAUTH_URL = "$BASE_URL/auth/oauth2"

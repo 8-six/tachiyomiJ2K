@@ -40,7 +40,7 @@ from upstream TachiyomiJ2K are not repeated here.
 
 - Library search by bookmark color (adapted from Komikku): `bookmark_color:red` (also `bmcolor:`, colors default/red/orange/yellow/green/blue/purple/pink) finds manga with a visible chapter bookmarked in that color; an empty value finds manga without bookmarks. Supports negation like other field terms.
 
-- Related manga (adapted from Komikku): manga tracked on AniList get a "Related manga" overflow-menu action listing sequels, prequels, side stories and similar relations; tapping one opens Global Search for it. Shown as a dialog list, not a horizontal row; MangaBaka relations are not included.
+- Related manga (adapted from Komikku): manga tracked on AniList or MangaBaka (either or both; at most 12 MangaBaka relations are looked up) get a "Related manga" overflow-menu action listing sequels, prequels, side stories and similar relations; tapping one opens Global Search for it. Shown as a dialog list, not a horizontal row; MangaBaka relations are not included.
 
 - Nested categories (adapted from Komikku): a category can be given a parent in Manage category. Child categories show as "Parent › Child" in the library header and category manager. Parent choices exclude the category itself and its descendants.
 - Smart categories: a category can be bound to a tracker status (reading, completed, plan to read) and manga move into or out of it when their tracking changes; bound subcategories only apply to manga already in the parent branch. Each category can also have its own automatic update interval (6h to weekly).

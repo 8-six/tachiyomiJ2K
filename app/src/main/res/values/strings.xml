@@ -97,6 +97,14 @@
     <string name="tracker_details_sync">Syncing</string>
     <string name="tracker_details_tags_titles">Tags and titles</string>
     <string name="tracker_details_per_tracker_info">Trackers that are turned off are skipped by automatic syncs. You can still pick any tracker by hand when editing a series.</string>
+    <string name="edit_details">Edit details</string>
+    <string name="sync_from_tracker">Sync from tracker</string>
+    <string name="sync_field_from_tracker">Sync %1$s from tracker</string>
+    <string name="tracker_not_provided">Not provided by this tracker</string>
+    <string name="choose_cover">Choose cover</string>
+    <string name="cover_from_gallery">From gallery</string>
+    <string name="cover_current">Current</string>
+    <string name="cover_source">Source cover</string>
     <string name="parent_category">Parent category</string>
     <string name="parent_category_none">None (top level)</string>
     <string name="parent_category_value">Parent category: %1$s</string>

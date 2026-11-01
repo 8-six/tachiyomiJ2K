@@ -280,7 +280,8 @@ class TrackMetadataSync {
         url: String,
     ): Uri? =
         withIOContext {
-            val file = File(context.cacheDir, "tracker_cover")
+            // One file per cover so the picker can show each of them without the image cache mixing them up
+            val file = File(context.cacheDir, "tracker_cover_${url.hashCode()}")
             network.client
                 .newCall(GET(url))
                 .awaitSuccess()

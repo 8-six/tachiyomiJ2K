@@ -54,8 +54,10 @@ from upstream TachiyomiJ2K are not repeated here.
 
 - Library search filter sheet: Bookmark color field (red, orange, yellow, green, blue, purple, pink) that builds the `bmcolor:` search term.
 - "Edit all trackers" sheet (Compose Material 3) in the manga overflow menu: status, chapter progress and score for every linked tracker in one place (adapted from Komikku's unified tracker editor).
+- Edit panel: a cover picker (grid like search results) with the current cover, the source's own and every cover the linked trackers offer, including all MangaBaka covers; picking one downloads it. Each field (title, author, artist, description, status, tags) has a sync button that asks the linked trackers and shows a preview of what each has before applying it.
 
 ### Changed
+- The edit panel opens as a half-height drawer with a fixed header (drag handle, title, Save/Cancel) instead of covering the whole screen, and stops below the status bar when expanded.
 - Tracking settings are reorganized: a short main page (progress, services, enhanced services) and a separate "Tracker details" page grouped into Syncing, Cover, Tags and titles, Trackers used and MangaBaka. The per-tracker "details from" pickers were removed from the UI (existing values still apply); each tracker keeps its on/off switch, and any tracker can still be picked by hand when editing a series.
 - Source browsing sends each request a snapshot of the selected filters, so changing filters while a request is loading cannot alter it (adapted from Komikku).
 - The manga edit panel is rewritten as a Compose Material 3 bottom sheet, adapted from Komikku's

@@ -92,6 +92,17 @@ class MangaBaka(
 
     // KMK -->
     suspend fun getRelations(mediaId: Long) = api.getRelations(mediaId)
+
+    /** Every safe cover (volumes, seasons, ...) of a series, for picking one by hand. */
+    suspend fun getCoverCandidates(mediaId: Long): List<TrackMangaMetadata.CoverCandidate> =
+        api
+            .getSeriesImages(mediaId)
+            .filter { it.contentRating == null || it.contentRating == "safe" }
+            .mapNotNull { image ->
+                image.image?.raw?.let { raw ->
+                    raw.url?.let { TrackMangaMetadata.CoverCandidate(it, raw.width, raw.height, id) }
+                }
+            }
     // KMK <--
 
     override suspend fun getMangaMetadata(track: Track): TrackMangaMetadata {

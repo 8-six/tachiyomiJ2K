@@ -66,6 +66,9 @@ class EditMangaDialog : DialogController {
         val actions =
             EditMangaActions(
                 onCoverClick = { infoController.changeCover() },
+                onLoadTrackers = { loadTrackers(state) },
+                onApplyField = { field, serviceId -> applyField(state, field, serviceId) },
+                onPickCover = { url -> pickTrackerCover(state, url) },
                 canPasteCover = { activity.clipboardHasImage() },
                 onPasteCover = { activity.getClipboardImageUri()?.let(::updateCover) },
                 onAutofill = { autofillFromTracker(state) },
@@ -77,8 +80,18 @@ class EditMangaDialog : DialogController {
                 onCancel = { dialog.dismiss() },
             )
         dialog.setContent { EditMangaSheet(state, actions) }
-        dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
-        dialog.behavior.skipCollapsed = true
+        // Opens like a drawer, a bit over half the screen, instead of covering all of it
+        dialog.behavior.apply {
+            isFitToContents = false
+            halfExpandedRatio = HALF_EXPANDED_RATIO
+            expandedOffset = (activity.resources.displayMetrics.density * EXPANDED_TOP_MARGIN_DP).toInt() + statusBarHeight(activity)
+            skipCollapsed = true
+            setState(BottomSheetBehavior.STATE_HALF_EXPANDED)
+        }
+        launchUI {
+            val sources = TrackMetadataSync().getSources(manga)
+            state.trackers = sources.map { (_, service) -> TrackerSource(service.id, activity.getString(service.nameRes())) }
+        }
         return dialog
     }
 
@@ -131,6 +144,87 @@ class EditMangaDialog : DialogController {
         }
     }
 
+    private fun statusBarHeight(activity: ComponentActivity): Int =
+        androidx.core.view.ViewCompat
+            .getRootWindowInsets(activity.window.decorView)
+            ?.getInsets(
+                androidx.core.view.WindowInsetsCompat.Type
+                    .statusBars(),
+            )?.top ?: 0
+
+    /** Asks every tracker of the manga for its details once, so fields and covers can be previewed. */
+    private fun loadTrackers(state: EditMangaState) {
+        launchUI {
+            val sync = TrackMetadataSync()
+            val trackManager: eu.kanade.tachiyomi.data.track.TrackManager =
+                uy.kohesive.injekt.Injekt
+                    .get()
+            sync.getSources(manga).forEach { (track, service) ->
+                if (state.trackerData[service.id] != null) return@forEach
+                state.trackerData[service.id] = TrackerData.Loading
+                launchUI {
+                    state.trackerData[service.id] =
+                        try {
+                            val metadata =
+                                withIOContext { service.getMangaMetadata(track).withCoverSource(service.id) }
+                            val extra =
+                                if (service.id == eu.kanade.tachiyomi.data.track.TrackManager.MANGABAKA && track.media_id > 0) {
+                                    runCatching { withIOContext { trackManager.mangaBaka.getCoverCandidates(track.media_id) } }
+                                        .getOrDefault(emptyList())
+                                } else {
+                                    emptyList()
+                                }
+                            val covers = (metadata.coverCandidates() + extra).distinctBy { it.url }
+                            TrackerData.Loaded(metadata, covers)
+                        } catch (e: Exception) {
+                            Timber.e(e)
+                            TrackerData.Failed(e.message ?: e.javaClass.simpleName)
+                        }
+                }
+            }
+        }
+    }
+
+    private fun applyField(
+        state: EditMangaState,
+        field: TrackMangaMetadata.Field,
+        serviceId: Int,
+    ) {
+        val metadata = (state.trackerData[serviceId] as? TrackerData.Loaded)?.metadata ?: return
+        val sync = TrackMetadataSync()
+        when (field) {
+            TrackMangaMetadata.Field.TITLE -> metadata.title?.let { state.title = it }
+            TrackMangaMetadata.Field.AUTHORS -> metadata.authors?.let { state.author = it }
+            TrackMangaMetadata.Field.ARTISTS -> metadata.artists?.let { state.artist = it }
+            TrackMangaMetadata.Field.DESCRIPTION -> sync.descriptionFor(metadata)?.let { state.description = it }
+            TrackMangaMetadata.Field.STATUS -> metadata.status?.let { state.status = it.coerceIn(SManga.UNKNOWN, SManga.ON_HIATUS) }
+            TrackMangaMetadata.Field.TAGS -> sync.tagsFor(state.tags.toList(), metadata)?.let { state.setTags(it) }
+            TrackMangaMetadata.Field.COVER -> metadata.coverUrl?.let { pickTrackerCover(state, it) }
+        }
+    }
+
+    private fun pickTrackerCover(
+        state: EditMangaState,
+        url: String,
+    ) {
+        val context = activity ?: return
+        launchUI {
+            state.coverBusy = true
+            try {
+                TrackMetadataSync().downloadCover(context, url)?.let {
+                    updateCover(it)
+                    state.pickedCoverUrl = url
+                    state.coverPickerOpen = false
+                }
+            } catch (e: Exception) {
+                Timber.e(e)
+                context.toast(context.getString(R.string.tracker_metadata_error, "", e.message.orEmpty()))
+            } finally {
+                state.coverBusy = false
+            }
+        }
+    }
+
     private fun resetTags(state: EditMangaState) {
         if (manga.genre.isNullOrBlank() || manga.isLocal()) {
             state.setTags(emptyList())
@@ -141,7 +235,11 @@ class EditMangaDialog : DialogController {
     }
 
     fun updateCover(uri: Uri) {
-        state?.cover = CoverChange.Custom(uri)
+        state?.apply {
+            cover = CoverChange.Custom(uri)
+            // A cover from the gallery isn't one of the tracker covers
+            if (pickedCoverUrl != null && uri.lastPathSegment?.startsWith("tracker_cover") != true) pickedCoverUrl = null
+        }
     }
 
     private fun autofillFromTracker(state: EditMangaState) {
@@ -235,6 +333,8 @@ class EditMangaDialog : DialogController {
     }
 
     private companion object {
+        const val HALF_EXPANDED_RATIO = 0.6f
+        const val EXPANDED_TOP_MARGIN_DP = 8
         const val KEY_MANGA = "manga_id"
     }
 }

@@ -1362,6 +1362,9 @@ class MangaDetailsController :
         menu.findItem(R.id.action_scanlator_priority)?.isVisible =
             !presenter.isLockedFromSearch &&
             presenter.allChapterScanlators.size > 1
+        menu.findItem(R.id.action_edit_trackers)?.isVisible =
+            !presenter.isLockedFromSearch &&
+            presenter.trackList.any { it.track != null }
         menu.findItem(R.id.action_related_manga)?.isVisible =
             !presenter.isLockedFromSearch &&
             (anilistTrackId() != null || mangaBakaTrackId() != null)
@@ -1378,6 +1381,7 @@ class MangaDetailsController :
             // KMK -->
             R.id.action_scanlator_priority -> showScanlatorPriority()
             R.id.action_related_manga -> showRelatedManga()
+            R.id.action_edit_trackers -> showUnifiedTrackerEditor()
             R.id.action_smart_merge_mode -> showSmartMergeMode()
             R.id.action_preferred_tracker -> showPreferredTracker()
             R.id.action_show_blacklisted -> {
@@ -1825,6 +1829,18 @@ class MangaDetailsController :
             .mapNotNull { it.track }
             .firstOrNull { it.sync_id == eu.kanade.tachiyomi.data.track.TrackManager.ANILIST && it.media_id > 0 }
             ?.media_id
+
+    private fun showUnifiedTrackerEditor() {
+        val activity = activity as? androidx.activity.ComponentActivity ?: return
+        if (isNotOnline()) return
+        eu.kanade.tachiyomi.ui.manga.track.UnifiedTrackerSheet.show(
+            activity,
+            presenter.trackList,
+            onStatus = { item, index -> presenter.setStatus(item, index) },
+            onProgress = { item, chapter -> presenter.setLastChapterRead(item, chapter) },
+            onScore = { item, index -> presenter.setScore(item, index) },
+        )
+    }
 
     private fun mangaBakaTrackId(): Long? =
         presenter.trackList

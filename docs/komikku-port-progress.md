@@ -61,4 +61,4 @@ architecture are recorded as `skipped` with the reason.
 | Backups / migrations review (s15/s16) | done (reviewed) | All new fields (chapter 801/802, manga 811/812, category 803-805, feeds + saved searches via app preferences) round-trip; SyncYomi not present in J2K, Fillermark migration N/A |
 | Performance / bug-fix review (s21/s23) | reviewed | No new benchmarks claimed; library reload already supersedes pending loads and new count queries are batched |
 | Source feeds | partial | Preference-backed feeds sheet (latest/popular/saved search, per-feed retry, reorder); no per-source feed tabs |
-| Unified tracker editor | skipped (for now) | Needs DB schema and backup work |
+| Unified tracker editor | done | "Edit all trackers" sheet from the manga overflow menu; reuses existing tracker calls, no schema change |

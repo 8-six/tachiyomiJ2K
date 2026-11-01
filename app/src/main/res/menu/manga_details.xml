@@ -46,6 +46,10 @@
 
     <!-- KMK -->
     <item
+        android:id="@+id/action_edit_trackers"
+        android:title="@string/edit_all_trackers"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_related_manga"
         android:title="@string/related_manga"
         app:showAsAction="never" />

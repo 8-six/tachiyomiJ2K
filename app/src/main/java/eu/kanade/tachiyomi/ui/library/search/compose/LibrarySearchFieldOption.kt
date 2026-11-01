@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.library.search.compose
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Style
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Brush
 import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.Description
@@ -100,6 +101,14 @@ fun rememberLibrarySearchFieldOptions(
                 MangaField.SERIES_TYPE.shorthand,
                 valueOptions = seriesTypeOptions,
             ),
+            // KMK -->
+            LibrarySearchFieldOption(
+                R.string.bookmark_color,
+                Icons.Outlined.BookmarkBorder,
+                MangaField.BOOKMARK_COLOR.shorthand,
+                valueOptions = listOf("red", "orange", "yellow", "green", "blue", "purple", "pink"),
+            ),
+            // KMK <--
             LibrarySearchFieldOption(
                 R.string.date_added,
                 Icons.Outlined.FavoriteBorder,

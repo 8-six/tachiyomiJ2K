@@ -52,6 +52,8 @@ from upstream TachiyomiJ2K are not repeated here.
 
 - Smart categories can also be bound to the tracker statuses On hold and Dropped (services without those statuses are ignored).
 
+- Library search filter sheet: Bookmark color field (red, orange, yellow, green, blue, purple, pink) that builds the `bmcolor:` search term.
+
 ### Changed
 - The manga edit panel is rewritten as a Compose Material 3 bottom sheet, adapted from Komikku's
   edit dialog. Fields have "restore original" buttons, tags are input chips, and pasting a cover

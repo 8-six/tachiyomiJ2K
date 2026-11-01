@@ -52,7 +52,7 @@ architecture are recorded as `skipped` with the reason.
 | Per-manga preferred tracker | done | Overflow menu choice; DB v28, backup 813 |
 | Colored chapter bookmarks | partial | DB v22 + backup 801 + picker on chapter long-press and on the reader chapter sheet bookmark button (long-press); Fillermarks not ported |
 | Auto Reread | partial | Setting + prompt/automatic reset when starting a fully read series; no tracker reread coordination or category/tracking automation |
-| Library bookmark-color filter | partial | Search term `bookmark_color:<name>` only; no filter-sheet control. Source language grouping/search not analysed |
+| Library bookmark-color filter | done | Search term `bookmark_color:<name>` plus a filter-sheet field; source language search (`lang:`) and grouping (BY_LANGUAGE) already existed |
 | Related manga (sequel/prequel) | partial | AniList only, overflow-menu dialog; no horizontal row on the manga page, no MangaBaka, no cover cards |
 | Nested categories | partial | Parent assignment, "Parent › Child" labels, backup/restore; no tree tabs/chips, no include/exclude-descendant filters |
 | Smart categories / update schedules | partial | reading/completed/plan-to-read buckets only; schedule applies to automatic updates only |

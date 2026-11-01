@@ -96,12 +96,9 @@ class AboutController : SettingsController() {
             preference {
                 key = "pref_version"
                 titleRes = R.string.version
-                summary =
-                    if (BuildConfig.DEBUG) {
-                        "r" + BuildInfo.commitCount
-                    } else {
-                        BuildConfig.VERSION_NAME
-                    }
+                // 8SIX -->
+                summary = BuildInfo.commitSha
+                // 8SIX <--
 
                 onClick {
                     activity?.let {

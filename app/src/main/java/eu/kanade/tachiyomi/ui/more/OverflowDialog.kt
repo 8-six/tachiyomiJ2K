@@ -11,6 +11,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updateLayoutParams
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import eu.kanade.tachiyomi.BuildConfig
+import eu.kanade.tachiyomi.BuildInfo
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.data.preference.toggle
@@ -101,7 +102,9 @@ class OverflowDialog(
             dismiss()
         }
 
-        val vName = "v${BuildConfig.VERSION_NAME}".substringBefore("-")
+        // 8SIX -->
+        val vName = BuildInfo.commitSha
+        // 8SIX <--
         val newVName =
             buildSpannedString {
                 color(context.getResourceColor(android.R.attr.textColorSecondary)) {

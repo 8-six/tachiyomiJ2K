@@ -59,6 +59,8 @@ from upstream TachiyomiJ2K are not repeated here.
 - Edit panel cover picker: 2-column grid with the outline of the library covers, and MangaBaka covers show the kind (volume or season and its number), the language as a badge and the uploader's note (like "Cover from Naver Webtoon").
 
 ### Changed
+- About and the overflow menu show the build commit SHA instead of the version number.
+- Removed the "next chapter around <date>" estimate from the manga page chapter header.
 - The edit panel opens as a half-height drawer with a fixed header (drag handle, title, Save/Cancel) instead of covering the whole screen, and stops below the status bar when expanded.
 - Tracking settings are reorganized: a short main page (progress, services, enhanced services) and a separate "Tracker details" page grouped into Syncing, Cover, Tags and titles, Trackers used and MangaBaka. The per-tracker "details from" pickers were removed from the UI (existing values still apply); each tracker keeps its on/off switch, and any tracker can still be picked by hand when editing a series.
 - Source browsing sends each request a snapshot of the selected filters, so changing filters while a request is loading cannot alter it (adapted from Komikku).

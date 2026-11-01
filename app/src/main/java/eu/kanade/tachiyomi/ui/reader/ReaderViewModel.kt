@@ -445,6 +445,17 @@ class ReaderViewModel(
         db.updateChapterProgress(chapter).executeAsBlocking()
     }
 
+    // KMK -->
+    fun setBookmarkColor(
+        chapter: Chapter,
+        color: Int,
+    ) {
+        chapter.bookmark_color = color
+        chapter.bookmark = color != 0 || chapter.bookmark
+        db.updateChapterProgress(chapter).executeAsBlocking()
+    }
+    // KMK <--
+
     /**
      * Called when the viewers decide it's a good time to preload a [chapter] and improve the UX so
      * that the user doesn't have to wait too long to continue reading.

@@ -18,8 +18,10 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.mikepenz.fastadapter.FastAdapter
 import com.mikepenz.fastadapter.adapters.ItemAdapter
 import com.mikepenz.fastadapter.listeners.ClickEventHook
+import com.mikepenz.fastadapter.listeners.LongClickEventHook
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.databinding.ReaderChaptersSheetBinding
+import eu.kanade.tachiyomi.ui.manga.chapter.BookmarkColorDialog
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.reader.ReaderViewModel
 import eu.kanade.tachiyomi.util.system.dpToPx
@@ -237,6 +239,33 @@ class ReaderChapterSheet
                     }
                 },
             )
+
+            // KMK -->
+            adapter?.addEventHook(
+                object : LongClickEventHook<ReaderChapterItem>() {
+                    override fun onBind(viewHolder: RecyclerView.ViewHolder): View? =
+                        if (viewHolder is ReaderChapterItem.ViewHolder) {
+                            viewHolder.binding.bookmarkButton
+                        } else {
+                            null
+                        }
+
+                    override fun onLongClick(
+                        v: View,
+                        position: Int,
+                        fastAdapter: FastAdapter<ReaderChapterItem>,
+                        item: ReaderChapterItem,
+                    ): Boolean {
+                        if (activity.isLoading || !sheetBehavior.isExpanded()) return false
+                        BookmarkColorDialog.show(activity, item.chapter.bookmark_color) { color ->
+                            viewModel.setBookmarkColor(item.chapter, color)
+                            refreshList()
+                        }
+                        return true
+                    }
+                },
+            )
+            // KMK <--
 
             backgroundTintList =
                 ColorStateList.valueOf(

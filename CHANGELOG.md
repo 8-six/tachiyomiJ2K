@@ -48,6 +48,8 @@ from upstream TachiyomiJ2K are not repeated here.
 
 - Per-manga preferred tracker: choose which tracker supplies metadata autofill for a manga (overflow menu, shown when more than one tracker with metadata is linked), overriding the global preference.
 
+- Reader chapter sheet: long-press a chapter's bookmark button to choose its bookmark color (also bookmarks the chapter).
+
 ### Changed
 - The manga edit panel is rewritten as a Compose Material 3 bottom sheet, adapted from Komikku's
   edit dialog. Fields have "restore original" buttons, tags are input chips, and pasting a cover

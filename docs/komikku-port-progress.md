@@ -50,7 +50,7 @@ architecture are recorded as `skipped` with the reason.
 | Webtoon disable pinch zoom | partial | Preference + switch; page gap slider in Settings > Reader; scale-type/refresh-rate options not ported |
 | Tracker error indicator | partial | In-memory flag in tracker sheet; unified editor not ported |
 | Per-manga preferred tracker | done | Overflow menu choice; DB v28, backup 813 |
-| Colored chapter bookmarks | partial | DB v22 + backup 801 + picker on chapter long-press; reader picker/Fillermarks not ported |
+| Colored chapter bookmarks | partial | DB v22 + backup 801 + picker on chapter long-press and on the reader chapter sheet bookmark button (long-press); Fillermarks not ported |
 | Auto Reread | partial | Setting + prompt/automatic reset when starting a fully read series; no tracker reread coordination or category/tracking automation |
 | Library bookmark-color filter | partial | Search term `bookmark_color:<name>` only; no filter-sheet control. Source language grouping/search not analysed |
 | Related manga (sequel/prequel) | partial | AniList only, overflow-menu dialog; no horizontal row on the manga page, no MangaBaka, no cover cards |

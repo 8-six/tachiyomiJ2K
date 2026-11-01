@@ -1,8 +1,6 @@
 name: CI
+# Automatic runs disabled for now: only nightly.yml publishes releases. Manual runs still work.
 on:
-  push:
-    branches:
-      - master
   workflow_dispatch:
     inputs:
       version:

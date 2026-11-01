@@ -29,6 +29,7 @@ import eu.kanade.tachiyomi.ui.source.filter.TriStateSectionItem
 import eu.kanade.tachiyomi.ui.source.searchhistory.FilterApplyResult
 import eu.kanade.tachiyomi.ui.source.searchhistory.SavedFilter
 import eu.kanade.tachiyomi.ui.source.searchhistory.applyTo
+import eu.kanade.tachiyomi.ui.source.searchhistory.diffFromDefault
 import eu.kanade.tachiyomi.util.manga.duplicateLibraryMangaIds
 import eu.kanade.tachiyomi.util.system.launchIO
 import eu.kanade.tachiyomi.util.system.withUIContext
@@ -178,11 +179,15 @@ open class BrowseSourcePresenter(
         this.query = query
         this.appliedFilters = filters
 
+        // KMK -->
+        val requestFilters = snapshotFilters(filters)
+        // KMK <--
+
         // Create a new pager.
         pager =
             createPager(
                 query,
-                filters.takeIf { it.isNotEmpty() || query.isBlank() }
+                requestFilters.takeIf { it.isNotEmpty() || query.isBlank() }
                     ?: source.getFilterList(),
             )
 
@@ -343,6 +348,24 @@ open class BrowseSourcePresenter(
         filtersChanged = true
         restartPager(filters = filters)
     }
+
+    // KMK -->
+
+    /**
+     * Copies the values the user changed into a fresh filter list, so the pager keeps its own state
+     * while the filter sheet goes on mutating [sourceFilters].
+     */
+    private fun snapshotFilters(filters: FilterList): FilterList {
+        if (filters.isEmpty()) return filters
+        return try {
+            val fresh = source.getFilterList()
+            filters.diffFromDefault(source.getFilterList()).applyTo(fresh, strict = true)
+            fresh
+        } catch (e: Exception) {
+            filters
+        }
+    }
+    // KMK <--
 
     open fun createPager(
         query: String,

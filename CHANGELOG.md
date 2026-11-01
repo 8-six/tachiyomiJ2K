@@ -56,6 +56,7 @@ from upstream TachiyomiJ2K are not repeated here.
 - "Edit all trackers" sheet (Compose Material 3) in the manga overflow menu: status, chapter progress and score for every linked tracker in one place (adapted from Komikku's unified tracker editor).
 
 ### Changed
+- Source browsing sends each request a snapshot of the selected filters, so changing filters while a request is loading cannot alter it (adapted from Komikku).
 - The manga edit panel is rewritten as a Compose Material 3 bottom sheet, adapted from Komikku's
   edit dialog. Fields have "restore original" buttons, tags are input chips, and pasting a cover
   from the clipboard moved to the cover's long-press menu. Tapping a tag offers "Move earlier" and

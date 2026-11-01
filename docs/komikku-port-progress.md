@@ -46,7 +46,7 @@ architecture are recorded as `skipped` with the reason.
 | Historical / removed items (s24, s25) | skipped | Verification-only lists (reverted or unverified fork experiments); nothing to port |
 | Release interval prediction (s14.2) | partial | Per-title median-gap estimate on the manga page (unit tested). Not used for library update scheduling. |
 | Extension repo management (s12) | done | J2K already had repo enable/disable, metadata, icons, source prefs; added refresh of the extension list after repo changes. Built, not device-tested. |
-| Source categories + scoped Global Search (s10.1, s10.2) | done (core) | Manage in Settings > Browse; picker in Global Search menu and Sources list menu. Filter-state isolation (s10.3) not done. Built, not device-tested. |
+| Source categories + scoped Global Search (s10.1, s10.2) | done (core) | Manage in Settings > Browse; picker in Global Search menu and Sources list menu. Filter-state isolation (s10.3) done via per-request filter snapshot; no debounce added (J2K search submits on enter). Built, not device-tested. |
 | Webtoon disable pinch zoom | partial | Preference + switch; page gap slider in Settings > Reader; scale-type/refresh-rate options not ported |
 | Tracker error indicator | partial | In-memory flag in tracker sheet; unified editor not ported |
 | Per-manga preferred tracker | done | Overflow menu choice; DB v28, backup 813 |

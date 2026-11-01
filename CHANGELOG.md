@@ -66,9 +66,11 @@ from upstream TachiyomiJ2K are not repeated here.
 - The issue templates, About screen and tracker User-Agents link to this fork instead of upstream.
 
 ### Fixed
+- Recents query no longer fails: the "newly added manga" branch was missing the `bookmark_color` and `blacklisted` chapter columns added by this fork, which made the UNION invalid.
 - Leaving the extension repositories screen refreshes the available extensions when the set of enabled repos changed, so adding, removing, enabling or disabling a repo shows up without a manual refresh or restart. Matches Komikku's behavior.
 
 ### Technical
+- `SqlDumpTest` writes the real schema, v22-v28 migration and raw query SQL when `SQL_DUMP_DIR` is set, so they can be run against `sqlite3` (verified: migrated v21 schema equals a fresh install, all raw queries run on both).
 - Reader auto-scroll steps once per display frame using the screen refresh rate instead of a fixed 16 ms tick.
 - Database version 28 adds `mangas.preferred_tracker`; backups carry it in `BackupManga` ProtoNumber 813 (existing local value is kept on restore when the backup has none).
 - Added `BackupCategoryTest` for category hierarchy, tracker status and update interval backup fields (including old backups without them). Source refresh was reviewed and keeps bookmark color and hidden flags of existing chapters.

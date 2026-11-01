@@ -276,6 +276,8 @@ fun getAllRecentsType(
 		Null as chapter_number,
 		Null as source_order,
 		Null as memo,
+		Null as bookmark_color,
+		Null as blacklisted,
 		Null as history_id,
         Null as history_chapter_id, 
         ${Manga.TABLE}.${Manga.COL_DATE_ADDED} as history_last_read, 

@@ -42,7 +42,7 @@ architecture are recorded as `skipped` with the reason.
 | Discord Rich Presence (s18.2) | skipped | Needs Discord account token handling and an RPC client; Komikku says its exact current behavior is unverified |
 | Version bump workflow (s22) | done | Script tested locally (patch, rollover, failure); workflow untested on GitHub. Spotless/formatting checks not applicable (kotlinter fails on existing code) |
 | Storage overview (s19.1) | partial | Per-source size list + delete in Downloads settings. No per-type categories; merged manga do not exist in J2K. Built, not device-tested (SAF folders unverified). |
-| History distinct-manga count (s13.1) | partial | Shown in Recents Updates date headings; History view has no date headings. Blacklist/Smart Merge-aware continue-reading waits for those features. |
+| History distinct-manga count (s13.1) | partial | Shown in Recents Updates date headings; History view has no date headings. Continue-reading (library, recents, shortcuts, manga page) already resolves the next chapter from visibility-filtered chapters, so blacklisted and Smart-Merge-hidden chapters are skipped; re-fetch keeps read/bookmark/blacklist state. |
 | Historical / removed items (s24, s25) | skipped | Verification-only lists (reverted or unverified fork experiments); nothing to port |
 | Release interval prediction (s14.2) | partial | Per-title median-gap estimate on the manga page (unit tested). Not used for library update scheduling. |
 | Extension repo management (s12) | done | J2K already had repo enable/disable, metadata, icons, source prefs; added refresh of the extension list after repo changes. Built, not device-tested. |

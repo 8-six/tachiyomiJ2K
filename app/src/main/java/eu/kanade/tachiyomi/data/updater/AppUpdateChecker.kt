@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.data.updater
 import android.content.Context
 import android.os.Build
 import eu.kanade.tachiyomi.BuildConfig
+import eu.kanade.tachiyomi.BuildInfo
 import eu.kanade.tachiyomi.data.preference.PreferencesHelper
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.NetworkHelper
@@ -100,7 +101,7 @@ class AppUpdateChecker {
         preferences.lastAppCheck().set(Date().time)
         if (release == null || release.nightlyCommit == null) return AppUpdateResult.NoNewUpdate
 
-        return if (NightlyUpdate.isNewer(release.nightlyCommit, release.publishedAt, BuildConfig.COMMIT_SHA, BuildConfig.BUILD_TIME)) {
+        return if (NightlyUpdate.isNewer(release.nightlyCommit, release.publishedAt, BuildInfo.commitSha, BuildInfo.buildTime)) {
             AppUpdateResult.NewUpdate(release)
         } else {
             AppUpdateResult.NoNewUpdate

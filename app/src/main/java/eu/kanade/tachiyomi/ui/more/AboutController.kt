@@ -14,6 +14,7 @@ import androidx.core.net.toUri
 import androidx.preference.PreferenceScreen
 import com.google.android.gms.oss.licenses.OssLicensesMenuActivity
 import eu.kanade.tachiyomi.BuildConfig
+import eu.kanade.tachiyomi.BuildInfo
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.updater.AppDownloadInstallJob
 import eu.kanade.tachiyomi.data.updater.AppUpdateChecker
@@ -97,7 +98,7 @@ class AboutController : SettingsController() {
                 titleRes = R.string.version
                 summary =
                     if (BuildConfig.DEBUG) {
-                        "r" + BuildConfig.COMMIT_COUNT
+                        "r" + BuildInfo.commitCount
                     } else {
                         BuildConfig.VERSION_NAME
                     }
@@ -249,11 +250,11 @@ class AboutController : SettingsController() {
                 val inputDf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'", Locale.getDefault())
                 inputDf.timeZone = TimeZone.getTimeZone("UTC")
                 val buildTime =
-                    inputDf.parse(BuildConfig.BUILD_TIME) ?: return BuildConfig.BUILD_TIME
+                    inputDf.parse(BuildInfo.buildTime) ?: return BuildInfo.buildTime
 
                 buildTime.toTimestampString(dateFormat)
             } catch (e: ParseException) {
-                BuildConfig.BUILD_TIME
+                BuildInfo.buildTime
             }
         }
     }

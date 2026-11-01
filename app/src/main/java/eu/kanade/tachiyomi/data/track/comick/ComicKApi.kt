@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.data.track.comick
 import android.net.Uri
 import androidx.core.net.toUri
 import eu.kanade.tachiyomi.BuildConfig
+import eu.kanade.tachiyomi.BuildInfo
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.preference.PreferenceStore
 import eu.kanade.tachiyomi.data.track.comick.dto.ComickLibraryEntry
@@ -64,7 +65,7 @@ class ComicKApi(
                     .newBuilder()
                     .header(
                         "User-Agent",
-                        "Tachiyomi J2K/${BuildConfig.VERSION_NAME} (${BuildConfig.APPLICATION_ID} ${BuildConfig.COMMIT_SHA}) " +
+                        "Tachiyomi J2K/${BuildConfig.VERSION_NAME} (${BuildConfig.APPLICATION_ID} ${BuildInfo.commitSha}) " +
                             "(Android) (https://github.com/8-six/tachiyomiJ2K)",
                     ).header("Accept", "application/json")
                     .build()

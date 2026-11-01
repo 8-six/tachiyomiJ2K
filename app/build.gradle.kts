@@ -33,10 +33,13 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled = true
 
-        buildConfigField("String", "COMMIT_COUNT", "\"${getCommitCount()}\"")
-        buildConfigField("String", "BETA_COUNT", "\"${getBetaCount()}\"")
-        buildConfigField("String", "COMMIT_SHA", "\"${getGitSha()}\"")
-        buildConfigField("String", "BUILD_TIME", "\"${getBuildTime()}\"")
+        // 8SIX -->
+        // Not BuildConfig: these change every build and would invalidate the Kotlin compile cache (see BuildInfo)
+        resValue("string", "build_commit_count", getCommitCount())
+        resValue("string", "build_beta_count", getBetaCount())
+        resValue("string", "build_commit_sha", getGitSha())
+        resValue("string", "build_time", getBuildTime())
+        // 8SIX <--
         buildConfigField("Boolean", "INCLUDE_UPDATER", "false")
         buildConfigField("boolean", "BETA", "false")
 

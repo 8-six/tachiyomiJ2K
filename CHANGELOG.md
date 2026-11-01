@@ -76,6 +76,7 @@ from upstream TachiyomiJ2K are not repeated here.
 - Leaving the extension repositories screen refreshes the available extensions when the set of enabled repos changed, so adding, removing, enabling or disabling a repo shows up without a manual refresh or restart. Matches Komikku's behavior.
 
 ### Technical
+- Build/CI: commit count, commit SHA and build time moved from `BuildConfig` to generated string resources read through `BuildInfo`, so a new commit no longer invalidates the Kotlin compilation of the whole app; the nightly workflow reads/writes the Gradle cache only on `master` with cleanup, and the CI Gradle properties use 4 workers, parallel execution and the build cache.
 - The CI release workflow (`build_push.yml`) no longer runs on push; it is manual-only for now, so nightly builds are the only automatic releases.
 - The Nightly workflow now runs on every push to `master` (ignoring docs/markdown-only changes) instead of the daily schedule; manual runs still work.
 - `SqlDumpTest` writes the real schema, v22-v28 migration and raw query SQL when `SQL_DUMP_DIR` is set, so they can be run against `sqlite3` (verified: migrated v21 schema equals a fresh install, all raw queries run on both).

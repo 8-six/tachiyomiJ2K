@@ -34,6 +34,11 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        with:
+          # Only master writes the cache; it keeps the Gradle build cache (task outputs) and dependencies
+          cache-read-only: ${{ github.ref != 'refs/heads/master' }}
+          # Keep what the build used, drop the rest, so the cache does not grow past the repository limit
+          cache-cleanup: on-success
 
       - name: Copy CI gradle.properties
         run: |
@@ -41,7 +46,7 @@ jobs:
           cp .github/runner-files/ci-gradle.properties ~/.gradle/gradle.properties
 
       - name: Build app
-        run: ./gradlew assembleStandardRelease
+        run: ./gradlew assembleStandardRelease --build-cache --stacktrace
 
       - name: Detect installed build-tools version
         run: |

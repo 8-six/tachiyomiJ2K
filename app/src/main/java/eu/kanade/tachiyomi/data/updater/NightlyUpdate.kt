@@ -29,8 +29,8 @@ object NightlyUpdate {
      *
      * @param releaseCommit the commit of the nightly, see [commitOf].
      * @param releasePublishedAt when it was published, like `2026-10-23T12:31:18Z`.
-     * @param installedCommit `BuildConfig.COMMIT_SHA`.
-     * @param installedBuildTime `BuildConfig.BUILD_TIME`, like `2026-10-23T12:20Z`.
+     * @param installedCommit `BuildInfo.commitSha`.
+     * @param installedBuildTime `BuildInfo.buildTime`, like `2026-10-23T12:20Z`.
      */
     fun isNewer(
         releaseCommit: String?,

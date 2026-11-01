@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.preference.PreferenceScreen
 import androidx.webkit.WebViewCompat
 import eu.kanade.tachiyomi.BuildConfig
+import eu.kanade.tachiyomi.BuildInfo
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.more.AboutController
 import eu.kanade.tachiyomi.ui.setting.SettingsController
@@ -42,7 +43,7 @@ class DebugController : SettingsController() {
                     title = "Version"
                     summary =
                         if (BuildConfig.DEBUG) {
-                            "r" + BuildConfig.COMMIT_COUNT
+                            "r" + BuildInfo.commitCount
                         } else {
                             BuildConfig.VERSION_NAME
                         }

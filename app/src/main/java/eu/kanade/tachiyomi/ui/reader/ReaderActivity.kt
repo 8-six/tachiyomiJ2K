@@ -200,6 +200,7 @@ class ReaderActivity : BaseActivity<ReaderActivityBinding>() {
                 }
                 invalidateOptionsMenu()
             },
+            { window.decorView.display?.refreshRate ?: 60f },
         )
     }
     // 8SIX <--

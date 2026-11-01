@@ -50,6 +50,8 @@ from upstream TachiyomiJ2K are not repeated here.
 
 - Reader chapter sheet: long-press a chapter's bookmark button to choose its bookmark color (also bookmarks the chapter).
 
+- Smart categories can also be bound to the tracker statuses On hold and Dropped (services without those statuses are ignored).
+
 ### Changed
 - The manga edit panel is rewritten as a Compose Material 3 bottom sheet, adapted from Komikku's
   edit dialog. Fields have "restore original" buttons, tags are input chips, and pasting a cover
@@ -63,6 +65,7 @@ from upstream TachiyomiJ2K are not repeated here.
 - Leaving the extension repositories screen refreshes the available extensions when the set of enabled repos changed, so adding, removing, enabling or disabling a repo shows up without a manual refresh or restart. Matches Komikku's behavior.
 
 ### Technical
+- Reader auto-scroll steps once per display frame using the screen refresh rate instead of a fixed 16 ms tick.
 - Database version 28 adds `mangas.preferred_tracker`; backups carry it in `BackupManga` ProtoNumber 813 (existing local value is kept on restore when the backup has none).
 - Added `BackupCategoryTest` for category hierarchy, tracker status and update interval backup fields (including old backups without them). Source refresh was reviewed and keeps bookmark color and hidden flags of existing chapters.
 - Feeds are stored as one JSON string preference (`source_feeds`), so they travel with app preference backups; saved-search feeds reference the saved search by id and are dropped when it is deleted. No database change. `SourceFeedsTest` covers ordering, de-duplication and serialization.

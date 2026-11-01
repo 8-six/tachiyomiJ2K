@@ -65,6 +65,12 @@ class Kitsu(
 
     override fun planningStatus() = PLAN_TO_READ
 
+    // KMK -->
+    override fun onHoldStatus() = ON_HOLD
+
+    override fun droppedStatus() = DROPPED
+    // KMK <--
+
     override fun getStatus(status: Int): String =
         with(context) {
             when (status) {

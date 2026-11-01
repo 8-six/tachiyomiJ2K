@@ -73,6 +73,12 @@ class MyAnimeList(
 
     override fun planningStatus() = PLAN_TO_READ
 
+    // KMK -->
+    override fun onHoldStatus() = ON_HOLD
+
+    override fun droppedStatus() = DROPPED
+    // KMK <--
+
     override fun getScoreList(): List<String> = IntRange(0, 10).map(Int::toString)
 
     override fun displayScore(track: Track): String = track.score.toInt().toString()

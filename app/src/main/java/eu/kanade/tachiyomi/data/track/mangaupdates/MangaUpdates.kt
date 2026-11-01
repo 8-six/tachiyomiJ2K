@@ -57,6 +57,12 @@ class MangaUpdates(
 
     override fun planningStatus() = WISH_LIST
 
+    // KMK -->
+    override fun onHoldStatus() = ON_HOLD_LIST
+
+    override fun droppedStatus() = UNFINISHED_LIST
+    // KMK <--
+
     override fun getStatus(status: Int): String =
         with(context) {
             when (status) {

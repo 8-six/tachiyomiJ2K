@@ -216,6 +216,8 @@ class ManageCategoryDialog(
                 eu.kanade.tachiyomi.data.track.SmartCategorySync.STATUS_READING to R.string.reading,
                 eu.kanade.tachiyomi.data.track.SmartCategorySync.STATUS_COMPLETED to R.string.completed,
                 eu.kanade.tachiyomi.data.track.SmartCategorySync.STATUS_PLANNING to R.string.plan_to_read,
+                eu.kanade.tachiyomi.data.track.SmartCategorySync.STATUS_ON_HOLD to R.string.on_hold,
+                eu.kanade.tachiyomi.data.track.SmartCategorySync.STATUS_DROPPED to R.string.dropped,
             )
         val intervals =
             listOf(

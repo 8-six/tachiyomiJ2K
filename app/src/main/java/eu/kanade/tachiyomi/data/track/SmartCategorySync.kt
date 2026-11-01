@@ -20,6 +20,8 @@ object SmartCategorySync {
     const val STATUS_READING = 1
     const val STATUS_COMPLETED = 2
     const val STATUS_PLANNING = 3
+    const val STATUS_ON_HOLD = 4
+    const val STATUS_DROPPED = 5
 
     private val trackManager: TrackManager by injectLazy()
 
@@ -31,11 +33,14 @@ object SmartCategorySync {
                 when (track.status) {
                     service.completedStatus() -> STATUS_COMPLETED
                     service.readingStatus() -> STATUS_READING
+                    service.onHoldStatus() -> STATUS_ON_HOLD
+                    service.droppedStatus() -> STATUS_DROPPED
                     service.planningStatus() -> STATUS_PLANNING
                     else -> null
                 }
             }
-        return listOf(STATUS_COMPLETED, STATUS_READING, STATUS_PLANNING).firstOrNull { it in buckets } ?: STATUS_NONE
+        return listOf(STATUS_COMPLETED, STATUS_READING, STATUS_ON_HOLD, STATUS_DROPPED, STATUS_PLANNING).firstOrNull { it in buckets }
+            ?: STATUS_NONE
     }
 
     /** Ids of [categories] that [membership] makes reachable: the categories themselves plus every ancestor. */

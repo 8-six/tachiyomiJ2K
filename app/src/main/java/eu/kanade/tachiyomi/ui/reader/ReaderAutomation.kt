@@ -21,6 +21,7 @@ class ReaderAutomation(
     private val preferences: PreferencesHelper,
     private val viewer: () -> BaseViewer?,
     private val onStopped: () -> Unit,
+    private val refreshRate: () -> Float = { 60f },
 ) {
     private var job: Job? = null
 
@@ -35,8 +36,10 @@ class ReaderAutomation(
                 var carry = 0f
                 var sinceFlip = 0L
                 var last = startedAt
+                // One step per display frame so 90/120 Hz screens scroll smoothly
+                val frameMs = (1000f / refreshRate().coerceIn(30f, 240f)).toLong().coerceAtLeast(4L)
                 while (isActive) {
-                    delay(FRAME_MS)
+                    delay(frameMs)
                     val now = SystemClock.elapsedRealtime()
                     val elapsed = now - last
                     last = now
@@ -71,7 +74,6 @@ class ReaderAutomation(
     }
 
     private companion object {
-        const val FRAME_MS = 16L
         const val SPEED_STEP_DP = 20
     }
 }

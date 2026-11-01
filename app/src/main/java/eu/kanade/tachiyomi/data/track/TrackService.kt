@@ -51,6 +51,15 @@ abstract class TrackService(
 
     abstract fun planningStatus(): Int
 
+    // KMK -->
+
+    /** Status meaning "on hold", or -1 if the service has none. */
+    open fun onHoldStatus(): Int = -1
+
+    /** Status meaning "dropped", or -1 if the service has none. */
+    open fun droppedStatus(): Int = -1
+    // KMK <--
+
     abstract fun getStatus(status: Int): String
 
     abstract fun getGlobalStatus(status: Int): String

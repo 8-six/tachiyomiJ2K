@@ -70,6 +70,7 @@ from upstream TachiyomiJ2K are not repeated here.
 - Leaving the extension repositories screen refreshes the available extensions when the set of enabled repos changed, so adding, removing, enabling or disabling a repo shows up without a manual refresh or restart. Matches Komikku's behavior.
 
 ### Technical
+- The Nightly workflow now runs on every push to `master` (ignoring docs/markdown-only changes) instead of the daily schedule; manual runs still work.
 - `SqlDumpTest` writes the real schema, v22-v28 migration and raw query SQL when `SQL_DUMP_DIR` is set, so they can be run against `sqlite3` (verified: migrated v21 schema equals a fresh install, all raw queries run on both).
 - Reader auto-scroll steps once per display frame using the screen refresh rate instead of a fixed 16 ms tick.
 - Database version 28 adds `mangas.preferred_tracker`; backups carry it in `BackupManga` ProtoNumber 813 (existing local value is kept on restore when the backup has none).

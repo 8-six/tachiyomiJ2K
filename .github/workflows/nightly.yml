@@ -1,7 +1,11 @@
 name: Nightly
 on:
-  schedule:
-    - cron: '0 3 * * *'
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
   workflow_dispatch:
 
 permissions:
@@ -22,44 +26,30 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Skip if nothing changed in the last day
-        if: github.event_name == 'schedule'
-        run: |
-          if [ -z "$(git log --since='24 hours ago' --oneline)" ]; then
-            echo "Nothing new, skipping"
-            echo "SKIP=true" >> $GITHUB_ENV
-          fi
-
       - name: Set up JDK
-        if: env.SKIP != 'true'
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           java-version: 21
           distribution: temurin
 
       - name: Set up Gradle
-        if: env.SKIP != 'true'
         uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
 
       - name: Copy CI gradle.properties
-        if: env.SKIP != 'true'
         run: |
           mkdir -p ~/.gradle
           cp .github/runner-files/ci-gradle.properties ~/.gradle/gradle.properties
 
       - name: Build app
-        if: env.SKIP != 'true'
         run: ./gradlew assembleStandardRelease
 
       - name: Detect installed build-tools version
-        if: env.SKIP != 'true'
         run: |
           BTV=$(ls -1 "${ANDROID_SDK_ROOT}/build-tools" | sort -V | tail -1)
           echo "Using build-tools $BTV"
           echo "BUILD_TOOLS_VERSION=$BTV" >> $GITHUB_ENV
 
       - name: Sign APK
-        if: env.SKIP != 'true'
         uses: r0adkll/sign-android-release@v1
         with:
           releaseDirectory: app/build/outputs/apk/standard/release
@@ -71,7 +61,6 @@ jobs:
           BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOLS_VERSION }}
 
       - name: Prepare files
-        if: env.SKIP != 'true'
         run: |
           set -e
           VERSION="nightly-$(date -u +%Y%m%d)-$(git rev-parse --short HEAD)"
@@ -98,7 +87,6 @@ jobs:
 
       # One rolling release, replaced by every nightly
       - name: Publish nightly release
-        if: env.SKIP != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

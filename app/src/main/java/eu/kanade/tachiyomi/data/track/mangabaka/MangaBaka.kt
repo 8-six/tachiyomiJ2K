@@ -100,7 +100,22 @@ class MangaBaka(
             .filter { it.contentRating == null || it.contentRating == "safe" }
             .mapNotNull { image ->
                 image.image?.raw?.let { raw ->
-                    raw.url?.let { TrackMangaMetadata.CoverCandidate(it, raw.width, raw.height, id) }
+                    raw.url?.let {
+                        TrackMangaMetadata.CoverCandidate(
+                            it,
+                            raw.width,
+                            raw.height,
+                            id,
+                            type = image.type,
+                            index = image.index,
+                            language = image.language,
+                            note =
+                                image.note
+                                    ?.lineSequence()
+                                    ?.firstOrNull { line -> line.isNotBlank() }
+                                    ?.trim(),
+                        )
+                    }
                 }
             }
     // KMK <--

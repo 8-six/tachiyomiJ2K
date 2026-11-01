@@ -33,6 +33,12 @@ data class TrackMangaMetadata(
         val height: Int? = null,
         /** Id of the tracker that offered it, which also decides between covers that are just as good. */
         val source: Int = 0,
+        /** What kind of cover it is, like volume or season, with its number and language. */
+        val type: String? = null,
+        val index: String? = null,
+        val language: String? = null,
+        /** Where it is from, as the tracker describes it. */
+        val note: String? = null,
     ) {
         val pixels: Long
             get() = if (width != null && height != null) width.toLong() * height else 0L

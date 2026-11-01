@@ -36,6 +36,11 @@ class ComposeBottomSheetDialog(
         composeView.setViewTreeViewModelStoreOwner(activity)
         composeView.setViewTreeSavedStateRegistryOwner(activity)
 
+        // KMK -->
+        // Lets scrollable content cooperate with the sheet; otherwise dragging down always drags the sheet
+        androidx.core.view.ViewCompat
+            .setNestedScrollingEnabled(composeView, true)
+        // KMK <--
         setContentView(composeView)
 
         val activityWic = WindowInsetsControllerCompat(activity.window, activity.window.decorView)

@@ -923,7 +923,7 @@ class MangaHeaderHolder(
             eu.kanade.tachiyomi.util.compose.AppComposeTheme {
                 SuggestionsRow(
                     suggestions = suggestions,
-                    onOpen = { controller.globalSearch(it) },
+                    onOpen = { controller.openSuggestion(it) },
                     onSeeAll = { controller.showSuggestions() },
                 )
             }

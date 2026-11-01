@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.manga
 
 import android.net.Uri
 import android.widget.ImageView
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
@@ -560,7 +562,7 @@ private fun CoverPickerDialog(
                 }
                 if (state.coverBusy) CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
                 LazyVerticalGrid(
-                    columns = GridCells.Adaptive(100.dp),
+                    columns = GridCells.Fixed(2),
                     modifier = Modifier.weight(1f),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -597,7 +599,9 @@ private fun CoverPickerDialog(
                                 items(data.covers, key = { source.serviceId.toString() + it.url }) { cover ->
                                     val size = if (cover.width != null && cover.height != null) " · ${cover.width}x${cover.height}" else ""
                                     CoverCell(
-                                        label = source.name + size,
+                                        label = coverTitle(cover),
+                                        detail = listOfNotNull(cover.note, source.name + size),
+                                        badge = cover.language?.uppercase(),
                                         selected = state.pickedCoverUrl == cover.url,
                                         onClick = { actions.onPickCover(cover.url) },
                                         load = { it.load(cover.url) },
@@ -632,31 +636,74 @@ private fun CoverPickerDialog(
     }
 }
 
+/** "Volume 1", "Season 2" or plain "Cover" for covers the tracker doesn't describe. */
+@Composable
+private fun coverTitle(cover: TrackMangaMetadata.CoverCandidate): String {
+    val index = cover.index
+    return when (cover.type) {
+        "volume" -> if (index != null) stringResource(R.string.cover_volume, index) else stringResource(R.string.cover_generic)
+        "season" -> if (index != null) stringResource(R.string.cover_season, index) else stringResource(R.string.cover_generic)
+        null, "other" -> stringResource(R.string.cover_generic) + (index?.let { " $it" } ?: "")
+        else -> cover.type.replaceFirstChar { it.uppercase() } + (index?.let { " $it" } ?: "")
+    }
+}
+
 @Composable
 private fun CoverCell(
     label: String,
+    detail: List<String> = emptyList(),
+    badge: String? = null,
     selected: Boolean,
     onClick: () -> Unit,
     load: (ImageView) -> Unit,
 ) {
+    // Same card shape and outline as the covers of the library
+    val shape = RoundedCornerShape(12.dp)
+    val outline =
+        if (selected) {
+            BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+        } else {
+            BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+        }
     Column(modifier = Modifier.clickable(onClick = onClick), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        AndroidView(
-            factory = { context -> ImageView(context).apply { scaleType = ImageView.ScaleType.CENTER_CROP } },
-            update = { load(it) },
+        Box(
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .aspectRatio(2f / 3f)
-                    .clip(RoundedCornerShape(10.dp))
-                    .then(
-                        if (selected) {
-                            Modifier.border(3.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(10.dp))
-                        } else {
-                            Modifier
-                        },
-                    ),
-        )
-        Text(label, style = MaterialTheme.typography.labelSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    .clip(shape)
+                    .border(outline, shape),
+        ) {
+            AndroidView(
+                factory = { context -> ImageView(context).apply { scaleType = ImageView.ScaleType.CENTER_CROP } },
+                update = { load(it) },
+                modifier = Modifier.fillMaxSize(),
+            )
+            if (badge != null) {
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.align(Alignment.TopStart).padding(6.dp),
+                ) {
+                    Text(
+                        badge,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                    )
+                }
+            }
+        }
+        Text(label, style = MaterialTheme.typography.labelLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        detail.forEach {
+            Text(
+                it,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 

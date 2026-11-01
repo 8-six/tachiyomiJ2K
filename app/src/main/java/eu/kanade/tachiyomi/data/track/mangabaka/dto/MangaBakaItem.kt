@@ -168,8 +168,11 @@ data class MangaBakaImage(
     val id: Long,
     val type: String? = null,
     val language: String? = null,
+    val index: String? = null,
     @SerialName("index_numeric")
     val indexNumeric: Double? = null,
+    /** Free text of the uploader, like where the cover is from. */
+    val note: String? = null,
     @SerialName("content_rating")
     val contentRating: String? = null,
     @SerialName("created_at")

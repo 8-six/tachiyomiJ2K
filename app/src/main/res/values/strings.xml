@@ -106,6 +106,9 @@
     <string name="cover_current">Current</string>
     <string name="cover_source">Source cover</string>
     <string name="suggestions">Suggestions</string>
+    <string name="cover_volume">Volume %1$s</string>
+    <string name="cover_season">Season %1$s</string>
+    <string name="cover_generic">Cover</string>
     <string name="parent_category">Parent category</string>
     <string name="parent_category_none">None (top level)</string>
     <string name="parent_category_value">Parent category: %1$s</string>

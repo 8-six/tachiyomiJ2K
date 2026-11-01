@@ -105,8 +105,8 @@ class MangaDetailsPresenter(
     var trackList: List<TrackItem> = emptyList()
 
     // KMK -->
-    /** Related and recommended series from the trackers, shown under the description. */
-    var suggestions: List<eu.kanade.tachiyomi.data.track.model.Suggestion> = emptyList()
+    /** Related manga found in the source, shown under the description. */
+    var suggestions: List<SourceSuggestion> = emptyList()
     // KMK <--
 
     var chapters: List<ChapterItem> = emptyList()

@@ -145,6 +145,8 @@ import eu.kanade.tachiyomi.util.view.toolbarHeight
 import eu.kanade.tachiyomi.util.view.withFadeTransaction
 import eu.kanade.tachiyomi.widget.LinearLayoutManagerAccurateOffset
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -1844,36 +1846,73 @@ class MangaDetailsController :
             .firstOrNull { it.sync_id == eu.kanade.tachiyomi.data.track.TrackManager.MANGABAKA && it.media_id > 0 }
             ?.media_id
 
-    private var suggestionsKey: Pair<Long?, Long?>? = null
+    private var suggestionsKey: Long? = null
 
-    /** Asks the linked trackers for related and recommended series once per set of tracker ids. */
+    /** Searches the manga's own source for the keywords of its title, like Komikku's related manga. */
     private fun loadSuggestions() {
-        val aniListId = anilistTrackId()
-        val mangaBakaId = mangaBakaTrackId()
-        val key = aniListId to mangaBakaId
-        if ((aniListId == null && mangaBakaId == null) || key == suggestionsKey) return
+        val source = presenter.source as? CatalogueSource ?: return
+        if (source.id == MERGED_SOURCE_ID || source is eu.kanade.tachiyomi.source.LocalSource) return
+        val manga = presenter.manga
+        val key = manga.id
+        if (key == suggestionsKey) return
         suggestionsKey = key
         viewScope.launch {
-            val trackManager = Injekt.get<eu.kanade.tachiyomi.data.track.TrackManager>()
-            // Either service may fail or lack data; use whatever answers
-            val results =
-                listOfNotNull(
-                    aniListId?.let { id -> runCatching { trackManager.aniList.getRelations(id) } },
-                    mangaBakaId?.let { id -> runCatching { trackManager.mangaBaka.getRelations(id) } },
-                )
-            results.forEach { result -> result.exceptionOrNull()?.let { Timber.w(it, "Could not load suggestions") } }
-            val allowed = setOf("SEQUEL", "PREQUEL", "PARENT", "SIDE_STORY", "ADAPTATION", "SPIN_OFF", "SERIES")
+            val keywords = relatedKeywords(manga.title, manga.originalTitle)
+            val found =
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    kotlinx.coroutines.supervisorScope {
+                        keywords
+                            .map { keyword ->
+                                async {
+                                    runCatching { source.getSearchManga(1, keyword, source.getFilterList()).mangas }
+                                        .onFailure { Timber.w(it, "Could not search related manga for $keyword") }
+                                        .getOrDefault(emptyList())
+                                }
+                            }.awaitAll()
+                    }
+                }
             presenter.suggestions =
-                results
-                    .flatMap { it.getOrDefault(emptyList()) }
-                    .filter { it.relation == null || it.relation.uppercase() in allowed }
-                    .distinctBy { it.title.lowercase() }
-                    .sortedBy { it.relation == null }
+                found
+                    .flatten()
+                    .filter { it.url != manga.url }
+                    .distinctBy { it.url }
+                    .take(30)
+                    .map { SourceSuggestion(it) }
             getHeader()?.bindSuggestions()
         }
     }
 
-    /** The full list of suggestions, as a dialog, opened from the arrow of the suggestions row. */
+    private fun relatedKeywords(vararg titles: String?): List<String> {
+        val special = Regex("([!~#$%^&*+_|/\\\\,?:;'\"<>(){}\\[\\]]|\\s-|-\\s|\\s\\.|\\.\\s)")
+        val words = LinkedHashSet<String>()
+        titles.filterNotNull().filter { it.isNotBlank() }.forEach { words.add(it.trim()) }
+        titles.filterNotNull().forEach { title ->
+            title
+                .replace(special, " ")
+                .split(Regex("\\s+"))
+                .map { it.lowercase() }
+                .filter { it.length > 1 && !it.all(Char::isDigit) }
+                .forEach { word -> if (words.none { it.lowercase() == word }) words.add(word) }
+        }
+        return words.take(6)
+    }
+
+    override fun openSuggestion(sManga: eu.kanade.tachiyomi.source.model.SManga) {
+        val sourceId = presenter.source.id
+        viewScope.launch {
+            val local =
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    val db = Injekt.get<DatabaseHelper>()
+                    db.getManga(sManga.url, sourceId).executeAsBlocking() ?: Manga.create(sManga.url, sManga.title, sourceId).also {
+                        it.copyFrom(sManga)
+                        it.id = db.insertManga(it).executeAsBlocking().insertedId()
+                    }
+                }
+            router.pushController(MangaDetailsController(local, true).withFadeTransaction())
+        }
+    }
+
+    /** The full list of related manga, as a dialog, opened from the arrow of the suggestions row. */
     override fun showSuggestions() {
         val activity = activity ?: return
         val suggestions = presenter.suggestions
@@ -1881,20 +1920,10 @@ class MangaDetailsController :
             activity.toast(R.string.related_manga_none)
             return
         }
-        val labels =
-            suggestions
-                .map { suggestion ->
-                    val relation =
-                        suggestion.relation
-                            ?.lowercase()
-                            ?.replace('_', ' ')
-                            ?.replaceFirstChar { it.uppercase() }
-                    if (relation != null) "$relation: ${suggestion.title}" else suggestion.title
-                }.toTypedArray()
         activity
             .materialAlertDialog()
-            .setTitle(R.string.related_manga)
-            .setItems(labels) { _, index -> globalSearch(suggestions[index].title) }
+            .setTitle(R.string.suggestions)
+            .setItems(suggestions.map { it.manga.title }.toTypedArray()) { _, index -> openSuggestion(suggestions[index].manga) }
             .setNegativeButton(android.R.string.cancel, null)
             .show()
     }

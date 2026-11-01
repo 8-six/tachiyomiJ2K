@@ -203,6 +203,8 @@ class MangaDetailsAdapter(
         fun globalSearch(text: String)
 
         fun showSuggestions()
+
+        fun openSuggestion(sManga: eu.kanade.tachiyomi.source.model.SManga)
         // KMK <--
 
         fun prepareToShareManga()

@@ -55,7 +55,8 @@ from upstream TachiyomiJ2K are not repeated here.
 - Library search filter sheet: Bookmark color field (red, orange, yellow, green, blue, purple, pink) that builds the `bmcolor:` search term.
 - "Edit all trackers" sheet (Compose Material 3) in the manga overflow menu: status, chapter progress and score for every linked tracker in one place (adapted from Komikku's unified tracker editor).
 - Edit panel: a cover picker (grid like search results) with the current cover, the source's own and every cover the linked trackers offer, including all MangaBaka covers; picking one downloads it. Each field (title, author, artist, description, status, tags) has a sync button that asks the linked trackers and shows a preview of what each has before applying it.
-- Manga details: a "Suggestions" row of covers under the description (related series from AniList and MangaBaka plus AniList recommendations); tapping a cover searches for it, and the arrow opens the full list. It replaces the "Related manga" menu entry (adapted from Komikku).
+- Manga details: a "Suggestions" row of covers under the description with related manga found in the manga's own source by searching the keywords of its title (like Komikku's related manga; the extension related-manga API of Komikku does not exist in this app); tapping a cover opens that manga, and the arrow opens the full list. It replaces the "Related manga" menu entry. The title and arrow are now drawn in the theme colors instead of black.
+- Edit panel cover picker: 2-column grid with the outline of the library covers, and MangaBaka covers show the kind (volume or season and its number), the language as a badge and the uploader's note (like "Cover from Naver Webtoon").
 
 ### Changed
 - The edit panel opens as a half-height drawer with a fixed header (drag handle, title, Save/Cancel) instead of covering the whole screen, and stops below the status bar when expanded.
@@ -70,6 +71,7 @@ from upstream TachiyomiJ2K are not repeated here.
 - The issue templates, About screen and tracker User-Agents link to this fork instead of upstream.
 
 ### Fixed
+- Edit panel: after scrolling the content down it can be scrolled back up without closing the sheet (nested scrolling is enabled for Compose bottom sheets).
 - Recents query no longer fails: the "newly added manga" branch was missing the `bookmark_color` and `blacklisted` chapter columns added by this fork, which made the UNION invalid.
 - Leaving the extension repositories screen refreshes the available extensions when the set of enabled repos changed, so adding, removing, enabling or disabling a repo shows up without a manual refresh or restart. Matches Komikku's behavior.
 

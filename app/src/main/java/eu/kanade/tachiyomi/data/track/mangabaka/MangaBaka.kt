@@ -117,6 +117,8 @@ class MangaBaka(
     override fun onHoldStatus() = PAUSED
 
     override fun droppedStatus() = DROPPED
+
+    override fun rereadingStatus() = REREADING
     // KMK <--
 
     override fun getStatus(status: Int): String =

@@ -1212,6 +1212,21 @@ class MangaDetailsPresenter(
         }
     }
 
+    // KMK -->
+
+    /** Puts every linked tracker that has a rereading status into it and restarts its progress. */
+    fun startRereadTracking() {
+        trackList
+            .filter { it.track != null && it.service.rereadingStatus() != -1 }
+            .forEach { item ->
+                val track = item.track!!
+                track.status = item.service.rereadingStatus()
+                track.last_chapter_read = 0f
+                updateRemote(track, item.service)
+            }
+    }
+    // KMK <--
+
     private fun trackRefreshDone() {
         presenterScope.launch(Dispatchers.Main) { view?.trackRefreshDone() }
     }

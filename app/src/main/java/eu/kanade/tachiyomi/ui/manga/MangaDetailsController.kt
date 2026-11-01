@@ -1221,6 +1221,7 @@ class MangaDetailsController :
         if (mode != 0 && activity != null && isRereadStart(chapter)) {
             val reset = {
                 presenter.markChaptersRead(presenter.chapters, false)
+                presenter.startRereadTracking()
                 openChapterNow(chapter, sharedElement)
             }
             if (mode == 2) {

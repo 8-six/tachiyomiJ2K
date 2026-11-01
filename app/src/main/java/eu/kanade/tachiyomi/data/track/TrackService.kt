@@ -58,6 +58,9 @@ abstract class TrackService(
 
     /** Status meaning "dropped", or -1 if the service has none. */
     open fun droppedStatus(): Int = -1
+
+    /** Status meaning "rereading", or -1 if the service has none. */
+    open fun rereadingStatus(): Int = -1
     // KMK <--
 
     abstract fun getStatus(status: Int): String

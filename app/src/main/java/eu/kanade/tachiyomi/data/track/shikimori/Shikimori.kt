@@ -64,6 +64,8 @@ class Shikimori(
     override fun onHoldStatus() = ON_HOLD
 
     override fun droppedStatus() = DROPPED
+
+    override fun rereadingStatus() = REREADING
     // KMK <--
 
     override fun getStatus(status: Int): String =
